@@ -18,7 +18,7 @@ void loop() {
   {
     if(result) 
     {
-      Serial.println(result);
+      //Serial.println(result);
       
       // Send keypress
       buf[2] = 26;
@@ -26,7 +26,7 @@ void loop() {
     } 
     else 
     {
-      Serial.println(result);
+      //Serial.println(result);
       
        // Send release keypress
       buf[0] = 0;
