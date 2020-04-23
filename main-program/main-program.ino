@@ -1,7 +1,6 @@
 const int inputPin = 2;
 
-uint8_t buf[8] = { 
-  0 };   /* Keyboard report buffer */
+uint8_t buf[8] = { 0 };   /* Keyboard report buffer */
 bool oldResult = false;
 
 void setup() {
@@ -12,23 +11,31 @@ void setup() {
 }
 
 void loop() {
-  bool result = !digitalRead(inputPin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+  ReadPin(inputPin);
 
-  if(oldResult != result) 
+  HandleButton(result, keycode);
+  
+  oldResult = result;
+  digitalWrite(LED_BUILTIN, result);
+}
+
+void HandleButton(int pin, int keycode) 
+{
+  if(oldResult != result)
   {
-    if(result) 
+    if(result)
     {
       //Serial.println(result);
       
       // Send keypress
       buf[2] = 26;
-      Serial.write(buf, 8);   
-    } 
+      Serial.write(buf, 8);
+    }
     else 
     {
       //Serial.println(result);
       
-       // Send release keypress
+      // Send release keypress
       buf[0] = 0;
       buf[2] = 0;
       Serial.write(buf, 8); 
@@ -36,5 +43,10 @@ void loop() {
   }
   
   oldResult = result;
-  digitalWrite(LED_BUILTIN, result);
+}
+
+void ReadPin(int pin)
+{
+  bool result = !digitalRead(inputPin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+  // TODO: Create dictionary or list containing each key and value.
 }
