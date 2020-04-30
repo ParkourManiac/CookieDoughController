@@ -1,33 +1,35 @@
 #include <Arduino.h>
+#include <Key.h>
 
-// Struct
-struct Key {
-    int pin;
-    int keyCode;
-    bool value;
-    bool oldValue;
-};
 
 // HEADER
+void ConfigurePinsAsKeys();
+void CycleKeyMap();
+void ChangeKeyMap(int index);
 void ReadPinValueForKeys();
 void SendKeyInfo();
+void ExecuteSpecialCommands();
 
 // Public variables
+int currentKeyMap = 0;
 
-// WASD
-// Key keys[4] = { 
-//     {.pin = 2, .keyCode = 4},
-//     {.pin = 3, .keyCode = 26},
-//     {.pin = 4, .keyCode = 22},
-//     {.pin = 5, .keyCode = 7},
-// };
+Key keyMaps[2][4] = {
+    {   // Key map WASD
+        {.pin = 2, .keyCode = 80},
+        {.pin = 3, .keyCode = 82},
+        {.pin = 4, .keyCode = 81},
+        {.pin = 5, .keyCode = 79},
+    },
+    { // Key map Arrow keys
+        {.pin = 2, .keyCode = 4},
+        {.pin = 3, .keyCode = 26},
+        {.pin = 4, .keyCode = 22},
+        {.pin = 5, .keyCode = 7},
+    }
+};
 
-// Arrow keys
-Key keys[4] = { 
-    {.pin = 2, .keyCode = 80},
-    {.pin = 3, .keyCode = 82},
-    {.pin = 4, .keyCode = 81},
-    {.pin = 5, .keyCode = 79},
+SpecialKey specialKeys[1] = {
+    {.pin = 12, .function = cycleKeyMap}
 };
 
 uint8_t buf[8] = {0}; // Keyboard report buffer.
@@ -38,32 +40,72 @@ void setup()
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
 
-    // Set keys as Inputs with internal pullups.
-    for(Key& key : keys) {
-        pinMode(key.pin, INPUT_PULLUP);
-    }
+    ConfigurePinsAsKeys();
 }
 
 void loop()
 {
     ReadPinValueForKeys();
-
+    ExecuteSpecialCommands();
     SendKeyInfo();
 }
 
-void ReadPinValueForKeys() // TODO: Test if working
-{
-    for(Key& key : keys) {
-        key.value = !digitalRead(key.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+/**
+ * @brief Configures pins marked as Key or SpecialKey to act as input pins with internal pullups.
+ */
+void ConfigurePinsAsKeys() {
+    for(Key& key : keyMaps[currentKeyMap]) {
+        pinMode(key.pin, INPUT_PULLUP);
+    }
+
+    for(SpecialKey& specialKey : specialKeys) {
+        pinMode(specialKey.pin, INPUT_PULLUP);
     }
 }
 
-void SendKeyInfo() { // TODO: Handle debounce. Get values to update.
-    for(Key& key : keys) {
+/**
+ * @brief Switches to the next keyMap configuration in the available keyMaps.
+ * 
+ */
+void CycleKeyMap() {
+    ChangeKeyMap(currentKeyMap + 1);
+}
+
+/**
+ * @brief Changes the current keymap to the keymap specified at the given index (in the available keyMaps).
+ * 
+ * @param index The index of the keymap to be switched to.
+ */
+void ChangeKeyMap(int index) {
+    int length = sizeof(keyMaps) / sizeof(keyMaps[0]);
+    currentKeyMap = index % length;
+
+    ConfigurePinsAsKeys();
+}
+
+/**
+ * @brief Reads and updates the pin values of
+ *  the current keymap and special keys.
+ */
+void ReadPinValueForKeys()
+{
+    for(Key& key : keyMaps[currentKeyMap]) {
+        key.value = !digitalRead(key.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+    }
+
+    for(SpecialKey& specialKey : specialKeys) {
+        specialKey.value = !digitalRead(specialKey.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+    }
+}
+
+/**
+ * @brief Writes the keypress events to the buffer and sends them to the computer. 
+ * 
+ */
+void SendKeyInfo() { // TODO: Handle debounce.
+    for(Key& key : keyMaps[currentKeyMap]) {
         if (key.oldValue != key.value)
         {
-            digitalWrite(LED_BUILTIN, HIGH);
-            //Serial.println(key.value);
             if (key.value)
             {
                 digitalWrite(LED_BUILTIN, HIGH);
@@ -87,3 +129,56 @@ void SendKeyInfo() { // TODO: Handle debounce. Get values to update.
     }
 }
 
+/**
+ * @brief Executes the corresponding special function when a special key is pressed.
+ */
+void ExecuteSpecialCommands() { // TODO: Handle debounce.
+    for(SpecialKey& specialKey : specialKeys) {
+        if (specialKey.oldValue != specialKey.value)
+        {
+            if (specialKey.value)
+            {
+                digitalWrite(LED_BUILTIN, HIGH);
+
+                // Activate corresponding function
+                switch(specialKey.function) 
+                {
+                    case cycleKeyMap: 
+                        CycleKeyMap();
+                        break;
+                    case useDefaultKeyMap:
+                        // TODO: Create solution for a default keymap.
+                        break;
+                }
+            }
+            else
+            {
+                digitalWrite(LED_BUILTIN, LOW);
+            }
+        }
+
+        specialKey.oldValue = specialKey.value;
+    }
+}
+
+
+
+
+
+// Miscellaneous
+
+// Key setup WASD
+// Key keys[4] = { 
+//     {.pin = 2, .keyCode = 4},
+//     {.pin = 3, .keyCode = 26},
+//     {.pin = 4, .keyCode = 22},
+//     {.pin = 5, .keyCode = 7},
+// };
+
+// Key setup Arrow keys
+// Key keys[4] = { 
+//     {.pin = 2, .keyCode = 80},
+//     {.pin = 3, .keyCode = 82},
+//     {.pin = 4, .keyCode = 81},
+//     {.pin = 5, .keyCode = 79},
+// };
