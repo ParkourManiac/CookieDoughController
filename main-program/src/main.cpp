@@ -11,7 +11,16 @@ void SendKeyInfo();
 void ExecuteSpecialCommands();
 
 // Public variables
-int currentKeyMap = 0;
+Key defaultKeyMap[4] = { // Key map WASD
+    {.pin = 2, .keyCode = 80},
+    {.pin = 3, .keyCode = 82},
+    {.pin = 4, .keyCode = 81},
+    {.pin = 5, .keyCode = 79},
+};
+
+Key* currentKeyMap = &defaultKeyMap[0]; // TODO: Continue converting things to pointers.
+
+Key* availableKeyMaps;
 
 Key keyMaps[2][4] = {
     {   // Key map WASD
@@ -28,7 +37,7 @@ Key keyMaps[2][4] = {
     }
 };
 
-SpecialKey specialKeys[1] = {
+SpecialKey specialKeys[1] = { // Should never change.
     {.pin = 12, .function = cycleKeyMap}
 };
 
@@ -54,7 +63,7 @@ void loop()
  * @brief Configures pins marked as Key or SpecialKey to act as input pins with internal pullups.
  */
 void ConfigurePinsAsKeys() {
-    for(Key& key : keyMaps[currentKeyMap]) {
+    for(Key& key : keyMaps[currentKeyMapIndex]) {
         pinMode(key.pin, INPUT_PULLUP);
     }
 
@@ -68,7 +77,7 @@ void ConfigurePinsAsKeys() {
  * 
  */
 void CycleKeyMap() {
-    ChangeKeyMap(currentKeyMap + 1);
+    ChangeKeyMap(currentKeyMapIndex + 1);
 }
 
 /**
@@ -78,7 +87,7 @@ void CycleKeyMap() {
  */
 void ChangeKeyMap(int index) {
     int length = sizeof(keyMaps) / sizeof(keyMaps[0]);
-    currentKeyMap = index % length;
+    currentKeyMapIndex = index % length;
 
     ConfigurePinsAsKeys();
 }
@@ -89,7 +98,7 @@ void ChangeKeyMap(int index) {
  */
 void ReadPinValueForKeys()
 {
-    for(Key& key : keyMaps[currentKeyMap]) {
+    for(Key& key : keyMaps[currentKeyMapIndex]) {
         key.value = !digitalRead(key.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
     }
 
@@ -103,7 +112,7 @@ void ReadPinValueForKeys()
  * 
  */
 void SendKeyInfo() { // TODO: Handle debounce.
-    for(Key& key : keyMaps[currentKeyMap]) {
+    for(Key& key : keyMaps[currentKeyMapIndex]) {
         if (key.oldValue != key.value)
         {
             if (key.value)
