@@ -17,17 +17,16 @@ void PrintResults()
 {
     printf("Results: \n");
     int failedTests = 0;
-    for(test_result result : results) {
-        if(!result.passed) {
-            printf("Test failed:\n");
-            printf("Code: ");
-            printf(result.code);
-            printf("\n");
-            printf("file: ");
-            printf(result.file);
-            printf("\n");
-            printf("Line: ");
-            printf((char*) result.line);
+    for(int i = 0; i < currentTestIndex; i++) {
+        if(!results[i].passed) {
+            printf("\033[1;31m" "Test failed: ");
+            printf("\033[0m" "In file (");
+            printf("%s", results[i].file);
+            printf(") at line (");   
+            printf("%lu", results[i].line);
+            printf(") while executing code snippet (");
+            printf("%s", results[i].code);
+            printf(")\n");
 
             failedTests++;
         }
@@ -35,13 +34,20 @@ void PrintResults()
 
     int successfulTests = currentTestIndex - failedTests;
     printf("\n");
-    printf((char*) successfulTests);
+    printf("%d", successfulTests);
     printf(" out of ");
-    printf((char*) currentTestIndex);
-    printf(" tests passed.");
+    printf("%d", currentTestIndex);
+    printf(" tests passed.\n");
+    if(successfulTests == currentTestIndex) {
+        printf("\033[1;32m""All tests PASSED!\n\n");
+        printf("\033[0m");
+    } else {
+        printf("\033[01;33m" "One or more tests FAILED!\n\n");
+        printf("\033[0m");
+    }
 }
 
-void Test(bool eval, char* code, const char* file, unsigned long line) 
+void Test(bool eval, const char* code, const char* file, unsigned long line) 
 {
     test_result newResult;
 
@@ -55,15 +61,14 @@ void Test(bool eval, char* code, const char* file, unsigned long line)
 }
 
 int main() {
-    printf("-------------------\n");
+    printf("\n-------------------\n");
     RunTests();
-    printf("-------------------\n");
     PrintResults();
-    printf("-------------------\n");
 }
 
 void RunTests() 
 {
-    printf("Running tests...\n");
-    AddTwoNumbers_SumIsCorrect();
+    printf("Running tests:\n");
+    RUN_TEST(AddTwoNumbers_SumIsCorrect);
+    RUN_TEST(AddTwoNumbers_TestFails);
 }
