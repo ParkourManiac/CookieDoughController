@@ -12,7 +12,7 @@ void AddTwoNumbers_SumIsCorrect() {
 
 void AddTwoNumbers_TestFails() {
     int num1 = 3;
-    int num2 = 5;
+    int num2 = 50;
     int expected = 8;
 
     int result = num1 + num2;
