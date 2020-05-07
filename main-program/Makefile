@@ -6,7 +6,7 @@ upload: # Builds and uploads the project to the targeted arduino.
 
 # Name of command: Dependent on file. ($^ -The dependent file. -g -Keep symbols for debugging. -o -Output file)
 compileTests: TestCookieDough
-	g++ -g -o $^/Testrun/latestTestRun $^/*.cpp
+	g++ -std=c++11 -g -o $^/Testrun/latestTestRun $^/*.cpp
 
 test: compileTests # "Dependent" on compileTests. ("compileTests" will run before this command).
 	./TestCookieDough/Testrun/latestTestRun
