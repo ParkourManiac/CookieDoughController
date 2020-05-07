@@ -20,18 +20,18 @@ public:
      * @param item The item to be added.
      */
     void Add(T item) { // TODO: Needs to be tested (step 1)
-        Node<T> newNode = new Node<T>();
-        newNode.value = item;
+        Node<T>* newNode = new Node<T>();
+        newNode->value = item;
 
         if(head == nullptr) 
         {
-            head = &newNode;
-            tail = &newNode;
+            head = newNode;
+            tail = newNode;
         } 
         else 
         {
-            tail->next = &newNode;
-            tail = &newNode;
+            tail->next = newNode;
+            tail = newNode;
         }
 
         length++;
@@ -46,8 +46,8 @@ public:
      * @param item The item to be inserted.
      */
     void Insert(int index, T item) { // TODO: Needs to be tested (step 3)
-        Node<T> newNode = new Node<T>();
-        newNode.value = item;
+        Node<T>* newNode = new Node<T>();
+        newNode->value = item;
 
         if(index == 0) 
         {
@@ -56,27 +56,27 @@ public:
             } 
             else 
             {
-                newNode.next = head;
-                head = &newNode;
+                newNode->next = head;
+                head = newNode;
             }
         } 
         else 
         {
-            Node<T> precedingNode = this[index - 1];
+            Node<T>* precedingNode = this[index - 1];
 
-            if(precedingNode != NULL)
+            if(precedingNode != nullptr)
             {
-                if(precedingNode.next != nullptr)
+                if(precedingNode->next != nullptr)
                 {
-                    Node<T>* followingNode = precedingNode.next;
+                    Node<T>* followingNode = precedingNode->next;
 
-                    precedingNode.next = &newNode;
-                    newNode.next = followingNode;
+                    precedingNode->next = newNode;
+                    newNode->next = followingNode;
                 } 
                 else // we are one step past the end.
                 {
-                    precedingNode.next = &newNode; 
-                    tail = &newNode;
+                    precedingNode->next = newNode; 
+                    tail = newNode;
                 }
             } 
             else 
@@ -95,14 +95,14 @@ public:
      * @param index The index of the item to be removed.
      * @return T The value of the removed item.
      */
-    T removeAtIndex(int index) { // TODO: Needs to be tested (step 3)
+    T* removeAtIndex(int index) { // TODO: Needs to be tested (step 3)
         Node<T>* nodeToBeDeleted;
         if(index == 0) 
         {
             if(head == nullptr) // Empty list
             {
                 // Throw error: No elements in list!
-                return NULL;
+                return nullptr;
             } 
             else
             {
@@ -120,27 +120,27 @@ public:
         } 
         else 
         {
-            Node<T> precedingNode = this[index - 1];
+            Node<T>* precedingNode = this[index - 1];
 
-            if(precedingNode != NULL)
+            if(precedingNode != nullptr)
             {
-                if(precedingNode.next != nullptr)
+                if(precedingNode->next != nullptr)
                 {
-                    nodeToBeDeleted = precedingNode.next;
+                    nodeToBeDeleted = precedingNode->next;
                     Node<T>* followingNode = nodeToBeDeleted->next;
 
-                    precedingNode.next = followingNode;
+                    precedingNode->next = followingNode;
                 } 
                 else // we are one step past the end.
                 {
                     // Throw an error..? (Out of range)
-                    return NULL;
+                    return nullptr;
                 }
             } 
             else 
             {
                 // Throw an error..? (Out of range)
-                return NULL;
+                return nullptr;
             }
         }
 
@@ -149,7 +149,7 @@ public:
         delete(nodeToBeDeleted);
         length--;
 
-        return valueOfDeleted;
+        return &valueOfDeleted;
     }
 
     /**
@@ -162,14 +162,14 @@ public:
     }
 
     /**
-     * @brief Retrieves the item at the specified index.
+     * @brief Retrieves the pointer to the item at the specified index.
      * 
      * @param idx The index of the item.
-     * @return T& The item at the specified index.
+     * @return T* The pointer to the item at the specified index.
      */
-    T& operator[](size_t idx) // TODO: Needs to be tested (step 2)
+    T* operator[](size_t idx) // TODO: Needs to be tested (step 2)
     {
-        if(head == nullptr) return NULL; // Throw error: List is empty.
+        if(head == nullptr) return nullptr; // Throw error: List is empty.
 
         Node<T>* current = head;
         int currentIndex = 0;
@@ -181,11 +181,11 @@ public:
 
             if(current == nullptr) 
             {
-                return NULL; // Throw error instead? (Out of range)
+                return nullptr; // Throw error instead? (Out of range)
             }
         }
 
-        return *current;
+        return &current->value;
     }
 
 private: 

@@ -1,7 +1,10 @@
 #include "testSuite.h"
 #include "test.h"
 
-#include "LinkedListTest.cpp"
+void AddItemToList_ListContainsItem();
+void AddItemToListThenGetItemUsingSubscriptOperator_GetsItem();
+void AddOneItemToList_ItemBecomesHead();
+void AddOneItemToList_ItemBecomesTail();
 
 /**
  * @brief A container for all tests to be run.
@@ -16,4 +19,7 @@ void RunTests()
 {
     //RUN_TEST(MyExampleTest);
     RUN_TEST(AddItemToList_ListContainsItem);
+    RUN_TEST(AddItemToListThenGetItemUsingSubscriptOperator_GetsItem);
+    RUN_TEST(AddOneItemToList_ItemBecomesHead);
+    RUN_TEST(AddOneItemToList_ItemBecomesTail);
 }
