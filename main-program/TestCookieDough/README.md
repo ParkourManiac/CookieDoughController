@@ -32,3 +32,9 @@ void RunTests()
     RUN_TEST(ExampleTest);
 }
 ```
+
+
+# AUTO GENERATE "testSuite.cpp"
+1. Create a file ending with "Test.cpp" (example: "ExampleTest.cpp"), next to the generateTestSuite.py file. (NOTE: This is the way the framework finds all files containing tests. It will take ALL functions defined as "void" inside all files ending with "Test.cpp" and mark each function as a test.)
+2. Inside your file ending with "Test.cpp", include "test.h", then write a test using the 'ASSERT_TEST(condition)' macro.
+3. Lastly run the "generateTestSuite.py" script using the "python" command and specify the directory in which the "testSuite.cpp" should be generated. (Example: "python generateTestSuite.py .", this will create a new testSuite.cpp file inside your current directory).
