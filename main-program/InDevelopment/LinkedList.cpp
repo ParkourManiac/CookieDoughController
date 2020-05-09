@@ -19,7 +19,7 @@ public:
      * 
      * @param item The item to be added.
      */
-    void Add(T item) { // TODO: Needs to be tested (step 1)
+    void Add(T item) {
         Node<T>* newNode = new Node<T>();
         newNode->value = item;
 
@@ -45,14 +45,15 @@ public:
      * @param index The index in which the item should be inserted.
      * @param item The item to be inserted.
      */
-    void Insert(int index, T item) { // TODO: Needs to be tested (step 3)
+    void Insert(size_t index, T item) { // TODO: Needs to be tested (step 3)
         Node<T>* newNode = new Node<T>();
         newNode->value = item;
 
-        if(index == 0) 
+        if(index == 0)
         {
             if(head == nullptr) {
                 Add(item);
+                return; // Will prevent adding to length twice.
             } 
             else 
             {
@@ -62,7 +63,7 @@ public:
         } 
         else 
         {
-            Node<T>* precedingNode = this[index - 1];
+            Node<T>* precedingNode = GetNode(index - 1);
 
             if(precedingNode != nullptr)
             {
@@ -81,7 +82,7 @@ public:
             } 
             else 
             {
-                // Throw an error..? (Out of range)
+                // Throw error: Out of range.
                 return;
             }
         }
@@ -95,7 +96,7 @@ public:
      * @param index The index of the item to be removed.
      * @return T The value of the removed item.
      */
-    T* removeAtIndex(int index) { // TODO: Needs to be tested (step 3)
+    T* removeAtIndex(size_t index) { // TODO: Needs to be tested (step 3)
         Node<T>* nodeToBeDeleted;
         if(index == 0) 
         {
@@ -120,7 +121,7 @@ public:
         } 
         else 
         {
-            Node<T>* precedingNode = this[index - 1];
+            Node<T>* precedingNode = GetNode(index - 1);
 
             if(precedingNode != nullptr)
             {
@@ -161,13 +162,7 @@ public:
         }
     }
 
-    /**
-     * @brief Retrieves the pointer to the item at the specified index.
-     * 
-     * @param idx The index of the item.
-     * @return T* The pointer to the item at the specified index.
-     */
-    T* operator[](size_t idx) // TODO: Needs to be tested (step 2)
+    Node<T>* GetNode(size_t idx)
     {
         if(head == nullptr) return nullptr; // Throw error: List is empty.
 
@@ -181,11 +176,22 @@ public:
 
             if(current == nullptr) 
             {
-                return nullptr; // Throw error instead? (Out of range)
+                return nullptr; // Throw error: Out of range.
             }
         }
 
-        return &current->value;
+        return current;
+    }
+
+    /**
+     * @brief Retrieves the pointer to the item at the specified index.
+     * 
+     * @param idx The index of the item.
+     * @return T* The pointer to the item at the specified index.
+     */
+    T* operator[](size_t idx)
+    {
+        return &GetNode(idx)->value;
     }
 
 private: 

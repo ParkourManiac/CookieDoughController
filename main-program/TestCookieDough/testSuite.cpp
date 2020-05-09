@@ -2,21 +2,73 @@
 #include "testSuite.h" 
 #include "test.h"
 
+void GetFirstNode_GetsFirstNode();
+void GetSecondNode_GetsSecondNode();
+void GetNodeInTheMiddleOfList_GetsNode();
+void GetLastNodeByPassingInLengthMinusOne_GetsLastNode();
+void TryToGetNodeOutOfRange_GetsNullptr();
+void TryToGetNodeWithEmptyList_GetsNullptr();
+void TryToGetNodeWithNegativeNumber_GetsNullptr();
+void GetTwoDifferentNodes_AllNodesAreNotTheSame();
 void GetFirstItemUsingSubscriptOperator_GetsItem();
 void GetSecondItemUsingSubscriptOperator_GetsSecondItem();
+void GetItemInTheMiddleOfListUsingSubscriptOperator_GetsItem();
+void GetLastItemByPassingLengthMinusOneToSubscriptOperator_GetsLastItem();
+void OutOfRangeInSubscriptOperator_GetsNullptr();
+void UsingSubscriptOperatorWithEmptyList_GetsNullptr();
+void UsingSubscriptOperatorWithNegativeNumber_GetsNullptr();
+void UsingSubscriptOperator_AllItemsAreNotTheSame();
 void AddItemToList_ListContainsItem();
 void AddOneItemToList_ItemBecomesHead();
 void AddOneItemToList_ItemBecomesTail();
 void AddTwoItemsToList_FirstIsHeadSecondIsTail();
 void AddMultipleItemsToList_FirstlyAddedIsHeadLastlyAddedIsTail();
+void AddItem_LengthIncreasesByOne();
+void InsertItemIntoEmptyList_ItemIsHead();
+void InsertItemIntoEmptyList_ItemIsTail();
+void InsertItemAtIndexZero_ItemIsHead();
+void InsertItemAtLastIndex_ItemIsTail();
+void InsertItemAtIndexThenGetItemFromIndex_ItemAtIndexIsTheInsertedItem();
+void InsertItemIntoMiddleOfPopulatedList_AllItemsArePresent();
+void InsertItemIntoEmptyListWithIndexOutOfRange_NothingIsAdded();
+void InsertItemIntoPopulatedListWithIndexOutOfRange_NothingIsAdded();
+void InsertItem_LengthIncreasesByOne();
+void InsertMultipleItems_LengthIsSameAsAmountOfItems();
+void InsertItemAtLastIndexUsingLength_ItemIsTail();
 
 void RunTests() 
 {
+	RUN_TEST(GetFirstNode_GetsFirstNode);
+	RUN_TEST(GetSecondNode_GetsSecondNode);
+	RUN_TEST(GetNodeInTheMiddleOfList_GetsNode);
+	RUN_TEST(GetLastNodeByPassingInLengthMinusOne_GetsLastNode);
+	RUN_TEST(TryToGetNodeOutOfRange_GetsNullptr);
+	RUN_TEST(TryToGetNodeWithEmptyList_GetsNullptr);
+	RUN_TEST(TryToGetNodeWithNegativeNumber_GetsNullptr);
+	RUN_TEST(GetTwoDifferentNodes_AllNodesAreNotTheSame);
 	RUN_TEST(GetFirstItemUsingSubscriptOperator_GetsItem);
 	RUN_TEST(GetSecondItemUsingSubscriptOperator_GetsSecondItem);
+	RUN_TEST(GetItemInTheMiddleOfListUsingSubscriptOperator_GetsItem);
+	RUN_TEST(GetLastItemByPassingLengthMinusOneToSubscriptOperator_GetsLastItem);
+	RUN_TEST(OutOfRangeInSubscriptOperator_GetsNullptr);
+	RUN_TEST(UsingSubscriptOperatorWithEmptyList_GetsNullptr);
+	RUN_TEST(UsingSubscriptOperatorWithNegativeNumber_GetsNullptr);
+	RUN_TEST(UsingSubscriptOperator_AllItemsAreNotTheSame);
 	RUN_TEST(AddItemToList_ListContainsItem);
 	RUN_TEST(AddOneItemToList_ItemBecomesHead);
 	RUN_TEST(AddOneItemToList_ItemBecomesTail);
 	RUN_TEST(AddTwoItemsToList_FirstIsHeadSecondIsTail);
 	RUN_TEST(AddMultipleItemsToList_FirstlyAddedIsHeadLastlyAddedIsTail);
+	RUN_TEST(AddItem_LengthIncreasesByOne);
+	RUN_TEST(InsertItemIntoEmptyList_ItemIsHead);
+	RUN_TEST(InsertItemIntoEmptyList_ItemIsTail);
+	RUN_TEST(InsertItemAtIndexZero_ItemIsHead);
+	RUN_TEST(InsertItemAtLastIndex_ItemIsTail);
+	RUN_TEST(InsertItemAtIndexThenGetItemFromIndex_ItemAtIndexIsTheInsertedItem);
+	RUN_TEST(InsertItemIntoMiddleOfPopulatedList_AllItemsArePresent);
+	RUN_TEST(InsertItemIntoEmptyListWithIndexOutOfRange_NothingIsAdded);
+	RUN_TEST(InsertItemIntoPopulatedListWithIndexOutOfRange_NothingIsAdded);
+	RUN_TEST(InsertItem_LengthIncreasesByOne);
+	RUN_TEST(InsertMultipleItems_LengthIsSameAsAmountOfItems);
+	RUN_TEST(InsertItemAtLastIndexUsingLength_ItemIsTail);
 }
