@@ -1,11 +1,26 @@
+/**
+ * @brief An individual node/part of the LinkedList. It contains the value
+ * of the stored item and the pointer to the next node.
+ * 
+ * @tparam T The type of item we want to store in this node.
+ */
 template <class T>
 struct Node {
+    /**
+     * @brief The value of the node.
+     */
     T value;
+    /**
+     * @brief The pointer to the next node in the chain of nodes.
+     */
     Node* next = nullptr;
 };
 
-// TODO: DOCUMENT ALL OF THIS CODE!!!!
-
+/**
+ * @brief A dynamic list where items can be added during runtime.
+ * 
+ * @tparam T The type of item to be stored in this list.
+ */
 template <class T>
 class LinkedList {
 public:
@@ -96,7 +111,7 @@ public:
      * @param index The index of the item to be removed.
      * @return T The value of the removed item.
      */
-    T* RemoveAtIndex(size_t index) {
+    T* RemoveAtIndex(size_t index) { // TODO: Needs to be tested for memory leaks
         Node<T>* nodeToBeDeleted;
         if(index == 0) 
         {
@@ -160,7 +175,7 @@ public:
     /**
      * @brief Removes all items of the array and clears the memory.
      */
-    void Clear() { // TODO: Needs to be tested (step 5)
+    void Clear() {
         while(head != nullptr) {
             RemoveAtIndex(0);
         }
@@ -208,9 +223,9 @@ private:
     /**
      * @brief The first element of the list.
      */
-    Node<T>* head = nullptr; // TODO: Needs to be tested.
+    Node<T>* head = nullptr;
     /**
      * @brief The last element of the list.
      */
-    Node<T>* tail = nullptr; // TODO: Needs to be tested.
+    Node<T>* tail = nullptr;
 };
