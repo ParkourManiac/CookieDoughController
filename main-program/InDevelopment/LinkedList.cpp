@@ -12,7 +12,7 @@ public:
     /**
      * @brief The total length of the list.
      */
-    int length = 0; // TODO: Needs to be tested (step 4)
+    int length = 0;
 
     /**
      * @brief Add the item to the end of the list.
@@ -96,7 +96,7 @@ public:
      * @param index The index of the item to be removed.
      * @return T The value of the removed item.
      */
-    T* RemoveAtIndex(size_t index) { // TODO: Needs to be tested (step 3)
+    T* RemoveAtIndex(size_t index) {
         Node<T>* nodeToBeDeleted;
         if(index == 0) 
         {

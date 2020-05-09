@@ -51,6 +51,9 @@ void RemoveLastItemInList_NewTailsNextPointerIsNowNullptr();
 void RemoveOnlyItemInList_LengthIsZero();
 void RemoveItemInPopulatedList_LengthDecreasesByOne();
 void RemoveAllItemsInList_LengthIsZero();
+void ClearList_HeadIsNullptr();
+void ClearList_TailIsNullptr();
+void ClearList_LengthIsZero();
 
 void RunTests() 
 {
@@ -103,4 +106,7 @@ void RunTests()
 	RUN_TEST(RemoveOnlyItemInList_LengthIsZero);
 	RUN_TEST(RemoveItemInPopulatedList_LengthDecreasesByOne);
 	RUN_TEST(RemoveAllItemsInList_LengthIsZero);
+	RUN_TEST(ClearList_HeadIsNullptr);
+	RUN_TEST(ClearList_TailIsNullptr);
+	RUN_TEST(ClearList_LengthIsZero);
 }

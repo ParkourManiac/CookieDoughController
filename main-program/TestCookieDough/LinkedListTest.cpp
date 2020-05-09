@@ -570,3 +570,38 @@ void RemoveAllItemsInList_LengthIsZero() {
 
     ASSERT_TEST(list.length == 0);
 }
+
+void ClearList_HeadIsNullptr() {
+    LinkedList<int> list;
+    list.Add(1);
+    list.Add(2);
+    list.Add(3);
+
+    list.Clear();
+
+    ASSERT_TEST(list.head == nullptr);
+}
+
+void ClearList_TailIsNullptr() {
+    LinkedList<int> list;
+    list.Add(1);
+    list.Add(2);
+    list.Add(3);
+
+    list.Clear();
+
+    ASSERT_TEST(list.tail == nullptr);
+}
+
+void ClearList_LengthIsZero() {
+    LinkedList<int> list;
+    list.Add(1);
+    list.Add(2);
+    list.Add(3);
+
+    list.Clear();
+    
+    ASSERT_TEST(list.length == 0);
+}
+
+// TODO: void ClearList_AllMemoryIsFreed()
