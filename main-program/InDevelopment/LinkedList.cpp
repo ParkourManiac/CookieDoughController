@@ -45,7 +45,7 @@ public:
      * @param index The index in which the item should be inserted.
      * @param item The item to be inserted.
      */
-    void Insert(size_t index, T item) { // TODO: Needs to be tested (step 3)
+    void Insert(size_t index, T item) {
         Node<T>* newNode = new Node<T>();
         newNode->value = item;
 
@@ -63,7 +63,7 @@ public:
         } 
         else 
         {
-            Node<T>* precedingNode = GetNode(index - 1);
+            Node<T>* precedingNode = GetNodeAtIndex(index - 1);
 
             if(precedingNode != nullptr)
             {
@@ -96,7 +96,7 @@ public:
      * @param index The index of the item to be removed.
      * @return T The value of the removed item.
      */
-    T* removeAtIndex(size_t index) { // TODO: Needs to be tested (step 3)
+    T* RemoveAtIndex(size_t index) { // TODO: Needs to be tested (step 3)
         Node<T>* nodeToBeDeleted;
         if(index == 0) 
         {
@@ -121,7 +121,7 @@ public:
         } 
         else 
         {
-            Node<T>* precedingNode = GetNode(index - 1);
+            Node<T>* precedingNode = GetNodeAtIndex(index - 1);
 
             if(precedingNode != nullptr)
             {
@@ -129,18 +129,22 @@ public:
                 {
                     nodeToBeDeleted = precedingNode->next;
                     Node<T>* followingNode = nodeToBeDeleted->next;
-
                     precedingNode->next = followingNode;
+
+                    if(followingNode == nullptr) { // We just deleted the tail.
+                        tail = precedingNode;
+                    }
+
                 } 
                 else // we are one step past the end.
                 {
-                    // Throw an error..? (Out of range)
+                    // Throw error: Out of range.
                     return nullptr;
                 }
             } 
             else 
             {
-                // Throw an error..? (Out of range)
+                // Throw error: Out of range.
                 return nullptr;
             }
         }
@@ -150,7 +154,7 @@ public:
         delete(nodeToBeDeleted);
         length--;
 
-        return &valueOfDeleted;
+        return &valueOfDeleted; // TODO: Compiler warns this is a stack variable. This could either be fixed by throwing errors and returning a copy of the value. 2. This can be fixed by modifying a parameter reference instead of returning a pointer. 
     }
 
     /**
@@ -158,11 +162,17 @@ public:
      */
     void Clear() { // TODO: Needs to be tested (step 5)
         while(head != nullptr) {
-            removeAtIndex(0);
+            RemoveAtIndex(0);
         }
     }
 
-    Node<T>* GetNode(size_t idx)
+    /**
+     * @brief Retrieves the pointer to the Node at the specified index. 
+     * 
+     * @param idx The index of the node we want to retrieve.
+     * @return Node<T>* The node at the specified index.
+     */
+    Node<T>* GetNodeAtIndex(size_t idx)
     {
         if(head == nullptr) return nullptr; // Throw error: List is empty.
 
@@ -191,7 +201,7 @@ public:
      */
     T* operator[](size_t idx)
     {
-        return &GetNode(idx)->value;
+        return &GetNodeAtIndex(idx)->value;
     }
 
 private: 

@@ -35,6 +35,22 @@ void InsertItemIntoPopulatedListWithIndexOutOfRange_NothingIsAdded();
 void InsertItem_LengthIncreasesByOne();
 void InsertMultipleItems_LengthIsSameAsAmountOfItems();
 void InsertItemAtLastIndexUsingLength_ItemIsTail();
+void TryToRemoveItemOfEmptyList_ReturnsNullptr();
+void TryToRemoveItemOutOfRange_ReturnsNullptr();
+void RemovesSpecificItemFromList_ReturnsCorrectItem();
+void RemoveOnlyItemInList_ReturnsCorrectItem();
+void RemoveOnlyItemInList_HeadIsNullptr();
+void RemoveOnlyItemInList_TailIsNullptr();
+void RemoveFirstItemOfListWithTwoItems_SecondItemIsNowHead();
+void RemoveFirstItemOfListWithTwoItems_SecondItemIsStillTail();
+void RemoveItemInTheMiddleOfList_ItemFollowingTheRemovedItemNowOccupiesTheRemovedItemsIndex();
+void RemoveItemInTheMiddleOfList_TheRemovedItemIsNoLongerInTheListAtTheRemovedIndex();
+void RemoveItemInMiddleOfList_FollowingItemTakesRemovedItemsPosition();
+void RemoveLastItemInList_SecondLastItemIsNowTail();
+void RemoveLastItemInList_NewTailsNextPointerIsNowNullptr();
+void RemoveOnlyItemInList_LengthIsZero();
+void RemoveItemInPopulatedList_LengthDecreasesByOne();
+void RemoveAllItemsInList_LengthIsZero();
 
 void RunTests() 
 {
@@ -71,4 +87,20 @@ void RunTests()
 	RUN_TEST(InsertItem_LengthIncreasesByOne);
 	RUN_TEST(InsertMultipleItems_LengthIsSameAsAmountOfItems);
 	RUN_TEST(InsertItemAtLastIndexUsingLength_ItemIsTail);
+	RUN_TEST(TryToRemoveItemOfEmptyList_ReturnsNullptr);
+	RUN_TEST(TryToRemoveItemOutOfRange_ReturnsNullptr);
+	RUN_TEST(RemovesSpecificItemFromList_ReturnsCorrectItem);
+	RUN_TEST(RemoveOnlyItemInList_ReturnsCorrectItem);
+	RUN_TEST(RemoveOnlyItemInList_HeadIsNullptr);
+	RUN_TEST(RemoveOnlyItemInList_TailIsNullptr);
+	RUN_TEST(RemoveFirstItemOfListWithTwoItems_SecondItemIsNowHead);
+	RUN_TEST(RemoveFirstItemOfListWithTwoItems_SecondItemIsStillTail);
+	RUN_TEST(RemoveItemInTheMiddleOfList_ItemFollowingTheRemovedItemNowOccupiesTheRemovedItemsIndex);
+	RUN_TEST(RemoveItemInTheMiddleOfList_TheRemovedItemIsNoLongerInTheListAtTheRemovedIndex);
+	RUN_TEST(RemoveItemInMiddleOfList_FollowingItemTakesRemovedItemsPosition);
+	RUN_TEST(RemoveLastItemInList_SecondLastItemIsNowTail);
+	RUN_TEST(RemoveLastItemInList_NewTailsNextPointerIsNowNullptr);
+	RUN_TEST(RemoveOnlyItemInList_LengthIsZero);
+	RUN_TEST(RemoveItemInPopulatedList_LengthDecreasesByOne);
+	RUN_TEST(RemoveAllItemsInList_LengthIsZero);
 }
