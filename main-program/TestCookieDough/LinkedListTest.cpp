@@ -1,5 +1,6 @@
 #include "test.h"
-#include "../InDevelopment/LinkedList.cpp"
+#include "../lib/CookieDoughLibrary/LinkedList.h"
+#include "../lib/CookieDoughLibrary/LinkedList.cpp"
 
 void GetFirstNode_GetsFirstNode()
 {

@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <Key.h>
-
+#include <LinkedList.h>
+#include <LinkedList.cpp>
 
 // HEADER
+void LoadKeyMaps();
 void ConfigurePinsAsKeys();
 void CycleKeyMap();
 void ChangeKeyMap(int index);
@@ -11,31 +13,19 @@ void SendKeyInfo();
 void ExecuteSpecialCommands();
 
 // Public variables
-Key defaultKeyMap[4] = { // Key map WASD
-    {.pin = 2, .keyCode = 80},
-    {.pin = 3, .keyCode = 82},
-    {.pin = 4, .keyCode = 81},
-    {.pin = 5, .keyCode = 79},
+int amountOfCustomizableKeys = 4;
+
+Key defaultKeyMap[4] = { // Key map Arrow keys
+    {.pin = 2, .keyCode = 4},
+    {.pin = 3, .keyCode = 26},
+    {.pin = 4, .keyCode = 22},
+    {.pin = 5, .keyCode = 7},
 };
 
 Key* currentKeyMap = &defaultKeyMap[0]; // TODO: Continue converting things to pointers.
+int customKeyMapIndex = 0;
 
-Key* availableKeyMaps;
-
-Key keyMaps[2][4] = {
-    {   // Key map WASD
-        {.pin = 2, .keyCode = 80},
-        {.pin = 3, .keyCode = 82},
-        {.pin = 4, .keyCode = 81},
-        {.pin = 5, .keyCode = 79},
-    },
-    { // Key map Arrow keys
-        {.pin = 2, .keyCode = 4},
-        {.pin = 3, .keyCode = 26},
-        {.pin = 4, .keyCode = 22},
-        {.pin = 5, .keyCode = 7},
-    }
-};
+LinkedList<Key[4]> availableKeyMaps;
 
 SpecialKey specialKeys[1] = { // Should never change.
     {.pin = 12, .function = cycleKeyMap}
@@ -49,6 +39,7 @@ void setup()
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
 
+    LoadKeyMaps();
     ConfigurePinsAsKeys();
 }
 
@@ -59,11 +50,32 @@ void loop()
     SendKeyInfo();
 }
 
+
+void LoadKeyMaps() { // MOCKUP: TODO, change this into loading from memory.
+    Key keyMapWASD[4] = {   // Key map WASD
+            {.pin = 2, .keyCode = 80},
+            {.pin = 3, .keyCode = 82},
+            {.pin = 4, .keyCode = 81},
+            {.pin = 5, .keyCode = 79},
+    };
+        
+    Key keyMapArrows[4] = { // Key map Arrow keys
+            {.pin = 2, .keyCode = 4},
+            {.pin = 3, .keyCode = 26},
+            {.pin = 4, .keyCode = 22},
+            {.pin = 5, .keyCode = 7},
+    };
+
+    availableKeyMaps.Add(keyMapWASD);
+    availableKeyMaps.Add(keyMapArrows);
+}
+
 /**
  * @brief Configures pins marked as Key or SpecialKey to act as input pins with internal pullups.
  */
 void ConfigurePinsAsKeys() {
-    for(Key& key : keyMaps[currentKeyMapIndex]) {
+    for(int i = 0; i < amountOfCustomizableKeys; i++) {
+        Key key = currentKeyMap[i];
         pinMode(key.pin, INPUT_PULLUP);
     }
 
@@ -77,7 +89,7 @@ void ConfigurePinsAsKeys() {
  * 
  */
 void CycleKeyMap() {
-    ChangeKeyMap(currentKeyMapIndex + 1);
+    ChangeKeyMap(customKeyMapIndex + 1);
 }
 
 /**
@@ -86,8 +98,7 @@ void CycleKeyMap() {
  * @param index The index of the keymap to be switched to.
  */
 void ChangeKeyMap(int index) {
-    int length = sizeof(keyMaps) / sizeof(keyMaps[0]);
-    currentKeyMapIndex = index % length;
+    customKeyMapIndex = index % availableKeyMaps.length;
 
     ConfigurePinsAsKeys();
 }
@@ -98,7 +109,8 @@ void ChangeKeyMap(int index) {
  */
 void ReadPinValueForKeys()
 {
-    for(Key& key : keyMaps[currentKeyMapIndex]) {
+    for(int i = 0; i < amountOfCustomizableKeys; i++) {
+        Key key = currentKeyMap[i];
         key.value = !digitalRead(key.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
     }
 
@@ -112,7 +124,8 @@ void ReadPinValueForKeys()
  * 
  */
 void SendKeyInfo() { // TODO: Handle debounce.
-    for(Key& key : keyMaps[currentKeyMapIndex]) {
+    for(int i = 0; i < amountOfCustomizableKeys; i++) {
+        Key key = currentKeyMap[i];
         if (key.oldValue != key.value)
         {
             if (key.value)
