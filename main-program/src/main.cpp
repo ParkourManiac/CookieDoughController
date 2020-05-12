@@ -1,10 +1,13 @@
 #include <Arduino.h>
+#include <EEPROM.h>
+
 #include <Key.h>
 #include <LinkedList.h>
 #include <LinkedList.cpp>
 
 // HEADER
-void LoadKeyMaps();
+void SaveKeyMapsToMemory();
+void LoadKeyMapsFromMemory();
 void ConfigurePinsAsKeys();
 void CycleKeyMap();
 void ChangeKeyMap(Key *keyMap);
@@ -23,12 +26,12 @@ Key defaultKeyMap[normalKeyCount] = {
     {.pin = 5, .keyCode = 79},
 };
 
-SpecialKey specialKeys[2] = { // Should never change.
+SpecialKey specialKeys[2] = { 
     {.pin = 11, .function = cycleKeyMap},
-    {.pin = 12, .function = toggleDefaultKeyMap},
+    {.pin = 12, .function = toggleDefaultKeyMap}, // This one should never change.
 };
 
-Key *currentKeyMap = defaultKeyMap; // TODO: Continue converting things to pointers.
+Key *currentKeyMap = defaultKeyMap;
 int customKeyMapIndex = 0;
 LinkedList<Key *> availableKeyMaps;
 
@@ -40,7 +43,7 @@ void setup()
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
 
-    LoadKeyMaps();
+    LoadKeyMapsFromMemory();
     ConfigurePinsAsKeys();
 }
 
@@ -51,8 +54,12 @@ void loop()
     SendKeyInfo();
 }
 
-void LoadKeyMaps()
-{ // MOCKUP: TODO, change this into loading from memory.
+void SaveKeyMapsToMemory() {
+    
+}
+
+void LoadKeyMapsFromMemory() // MOCKUP: TODO, change this into loading from memory.
+{ 
     // Key keyMapArrows[normalKeyCount] = { // Key map Arrow keys
     //         {.pin = 2, .keyCode = 80},
     //         {.pin = 3, .keyCode = 82},
