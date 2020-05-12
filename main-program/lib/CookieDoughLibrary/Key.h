@@ -13,7 +13,7 @@ struct Key {
  */
 enum SpecialFunction {
     cycleKeyMap,  /**< Cycle between available key maps. */
-    useDefaultKeyMap /**< Switch to the default key map. */
+    toggleDefaultKeyMap /**< Toggle between the default and custom key map. */
 };
 
 /**
