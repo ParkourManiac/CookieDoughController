@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 
 /**
  * @brief Tests if a condition is successful.
@@ -16,6 +15,5 @@ printf(#functionName); \
 printf("\033[0m" "\n"); \
 functionName();
 
-void RunTests();
 void PrintResults();
 void Test(bool eval, const char* code, const char* file, unsigned long line);

@@ -1,5 +1,5 @@
 #include "test.h"
-#include "FrameworkTest.cpp"
+#include "testSuite.h"
 
 /**
  * @brief Stores useful information about a test result.
@@ -51,7 +51,10 @@ void PrintResults()
     printf(" out of ");
     printf("%d", currentTestIndex);
     printf(" tests passed.\n");
-    if(successfulTests == currentTestIndex) {
+    if(currentTestIndex == 0) {
+        printf("\033[1;35m""It's pretty empty over here... Writing a test in the testSuite.cpp file would fix that problem! ;D\n\n");
+        printf("\033[0m");
+    } else if(successfulTests == currentTestIndex) {
         printf("\033[1;32m""All tests PASSED!\n\n");
         printf("\033[0m");
     } else {
@@ -92,17 +95,4 @@ int main() {
     PrintResults();
 }
 
-/**
- * @brief A container for all tests to be run.
- * 
- * NOTE: Write your tests here! USE MACRO 'RUN_TEST(NameOfFunction)'. 
- * Example 'RUN_TEST(MyFunction)' will run the function 'void MyFunction();'.
- * 
- * TESTS: When writing a new test make sure to use the 'ASSERT_TEST(condition)' macro to properly run the test. 
- * Example 'void ExampleTest() { ASSERT_TEST((2+2) == 4) }'.
- */
-void RunTests() 
-{
-    RUN_TEST(AddTwoNumbers_SumIsCorrect);
-    RUN_TEST(AddTwoNumbers_TestFails);
-}
+// IMPORTANT: To run a test please run your function in the file testSuite.cpp RunTests() function using the macro RUN_TEST(functionName).
