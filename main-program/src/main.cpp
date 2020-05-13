@@ -26,7 +26,7 @@ Key defaultKeyMap[normalKeyCount] = {
     {.pin = 5, .keyCode = 79},
 };
 
-SpecialKey specialKeys[2] = { 
+SpecialKey specialKeys[2] = {
     {.pin = 11, .function = cycleKeyMap},
     {.pin = 12, .function = toggleDefaultKeyMap}, // This one should never change.
 };
@@ -37,12 +37,24 @@ LinkedList<Key *> availableKeyMaps;
 
 uint8_t buf[8] = {0}; // Keyboard report buffer.
 
+int eepromAdress = 0;
+
+struct dataPacket
+{
+    uint8_t stx = 0x02;
+    uint16_t payloadLength;
+    x crc;
+
+    uint8_t etx = 0x03;
+}
+
 // PROGRAM
 void setup()
 {
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
 
+    SaveKeyMapsToMemory(); // TODO: REMOVE THIS.
     LoadKeyMapsFromMemory();
     ConfigurePinsAsKeys();
 }
@@ -54,38 +66,35 @@ void loop()
     SendKeyInfo();
 }
 
-void SaveKeyMapsToMemory() {
-    
+void SaveKeyMapsToMemory() // TODO: Save something to EEPROM.
+{
+    // delay(1000);
+    // EEPROM.put(eepromAdress, (int)0);
+    // eepromAdress += sizeof(int);
+    // EEPROM.put(eepromAdress, (int)1337);
+    // eepromAdress += sizeof(int);
+    // EEPROM.put(eepromAdress, (int)32767);
+    // eepromAdress += sizeof(int);
+
+    delay(100);
 }
 
-void LoadKeyMapsFromMemory() // MOCKUP: TODO, change this into loading from memory.
-{ 
-    // Key keyMapArrows[normalKeyCount] = { // Key map Arrow keys
-    //         {.pin = 2, .keyCode = 80},
-    //         {.pin = 3, .keyCode = 82},
-    //         {.pin = 4, .keyCode = 81},
-    //         {.pin = 5, .keyCode = 79},
-    // };
+void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
+{
+    // EEPROM.length();
+    // EEPROM.get();
 
-    Key keyMapWASD[normalKeyCount] = {
-        // Key map WASD
-        {.pin = 2, .keyCode = 4},
-        {.pin = 3, .keyCode = 26},
-        {.pin = 4, .keyCode = 22},
-        {.pin = 5, .keyCode = 7},
-    };
+    unsigned int adress = 0;
+    do
+    {
+        int value;
+        EEPROM.get(adress, value);
+        Serial.println(value);
+        adress += sizeof(value);
+    } while (adress < EEPROM.length());
 
-    Key keyMapNumbers[normalKeyCount] = {
-        // Key map Arrow keys
-        {.pin = 2, .keyCode = 30},
-        {.pin = 3, .keyCode = 31},
-        {.pin = 4, .keyCode = 32},
-        {.pin = 5, .keyCode = 33},
-    };
-
-    // availableKeyMaps.Add(keyMapArrows);
-    availableKeyMaps.Add(keyMapWASD);
-    availableKeyMaps.Add(keyMapNumbers);
+    Serial.println("");
+    Serial.println(sizeof(12));
 }
 
 /**
