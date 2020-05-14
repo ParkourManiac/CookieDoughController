@@ -14,6 +14,7 @@ void ChangeKeyMap(Key *keyMap);
 void ReadPinValueForKeys();
 void SendKeyInfo();
 void ExecuteSpecialCommands();
+unsigned long eeprom_crc(void);
 
 // Public variables
 const int normalKeyCount = 4;
@@ -41,12 +42,12 @@ int eepromAdress = 0;
 
 struct dataPacket
 {
-    uint8_t stx = 0x02;
+    uint8_t stx = 0x3A;
     uint16_t payloadLength;
-    x crc;
+    const unsigned long crc; // uint32_t ?
 
-    uint8_t etx = 0x03;
-}
+    uint8_t etx = 0x3B;
+};
 
 // PROGRAM
 void setup()
@@ -94,7 +95,8 @@ void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
     } while (adress < EEPROM.length());
 
     Serial.println("");
-    Serial.println(sizeof(12));
+    Serial.println(eeprom_crc());
+    Serial.println(eeprom_crc() == 1337241923);
 }
 
 /**
@@ -245,6 +247,30 @@ void ExecuteSpecialCommands()
         specialKey.oldValue = specialKey.value;
     }
 }
+
+/**
+ * @brief Taken from the arduino page: https://www.arduino.cc/en/Tutorial/EEPROMCrc
+ */
+unsigned long eeprom_crc(void) {
+
+  const unsigned long crc_table[16] = {
+    0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
+    0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
+    0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
+    0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c
+  };
+
+  unsigned long crc = ~0L;
+
+  for (int index = 0 ; index < EEPROM.length()  ; ++index) {
+    crc = crc_table[(crc ^ EEPROM[index]) & 0x0f] ^ (crc >> 4);
+    crc = crc_table[(crc ^ (EEPROM[index] >> 4)) & 0x0f] ^ (crc >> 4);
+    crc = ~crc;
+  }
+  return crc;
+}
+
+
 
 // Miscellaneous
 
