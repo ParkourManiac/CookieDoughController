@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
+#include <DataPacket.h>
 #include <Key.h>
 #include <LinkedList.h>
 #include <LinkedList.cpp>
@@ -40,15 +41,6 @@ uint8_t buf[8] = {0}; // Keyboard report buffer.
 
 unsigned int eepromAdress = 0;
 
-struct DataPacket
-{
-    uint8_t stx = 0x02;
-    uint16_t payloadLength;
-    uint32_t crc;
-    uint8_t *payload;
-    uint8_t etx = 0x03;
-};
-
 // PROGRAM
 void setup()
 {
@@ -66,75 +58,6 @@ void loop()
     ExecuteSpecialCommands();
     SendKeyInfo();
 }
-/** TODO: DOUBLE CHECK THIS DESCRIPTION WHEN FINISHED IMPLEMENTING FUNCTIONALITY.
- * @brief Reads and parses a data packet from the eeprom memory.
- * 
- * @param eepromAdress The starting adress of the packet.
- * @param parsedPacket The output data packet.
- * @return true If we successfully read the data packet from memory.
- * @return false If we were unsuccessful in reading the data
- * packet from memory.
- */
-bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &parsedPacket) // TODO: Needs to be tested.
-{
-    // Verifera att eepromAdress == parsedPacket.stx
-    // Läs in paketets längd
-    // Läs in paketets checksumma crc
-    // Verifera att längden längden är rimlig ;)
-    // Läs in payloaden.
-    // Dubbelkolla att nästa byte är packet.etx.
-    // Beräkna crc och jämför med parcedPacket.crc.
-    // Skriv till parsedPacket.
-    // returnera true.
-    // Om något ovanstående inte stämmer, returnera false.
-}
-
-/**
- * @brief Saves a data packet to memory.
- * 
- * @param adress The destination adress for the packet to be written.
- * @param data The data/payload to saved.
- * @param sizeOfPacket The total size of the data packet.
- * @return true If we successfully wrote the data packet to memory.
- * @return false If we were unsuccessful in writing the data packet to memory
- */
-bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int &sizeOfPacket)// TODO: NEEDS TO BE TESTED
-{ 
-    sizeOfPacket = 0;
-    unsigned int initAdress = adress;
-
-    // Create packet.
-    DataPacket packet;
-    packet.payload = data;
-    packet.payloadLength = sizeof(packet.payload);
-    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-
-    // Write packet.
-    EEPROM.put(adress, packet.stx);
-    adress += sizeof(packet.stx);
-    EEPROM.put(adress, packet.payloadLength);
-    adress += sizeof(packet.payloadLength);
-    EEPROM.put(adress, packet.crc);
-    adress += sizeof(packet.crc);
-    for (unsigned int i = 0; i < packet.payloadLength; i++)
-    {
-        EEPROM.update(adress, packet.payload[i]);
-        adress += sizeof(packet.payload[i]);
-    }
-    EEPROM.put(adress, packet.etx);
-    adress += sizeof(packet.etx);
-
-    // Verify that package can be read from memory correctly.
-    DataPacket packetFromEeprom;
-    bool success = ParsePacketFromEEPROM(initAdress, packetFromEeprom);
-    if (!success || packet.crc != packetFromEeprom.crc)
-    {
-        return false; // Something went wrong when writing.
-    }
-
-    sizeOfPacket = adress - initAdress;
-    return true; // Package saved successfully.
-}
 
 void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
 {
@@ -146,27 +69,40 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
     // EEPROM.put(eepromAdress, (int)32767);
     // eepromAdress += sizeof(int);
 
-    delay(100);
+    // int data[8] = {1, 3, 3, 7, 4, 2, 0, 0};
+    // uint8_t* dataPtr = (uint8_t*) &data;
+    // unsigned int packetSize;
+    // if(!SavePacketToEEPROM(eepromAdress, dataPtr, sizeof(data), packetSize))
+    //     Serial.println("Failed to write data to memory!");
+    // eepromAdress += packetSize;
+
+    delay(1000);
 }
 
 void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
 {
-    // EEPROM.length();
-    // EEPROM.get();
+    DataPacket packet;
+    unsigned int packetSize;
 
-    unsigned int adress = 0;
-    do
+    if (ParsePacketFromEEPROM(0, packet, packetSize))
     {
-        int value;
-        EEPROM.get(adress, value);
-        Serial.println(value);
-        adress += sizeof(value);
-    } while (adress < EEPROM.length());
+        Serial.println(packet.stx, HEX);
+        Serial.println(packet.payloadLength);
+        Serial.println(packet.crc);
+        Serial.println("Data:");
+        for(int i = 0; i < 8; i ++) {
+            Serial.print(((int *)packet.payload)[i]);
+        }
+        Serial.println();
+        Serial.println(packet.etx, HEX);
+    }
+    else
+    {
+        Serial.println("Failed to read data from memory!");
+    }
 
-    char a[] = "Hello world";
-    Serial.println("");
-    Serial.println(CalculateCRC((uint8_t *)a, sizeof(a)));
-    Serial.println(73897685 == CalculateCRC((uint8_t *)a, sizeof(a)));
+    Serial.println();
+    Serial.println(packetSize);
 }
 
 /**
@@ -316,35 +252,6 @@ void ExecuteSpecialCommands()
 
         specialKey.oldValue = specialKey.value;
     }
-}
-
-/**
- * @brief Calculates a CRC checksum from the provided data.
- * NOTE: This is a modified version of the CRC function 
- * at arduino page: https://www.arduino.cc/en/Tutorial/EEPROMCrc
- * 
- * @param data The data that will be used to calculate the CRC checksum.
- * @param length The length of the data in bytes.
- * @return unsigned long Returns a CRC checksum.
- */
-unsigned long CalculateCRC(uint8_t *data, unsigned int length)
-{
-
-    const unsigned long crc_table[16] = {
-        0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
-        0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
-        0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
-        0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c};
-
-    unsigned long crc = ~0L;
-
-    for (unsigned int index = 0; index < length; ++index)
-    {
-        crc = crc_table[(crc ^ data[index]) & 0x0f] ^ (crc >> 4);
-        crc = crc_table[(crc ^ (data[index] >> 4)) & 0x0f] ^ (crc >> 4);
-        crc = ~crc;
-    }
-    return crc;
 }
 
 // Miscellaneous

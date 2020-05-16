@@ -151,7 +151,7 @@ Node<T>* LinkedList<T>::GetNodeAtIndex(size_t idx)
         return nullptr; // Throw error: List is empty.
 
     Node<T> *current = head;
-    int currentIndex = 0;
+    unsigned int currentIndex = 0;
 
     while (currentIndex < idx)
     {
