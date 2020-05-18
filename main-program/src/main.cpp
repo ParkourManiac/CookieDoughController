@@ -76,7 +76,7 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
     //         {.pin = 5, .keyCode = 79},
     // };
 
-    Key keyMapWASD[normalKeyCount] = {
+    static Key keyMapWASD[normalKeyCount] = {
         // Key map WASD
         {.pin = 2, .keyCode = 4},
         {.pin = 3, .keyCode = 26},
@@ -84,7 +84,7 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
         {.pin = 5, .keyCode = 7},
     };
 
-    Key keyMapNumbers[normalKeyCount] = {
+    static Key keyMapNumbers[normalKeyCount] = {
         // Key map Arrow keys
         {.pin = 2, .keyCode = 30},
         {.pin = 3, .keyCode = 31},
@@ -108,6 +108,22 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
     //     Serial.println("Failed to write data to memory!");
     // eepromAdress += packetSize;
 
+
+    // eepromAdress = 100;
+    // uint8_t *dataPtr = (uint8_t *)keyMapNumbers;
+    // unsigned int packetSize;
+    // if (!SavePacketToEEPROM(eepromAdress, dataPtr, sizeof(keyMapNumbers), packetSize))
+    //     Serial.println("Failed to write data to memory!");
+    // eepromAdress += packetSize;
+
+    // print data
+    // Serial.println("DATA:::::");
+    // for(int i = 0; i < sizeof(keyMapNumbers); i++) {
+    //     Serial.println(dataPtr[i], HEX);
+    // }
+    // Serial.println(":::::");
+
+
     delay(1000);
 }
 
@@ -115,24 +131,33 @@ void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
 {
     DataPacket packet;
     unsigned int packetSize;
+    static LinkedList<Key *> parsedKeyMaps;
+    static Key keyMap[normalKeyCount];
 
-    if (ParsePacketFromEEPROM(0, packet, packetSize))
+    delay(100);
+    if (ParsePacketFromEEPROM(100, packet, packetSize))
     {
-        Serial.println(packet.stx, HEX);
-        Serial.println(packet.payloadLength);
-        Serial.println(packet.crc);
+        // Serial.println(packet.stx, HEX);
+        // Serial.println(packet.payloadLength);
+        // Serial.println(packet.crc);
 
         Serial.println("Data:");
         // Convert
-        LinkedList<Key *> parsedKeyMaps;
-        unsigned int keyMapSize = sizeof(Key[normalKeyCount]);
-        unsigned int payloadSize = packet.payloadLength * sizeof(packet.payload[0]);
-        unsigned int amountOfKeymaps =  payloadSize / keyMapSize;
-        for (unsigned int i = 0; i < amountOfKeymaps; i++)
-        {
-            // (Key(*)[10]) means pointer to array of 10 keys.
-            parsedKeyMaps.Add(((Key(*)[normalKeyCount])packet.payload)[i]);
-        } // TODO: DET SKITER SIG HÄR.------------------------------------------------------------
+        // LinkedList<Key *> parsedKeyMaps;
+        // unsigned int keyMapSize = sizeof(Key[normalKeyCount]);
+        // unsigned int payloadSize = packet.payloadLength * sizeof(packet.payload[0]);
+        // unsigned int amountOfKeymaps =  payloadSize / keyMapSize;
+        // for (unsigned int i = 0; i < amountOfKeymaps; i++)
+        // {
+        //     // (Key(*)[10]) means pointer to array of 10 keys.
+        //     parsedKeyMaps.Add(((Key(*)[normalKeyCount])packet.payload)[i]);
+        // } // TODO: DET SKITER SIG HÄR.------------------------------------------------------------
+        
+        for(int i = 0; i < normalKeyCount; i++) {
+            keyMap[i] = ((Key*) packet.payload)[i];
+        }
+
+        parsedKeyMaps.Add(keyMap); // DET SKITER SIG HÄR! -------------------------------------------
 
         // print
         for (unsigned int i = 0; i < parsedKeyMaps.length; i++)
@@ -148,13 +173,21 @@ void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
             Serial.println("}");
         }
 
-        Serial.println();
-        Serial.println(packet.etx, HEX);
+        // Serial.println("DATA:::::");
+        // for(int i = 0; i < packet.payloadLength; i++) {
+        //     Serial.println(packet.payload[i], HEX);
+        // }
+        // Serial.println(":::::");
+
+        // Serial.println();
+        // Serial.println(packet.etx, HEX);
     }
     else
     {
         Serial.println("Failed to read data from memory!");
     }
+
+    Serial.println("Success");
 
     Serial.println();
     Serial.println(packetSize);
