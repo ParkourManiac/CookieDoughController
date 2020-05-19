@@ -33,6 +33,7 @@ void LinkedList<T>::Insert(size_t index, T item)
     {
         if (head == nullptr)
         {
+            delete(newNode);
             Add(item);
             return; // Will prevent adding to length twice.
         }

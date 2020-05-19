@@ -76,7 +76,7 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
     //         {.pin = 5, .keyCode = 79},
     // };
 
-    static Key keyMapWASD[normalKeyCount] = {
+    Key* keyMapWASD = new Key[normalKeyCount] {
         // Key map WASD
         {.pin = 2, .keyCode = 4},
         {.pin = 3, .keyCode = 26},
@@ -84,7 +84,7 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
         {.pin = 5, .keyCode = 7},
     };
 
-    static Key keyMapNumbers[normalKeyCount] = {
+    Key* keyMapNumbers = new Key[normalKeyCount] {
         // Key map Arrow keys
         {.pin = 2, .keyCode = 30},
         {.pin = 3, .keyCode = 31},
@@ -95,36 +95,51 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
     availableKeyMaps.Add(keyMapWASD);
     availableKeyMaps.Add(keyMapNumbers);
 
-    // Key serializedKeyMaps[availableKeyMaps.length][normalKeyCount];
-    // for(unsigned int i = 0; i < availableKeyMaps.length; i++) {
-    //     for(unsigned int j = 0; j < normalKeyCount; j++) {
-    //         serializedKeyMaps[i][j] = *(availableKeyMaps[i])[j];
-    //     }
+    unsigned int serializedSize = sizeof(Key[availableKeyMaps.length * normalKeyCount]);
+    Key* serializedKeyMaps = new Key[availableKeyMaps.length * normalKeyCount];
+    for(unsigned int i = 0; i < availableKeyMaps.length; i++) {
+        for(unsigned int j = 0; j < normalKeyCount; j++) {
+            unsigned int pos = i*normalKeyCount + j;
+            serializedKeyMaps[pos] = (*availableKeyMaps[i])[j];
+        }
+    }
+
+    // // PRINT DATA
+    // for(unsigned int i = 0; i < availableKeyMaps.length * normalKeyCount; i++) {
+    //     Serial.print("    .pin: ");
+    //     Serial.println(serializedKeyMaps[i].pin);
+    //     Serial.print("    .keyCode: ");
+    //     Serial.println(serializedKeyMaps[i].keyCode);
     // }
 
-    // uint8_t *dataPtr = (uint8_t *)&serializedKeyMaps;
+    // eepromAdress = 100;
+    // uint8_t *dataPtr = (uint8_t *)serializedKeyMaps;
     // unsigned int packetSize;
-    // if (!SavePacketToEEPROM(eepromAdress, dataPtr, sizeof(serializedKeyMaps), packetSize))
+    // delay(100);
+    // Serial.println("Stepping...");
+    // delay(100);
+    // if (!SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, packetSize))
     //     Serial.println("Failed to write data to memory!");
     // eepromAdress += packetSize;
 
-
-    eepromAdress = 100;
-    uint8_t *dataPtr = (uint8_t *)keyMapNumbers;
-    unsigned int packetSize;
-    if (!SavePacketToEEPROM(eepromAdress, dataPtr, sizeof(keyMapNumbers), packetSize))
-        Serial.println("Failed to write data to memory!");
-    eepromAdress += packetSize;
+    // eepromAdress = 100;
+    // uint8_t *dataPtr = (uint8_t *)keyMapNumbers;
+    // unsigned int packetSize;
+    // if (!SavePacketToEEPROM(eepromAdress, dataPtr, sizeof(keyMapNumbers), packetSize))
+    //     Serial.println("Failed to write data to memory!");
+    // eepromAdress += packetSize;
 
     // print data
     // Serial.println("DATA:::::");
-    // for(int i = 0; i < sizeof(keyMapNumbers); i++) {
+    // for(int i = 0; i < serializedSize; i++) {
     //     Serial.println(dataPtr[i], HEX);
     // }
     // Serial.println(":::::");
 
 
+    Serial.println("Successfully stored thingy to memory");
     delay(1000);
+    delete(serializedKeyMaps);
 }
 
 void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
@@ -132,9 +147,12 @@ void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
     DataPacket packet;
     unsigned int packetSize;
     static LinkedList<Key *> parsedKeyMaps;
-    static Key keyMap[normalKeyCount];
+    // static Key keyMap[normalKeyCount];
 
+    Serial.println("Began loading...");
     delay(100);
+
+
     if (ParsePacketFromEEPROM(100, packet, packetSize))
     {
         // Serial.println(packet.stx, HEX);
@@ -142,22 +160,29 @@ void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
         // Serial.println(packet.crc);
 
         Serial.println("Data:");
+        delay(100);
         // Convert
-        LinkedList<Key *> parsedKeyMaps;
         unsigned int keyMapSize = sizeof(Key[normalKeyCount]);
         unsigned int payloadSize = packet.payloadLength * sizeof(packet.payload[0]);
         unsigned int amountOfKeymaps =  payloadSize / keyMapSize;
         for (unsigned int i = 0; i < amountOfKeymaps; i++)
         {
-            // (Key(*)[10]) means pointer to array of 10 keys.
-            parsedKeyMaps.Add(((Key(*)[normalKeyCount])packet.payload)[i]);
-        } // TODO: DET SKITER SIG HÄR.------------------------------------------------------------
-        
-        // for(int i = 0; i < normalKeyCount; i++) {
-        //     keyMap[i] = ((Key*) packet.payload)[i];
-        // }
+            Key *loadedKeyMap = new Key[normalKeyCount];
+            delay(100);
+            Serial.println("Stepping...");
+            delay(100);
+            for(unsigned int j = 0; j < normalKeyCount; j++) {
+                unsigned int pos = i*normalKeyCount + j;
+                loadedKeyMap[j] = ((Key*)packet.payload)[pos];
 
-        // parsedKeyMaps.Add(keyMap); // DET SKITER SIG HÄR! -------------------------------------------
+                delay(100);
+                Serial.print("    .pin: ");
+                Serial.println(loadedKeyMap[j].pin);
+                Serial.print("    .keyCode: ");
+                Serial.println(loadedKeyMap[j].keyCode);
+                delay(100);
+            }
+        }
 
         // print
         for (unsigned int i = 0; i < parsedKeyMaps.length; i++)
@@ -187,10 +212,12 @@ void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
         Serial.println("Failed to read data from memory!");
     }
 
-    Serial.println("Success");
+    Serial.println("Finished loading.");
 
     Serial.println();
+    Serial.print("Packet size: ");
     Serial.println(packetSize);
+    delay(100);
 }
 
 /**
