@@ -76,7 +76,7 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
     //         {.pin = 5, .keyCode = 79},
     // };
 
-    Key* keyMapWASD = new Key[normalKeyCount] {
+    Key *keyMapWASD = new Key[normalKeyCount]{
         // Key map WASD
         {.pin = 2, .keyCode = 4},
         {.pin = 3, .keyCode = 26},
@@ -84,7 +84,7 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
         {.pin = 5, .keyCode = 7},
     };
 
-    Key* keyMapNumbers = new Key[normalKeyCount] {
+    Key *keyMapNumbers = new Key[normalKeyCount]{
         // Key map Arrow keys
         {.pin = 2, .keyCode = 30},
         {.pin = 3, .keyCode = 31},
@@ -96,10 +96,12 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
     availableKeyMaps.Add(keyMapNumbers);
 
     unsigned int serializedSize = sizeof(Key[availableKeyMaps.length * normalKeyCount]);
-    Key* serializedKeyMaps = new Key[availableKeyMaps.length * normalKeyCount];
-    for(unsigned int i = 0; i < availableKeyMaps.length; i++) {
-        for(unsigned int j = 0; j < normalKeyCount; j++) {
-            unsigned int pos = i*normalKeyCount + j;
+    Key *serializedKeyMaps = new Key[availableKeyMaps.length * normalKeyCount];
+    for (unsigned int i = 0; i < availableKeyMaps.length; i++)
+    {
+        for (unsigned int j = 0; j < normalKeyCount; j++)
+        {
+            unsigned int pos = i * normalKeyCount + j;
             serializedKeyMaps[pos] = (*availableKeyMaps[i])[j];
         }
     }
@@ -136,10 +138,9 @@ void SaveKeyMapsToMemory() // TODO: Save something to EEPROM using data packet.
     // }
     // Serial.println(":::::");
 
-
     Serial.println("Successfully stored thingy to memory");
     delay(1000);
-    delete(serializedKeyMaps);
+    delete (serializedKeyMaps);
 }
 
 void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
@@ -152,7 +153,6 @@ void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
     Serial.println("Began loading...");
     delay(100);
 
-
     if (ParsePacketFromEEPROM(100, packet, packetSize))
     {
         // Serial.println(packet.stx, HEX);
@@ -162,26 +162,27 @@ void LoadKeyMapsFromMemory() // TODO: Load availableKeyMaps from EEPROM.
         Serial.println("Data:");
         delay(100);
         // Convert
-        unsigned int keyMapSize = sizeof(Key[normalKeyCount]);
-        unsigned int payloadSize = packet.payloadLength * sizeof(packet.payload[0]);
-        unsigned int amountOfKeymaps =  payloadSize / keyMapSize;
-        for (unsigned int i = 0; i < amountOfKeymaps; i++)
-        {
-            Key *loadedKeyMap = new Key[normalKeyCount];
-            delay(100);
-            Serial.println("Stepping...");
-            delay(100);
-            for(unsigned int j = 0; j < normalKeyCount; j++) {
-                unsigned int pos = i*normalKeyCount + j;
-                loadedKeyMap[j] = ((Key*)packet.payload)[pos];
+        unsigned int amountOfKeys = packet.payloadLength / sizeof(Key);
+        Key payloadAsKeys[normalKeyCount * amountOfKeys];
 
-                delay(100);
-                Serial.print("    .pin: ");
-                Serial.println(loadedKeyMap[j].pin);
-                Serial.print("    .keyCode: ");
-                Serial.println(loadedKeyMap[j].keyCode);
-                delay(100);
+        for (unsigned int i = 0; i < amountOfKeys; i++)
+        {
+            payloadAsKeys[i] = ((Key *)packet.payload)[i];
+        }
+
+        Serial.println("First step");
+        delay(100);
+
+        unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
+        for (unsigned int i = 0; i < amountOfKeymaps; i++) // For each keymap
+        { 
+            Key *keyMap = new Key[normalKeyCount]; // BUG: FREEZES WHEN THIS VARIABLE IS USED.
+            for (unsigned int j = 0; j < normalKeyCount; j++) // For each key in a keymap
+            {
+                //keyMap[j] = Key {}; // <------
+                //keyMap[j] = payloadAsKeys[i*normalKeyCount + j];  // <------
             }
+            //parsedKeyMaps.Add(keyMap);  // <------
         }
 
         // print
