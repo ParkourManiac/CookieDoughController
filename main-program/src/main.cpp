@@ -7,7 +7,7 @@
 #include <LinkedList.cpp>
 
 // HEADER
-void SaveKeyMapsToMemory(LinkedList<Key *> &keyMapList);
+void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList);
 void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList);
 void ConfigurePinsAsKeys();
 void CycleKeyMap();
@@ -49,8 +49,17 @@ void setup()
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
 
-    // Key keys[normalKeyCount] = {};
-    // availableKeyMaps.Add(keys);
+    for(unsigned int i = 0; i < EEPROM.length(); i++) {
+        EEPROM.write(i, 0);
+    }
+
+    Key keys[normalKeyCount] = {
+        {.pin = 2, .keyCode = 4},
+        {.pin = 3, .keyCode = 26},
+        {.pin = 4, .keyCode = 22},
+        {.pin = 5, .keyCode = 7},
+    };
+    availableKeyMaps.Add(keys);
     SaveKeyMapsToMemory(availableKeyMaps);
 
     availableKeyMaps.Clear();
@@ -65,7 +74,7 @@ void loop()
     SendKeyInfo();
 }
 
-void SaveKeyMapsToMemory(LinkedList<Key *> &keyMapList) // TODO: Save something to EEPROM using data packet.
+void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Save something to EEPROM using data packet.
 {
     unsigned int serializedSize = sizeof(Key[keyMapList.length * normalKeyCount]);
     Key *serializedKeyMaps = new Key[keyMapList.length * normalKeyCount];
@@ -78,7 +87,17 @@ void SaveKeyMapsToMemory(LinkedList<Key *> &keyMapList) // TODO: Save something 
         }
     }
 
+
+
     uint8_t *dataPtr = (uint8_t *)serializedKeyMaps;
+    // DEBUG
+    Serial.print("Passed in: ");
+    for(int i = 0; i < serializedSize; i++) {
+        Serial.print(dataPtr[i], HEX);
+    }
+    Serial.println();
+    delay(100);
+    // DEBUG
     unsigned int packetSize;
     bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, packetSize);
     if (!success)
@@ -329,10 +348,10 @@ void ExecuteSpecialCommands()
 
 // Key setup WASD
 // Key keys[4] = {
-//     {.pin = 2, .keyCode = 4},
-//     {.pin = 3, .keyCode = 26},
-//     {.pin = 4, .keyCode = 22},
-//     {.pin = 5, .keyCode = 7},
+    // {.pin = 2, .keyCode = 4},
+    // {.pin = 3, .keyCode = 26},
+    // {.pin = 4, .keyCode = 22},
+    // {.pin = 5, .keyCode = 7},
 // };
 
 // Key setup Arrow keys

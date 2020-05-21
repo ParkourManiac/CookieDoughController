@@ -1,6 +1,7 @@
 #include "DataPacket.h"
 #include <stdlib.h>
 #include <EEPROM.h>
+#include <Arduino.h>
 
 // TODO: Needs to be tested.
 bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int &packetSize)
@@ -36,14 +37,25 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
     currentAdress += packet.payloadLength * sizeof(packet.payload[0]);
 
     // Fill adress of packet.payload with the payload from eeprom.
-    realloc(packet.payload, packet.payloadLength * sizeof(packet.payload[0])); // TODO: PREVENT THIS FROM BEING A MEMORY LEAK.
+    unsigned int payloadByteSize = packet.payloadLength * sizeof(packet.payload[0]);
+    packet.payload = (uint8_t*) realloc(packet.payload, payloadByteSize); // TODO: PREVENT THIS FROM BEING A MEMORY LEAK.
     for (unsigned int i = 0; i < packet.payloadLength; i++)
     {
         packet.payload[i] = payload[i];
     }
 
+    // DEBUG
+    Serial.print("Reading: ");
+    for(int i = 0; i < packet.payloadLength; i++) {
+        Serial.print(packet.payload[i], HEX);
+    }
+    Serial.println();
+    delay(100);
+    // DEBUG
+
     // If the crc of the payload is not equal to the crc of the packet...
-    if (packet.crc != CalculateCRC(packet.payload, packet.payloadLength))
+    unsigned long payloadCRC = CalculateCRC(packet.payload, packet.payloadLength);
+    if (packet.crc != payloadCRC)
         return false;
 
     // ETX: Move adress to end of packet and assign packet size.
@@ -78,6 +90,15 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     currentAdress += packet.payloadLength * sizeof(packet.payload[0]);
     EEPROM.put(currentAdress, packet.etx);
     currentAdress += sizeof(packet.etx);
+
+    // DEBUG
+    Serial.print("Putting down: ");
+    for(int i = 0; i < packet.payloadLength; i++) {
+        Serial.print(packet.payload[i], HEX);
+    }
+    Serial.println();
+    delay(100);
+    // DEBUG
 
     // Verify that package can be read from memory correctly.
     DataPacket packetFromEeprom;
