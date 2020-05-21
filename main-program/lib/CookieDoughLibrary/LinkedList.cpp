@@ -65,6 +65,7 @@ void LinkedList<T>::Insert(size_t index, T item)
         else
         {
             // Throw error: Out of range.
+            delete(newNode);
             return;
         }
     }
