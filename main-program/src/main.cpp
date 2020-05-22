@@ -15,7 +15,6 @@ void ChangeKeyMap(Key *keyMap);
 void ReadPinValueForKeys();
 void SendKeyInfo();
 void ExecuteSpecialCommands();
-unsigned long CalculateCRC(uint8_t *data, unsigned int length);
 
 // Public variables
 const int normalKeyCount = 4;
