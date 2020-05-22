@@ -35,7 +35,7 @@ SpecialKey specialKeys[2] = {
 
 Key *currentKeyMap = defaultKeyMap;
 int customKeyMapIndex = 0;
-LinkedList<Key *>* availableKeyMapsPtr = new LinkedList<Key*>();
+LinkedList<Key *> *availableKeyMapsPtr = new LinkedList<Key *>();
 LinkedList<Key *> availableKeyMaps = *availableKeyMapsPtr;
 //LinkedList<Key *> availableKeyMaps = *(new LinkedList<Key*>());
 
@@ -48,7 +48,8 @@ void setup()
 {
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
-    while(!Serial); // Wait for serial port to start.
+    while (!Serial)
+        ; // Wait for serial port to start.
 
     // for(unsigned int i = 0; i < EEPROM.length(); i++) {
     //     EEPROM.write(i, 0);
@@ -75,7 +76,13 @@ void loop()
     SendKeyInfo();
 }
 
-void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Save something to EEPROM using data packet.
+/**
+ * @brief Saves a list of keymaps to memory.
+ * Note: Will overwrite existing keymaps on the eeprom.
+ * 
+ * @param keyMapList The list of keymaps to be saved.
+ */
+void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be tested.
 {
     unsigned int serializedSize = sizeof(Key[keyMapList.length * normalKeyCount]);
     Key *serializedKeyMaps = new Key[keyMapList.length * normalKeyCount];
@@ -112,6 +119,12 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Save something t
     delete (serializedKeyMaps);
 }
 
+/**
+ * @brief Loads the list of keymaps from memory
+ * into the provided keyMap list.
+ * 
+ * @param keyMapList The keyMap list to store the result.
+ */
 void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
 {
     unsigned int packetAdress = 0;
@@ -344,10 +357,10 @@ void ExecuteSpecialCommands()
 
 // Key setup WASD
 // Key keys[4] = {
-    // {.pin = 2, .keyCode = 4},
-    // {.pin = 3, .keyCode = 26},
-    // {.pin = 4, .keyCode = 22},
-    // {.pin = 5, .keyCode = 7},
+// {.pin = 2, .keyCode = 4},
+// {.pin = 3, .keyCode = 26},
+// {.pin = 4, .keyCode = 22},
+// {.pin = 5, .keyCode = 7},
 // };
 
 // Key setup Arrow keys
