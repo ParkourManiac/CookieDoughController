@@ -28,7 +28,8 @@ Key defaultKeyMap[normalKeyCount] = {
     {.pin = 5, .keyCode = 79},
 };
 
-SpecialKey specialKeys[2] = {
+SpecialKey specialKeys[3] = {
+    {.pin = 10, .function = cycleKeyMap},
     {.pin = 11, .function = cycleKeyMap},
     {.pin = 12, .function = toggleDefaultKeyMap}, // This one should never change.
 };
@@ -322,6 +323,8 @@ void ExecuteSpecialCommands()
                 // Activate corresponding function
                 switch (specialKey.function)
                 {
+                // case toggleEditMode:
+                //     ToggleEditMode();
                 case cycleKeyMap:
                     CycleKeyMap();
                     break;
