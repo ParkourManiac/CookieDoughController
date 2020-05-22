@@ -102,15 +102,18 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     // // DEBUG
 
     // Verify that package can be read from memory correctly.
-    DataPacket packetFromEeprom;
+    DataPacket *dataPtr = new DataPacket();
+    DataPacket packetFromEeprom =  *dataPtr;
     unsigned int _sizeOfPacket;
     bool success = ParsePacketFromEEPROM(adress, packetFromEeprom, _sizeOfPacket);
     if (!success || packet.crc != packetFromEeprom.crc)
     {
+        delete(dataPtr);
         return false; // Something went wrong when writing.
     }
 
     packetSize = currentAdress - adress;
+    delete(dataPtr);
     return true; // Package saved successfully.
 }
 

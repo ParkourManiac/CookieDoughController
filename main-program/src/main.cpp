@@ -59,7 +59,7 @@ void setup()
     //     {.pin = 4, .keyCode = 22},
     //     {.pin = 5, .keyCode = 7},
     // };
-    // eepromAdress = 33;
+    // eepromAdress = 50;
     // availableKeyMaps.Add(keys);
     // SaveKeyMapsToMemory(availableKeyMaps);
 
@@ -158,7 +158,7 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
         keyMapList.Add(keyMap);
     }
 
-    // print
+    // // print
     // Serial.println("Data:");
     // for (unsigned int i = 0; i < keyMapList.length; i++)
     // {
