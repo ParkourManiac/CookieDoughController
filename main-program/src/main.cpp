@@ -48,19 +48,20 @@ void setup()
 {
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
+    while(!Serial); // Wait for serial port to start.
 
-    for(unsigned int i = 0; i < EEPROM.length(); i++) {
-        EEPROM.write(i, 0);
-    }
-
-    Key keys[normalKeyCount] = {
-        {.pin = 2, .keyCode = 4},
-        {.pin = 3, .keyCode = 26},
-        {.pin = 4, .keyCode = 22},
-        {.pin = 5, .keyCode = 7},
-    };
-    availableKeyMaps.Add(keys);
-    SaveKeyMapsToMemory(availableKeyMaps);
+    // for(unsigned int i = 0; i < EEPROM.length(); i++) {
+    //     EEPROM.write(i, 0);
+    // }
+    // Key keys[normalKeyCount] = {
+    //     {.pin = 2, .keyCode = 4},
+    //     {.pin = 3, .keyCode = 26},
+    //     {.pin = 4, .keyCode = 22},
+    //     {.pin = 5, .keyCode = 7},
+    // };
+    // eepromAdress = 33;
+    // availableKeyMaps.Add(keys);
+    // SaveKeyMapsToMemory(availableKeyMaps);
 
     availableKeyMaps.Clear();
     LoadKeyMapsFromMemory(availableKeyMaps);
@@ -87,17 +88,15 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Save something t
         }
     }
 
-
-
     uint8_t *dataPtr = (uint8_t *)serializedKeyMaps;
-    // DEBUG
-    Serial.print("Passed in: ");
-    for(int i = 0; i < serializedSize; i++) {
-        Serial.print(dataPtr[i], HEX);
-    }
-    Serial.println();
-    delay(100);
-    // DEBUG
+    // // DEBUG
+    // Serial.print("Passed in: ");
+    // for(int i = 0; i < serializedSize; i++) {
+    //     Serial.print(dataPtr[i], HEX);
+    // }
+    // Serial.println();
+    // delay(100);
+    // // DEBUG
     unsigned int packetSize;
     bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, packetSize);
     if (!success)
@@ -125,7 +124,7 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
         if (!foundPacket)
             packetAdress++;
 
-        if (packetAdress == EEPROM.length())
+        if (packetAdress >= EEPROM.length())
         {
             Serial.println("Failed to read data from memory!");
             delay(100);
@@ -135,10 +134,6 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
 
     Serial.println("Began loading...");
     delay(100);
-
-    // Serial.println(packet.stx, HEX);
-    // Serial.println(packet.payloadLength);
-    // Serial.println(packet.crc);
 
     // Convert
     unsigned int amountOfKeys = packet.payloadLength / sizeof(Key);
@@ -180,9 +175,6 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
     //     Serial.println(packet.payload[i], HEX);
     // }
     // Serial.println(":::::");
-
-    // Serial.println();
-    // Serial.println(packet.etx, HEX);
 
     Serial.println("Finished loading.");
 

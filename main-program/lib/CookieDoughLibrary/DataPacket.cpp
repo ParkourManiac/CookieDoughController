@@ -10,7 +10,8 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
     unsigned int currentAdress = adress;
 
     // STX: If the first value is not equal to the stx...
-    if (EEPROM.read(currentAdress) != packet.stx)
+    uint8_t stx = EEPROM.read(currentAdress);
+    if (stx != packet.stx)
         return false;
     currentAdress += sizeof(packet.stx);
 
@@ -44,14 +45,14 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
         packet.payload[i] = payload[i];
     }
 
-    // DEBUG
-    Serial.print("Reading: ");
-    for(int i = 0; i < packet.payloadLength; i++) {
-        Serial.print(packet.payload[i], HEX);
-    }
-    Serial.println();
-    delay(100);
-    // DEBUG
+    // // DEBUG
+    // Serial.print("Reading: ");
+    // for(int i = 0; i < packet.payloadLength; i++) {
+    //     Serial.print(packet.payload[i], HEX);
+    // }
+    // Serial.println();
+    // delay(100);
+    // // DEBUG
 
     // If the crc of the payload is not equal to the crc of the packet...
     unsigned long payloadCRC = CalculateCRC(packet.payload, packet.payloadLength);
@@ -91,14 +92,14 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     EEPROM.put(currentAdress, packet.etx);
     currentAdress += sizeof(packet.etx);
 
-    // DEBUG
-    Serial.print("Putting down: ");
-    for(int i = 0; i < packet.payloadLength; i++) {
-        Serial.print(packet.payload[i], HEX);
-    }
-    Serial.println();
-    delay(100);
-    // DEBUG
+    // // DEBUG
+    // Serial.print("Putting down: ");
+    // for(int i = 0; i < packet.payloadLength; i++) {
+    //     Serial.print(packet.payload[i], HEX);
+    // }
+    // Serial.println();
+    // delay(100);
+    // // DEBUG
 
     // Verify that package can be read from memory correctly.
     DataPacket packetFromEeprom;
