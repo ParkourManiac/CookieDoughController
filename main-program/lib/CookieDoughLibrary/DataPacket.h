@@ -16,37 +16,36 @@ struct DataPacket
 };
 
 /**
- * @brief Reads and parses a data packet from the eeprom memory.
+ * @brief Reads and parses a DataPacket from the eeprom.
  * 
- * @param adress The starting adress of the packet.
- * @param packet The output data packet.
- * @param packetSize The total size of the packet.
- * @return true If we successfully read the data packet from memory.
- * @return false If we were unsuccessful in reading the data
- * packet from memory.
+ * @param adress The eeprom adress of the DataPacket. (The adress of the stx).
+ * @param packet A DataPacket where the result will be stored.
+ * @param packetSize The complete size of the parsed DataPacket in bytes.
+ * @return true When we successfully parsed the DataPacket from the eeprom.
+ * @return false When the adress couldn't be parsed as a DataPacket.
  */
 bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int &packetSize);
 
 /**
- * @brief Saves a data packet to memory.
+ * @brief Saves the given data as a DataPacket on the eeprom.
+ * Note: The DataPacket is the wrapper for the data.
  * 
- * @param adress The EEPROM adress where the packet will be written to.
- * @param data The data/payload to be saved.
- * @param dataSize The size of the data/payload in bytes.
- * @param packetSize The total size of the data packet.
- * @return true If we successfully wrote the data packet to memory.
- * @return false If we were unsuccessful in writing the data packet to memory
+ * @param adress The eeprom adress where the DataPacket will be written to.
+ * @param data The information we want to store (in the form of an array of bytes).
+ * @param dataSize The size of the data in bytes.
+ * @param packetSize The complete size of the DataPacket that was saved to the eeprom.
+ * @return true When we successfully saved the DataPacket to the eeprom.
+ * @return false When we were unsuccessful in saving the DataPacket to the eeprom.
  */
 bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSize, unsigned int &packetSize);
 
 /**
- * @brief Calculates a CRC checksum from the provided data.
- * NOTE: This is a modified version of the CRC function 
- * at arduino page: https://www.arduino.cc/en/Tutorial/EEPROMCrc
+ * @brief Calculates a CRC checksum for the given array of bytes.
  * 
- * @param data The data that will be used to calculate the CRC checksum.
- * @param length The length of the data in bytes.
- * @return unsigned long Returns a CRC checksum.
+ * @param data The data we want to calculate a CRC checksum for.
+ * @param length The size of the data in bytes.
+ * (The length of the array of bytes).
+ * @return unsigned long Returns the CRC checksum calculated from the data.
  */
 unsigned long CalculateCRC(uint8_t *data, unsigned int length);
 
