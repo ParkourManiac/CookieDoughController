@@ -31,7 +31,7 @@ public:
     /**
      * @brief The total length of the list.
      */
-    unsigned int length = 0;
+    int length = 0;
 
     /**
      * @brief Add the item to the end of the list.
