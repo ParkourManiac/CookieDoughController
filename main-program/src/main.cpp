@@ -1,13 +1,14 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
+#include <DataPacket.h>
 #include <Key.h>
 #include <LinkedList.h>
 #include <LinkedList.cpp>
 
 // HEADER
-void SaveKeyMapsToMemory();
-void LoadKeyMapsFromMemory();
+void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList);
+void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList);
 void ConfigurePinsAsKeys();
 void CycleKeyMap();
 void ChangeKeyMap(Key *keyMap);
@@ -26,24 +27,44 @@ Key defaultKeyMap[normalKeyCount] = {
     {.pin = 5, .keyCode = 79},
 };
 
-SpecialKey specialKeys[2] = { 
+SpecialKey specialKeys[2] = {
     {.pin = 11, .function = cycleKeyMap},
     {.pin = 12, .function = toggleDefaultKeyMap}, // This one should never change.
 };
 
 Key *currentKeyMap = defaultKeyMap;
 int customKeyMapIndex = 0;
-LinkedList<Key *> availableKeyMaps;
+LinkedList<Key *> *availableKeyMapsPtr = new LinkedList<Key *>();
+LinkedList<Key *> availableKeyMaps = *availableKeyMapsPtr;
+//LinkedList<Key *> availableKeyMaps = *(new LinkedList<Key*>());
 
 uint8_t buf[8] = {0}; // Keyboard report buffer.
+
+unsigned int eepromAdress = 0;
 
 // PROGRAM
 void setup()
 {
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
+    while (!Serial)
+        ; // Wait for serial port to start.
 
-    LoadKeyMapsFromMemory();
+    // for(unsigned int i = 0; i < EEPROM.length(); i++) {
+    //     EEPROM.write(i, 0);
+    // }
+    // Key keys[normalKeyCount] = {
+    //     {.pin = 2, .keyCode = 4},
+    //     {.pin = 3, .keyCode = 26},
+    //     {.pin = 4, .keyCode = 22},
+    //     {.pin = 5, .keyCode = 7},
+    // };
+    // eepromAdress = 50;
+    // availableKeyMaps.Add(keys);
+    // SaveKeyMapsToMemory(availableKeyMaps);
+
+    availableKeyMaps.Clear();
+    LoadKeyMapsFromMemory(availableKeyMaps);
     ConfigurePinsAsKeys();
 }
 
@@ -54,38 +75,132 @@ void loop()
     SendKeyInfo();
 }
 
-void SaveKeyMapsToMemory() {
-    
+/**
+ * @brief Saves a list of keymaps to memory.
+ * Note: Will overwrite existing keymaps on the eeprom.
+ * 
+ * @param keyMapList The list of keymaps to be saved.
+ */
+void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be tested.
+{
+    unsigned int serializedSize = sizeof(Key[keyMapList.length * normalKeyCount]);
+    Key *serializedKeyMaps = new Key[keyMapList.length * normalKeyCount];
+    for (unsigned int i = 0; i < keyMapList.length; i++)
+    {
+        for (unsigned int j = 0; j < normalKeyCount; j++)
+        {
+            unsigned int pos = i * normalKeyCount + j;
+            serializedKeyMaps[pos] = (*keyMapList[i])[j];
+        }
+    }
+
+    uint8_t *dataPtr = (uint8_t *)serializedKeyMaps;
+    // // DEBUG
+    // Serial.print("Passed in: ");
+    // for(int i = 0; i < serializedSize; i++) {
+    //     Serial.print(dataPtr[i], HEX);
+    // }
+    // Serial.println();
+    // delay(100);
+    // // DEBUG
+    unsigned int packetSize;
+    bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, packetSize);
+    if (!success)
+    {
+        // Serial.println("Failed to write data to memory!");
+        // delay(100);
+
+        // TODO: Implement error code.
+    }
+    eepromAdress += packetSize;
+
+    delay(500);
+    delete (serializedKeyMaps);
 }
 
-void LoadKeyMapsFromMemory() // MOCKUP: TODO, change this into loading from memory.
-{ 
-    // Key keyMapArrows[normalKeyCount] = { // Key map Arrow keys
-    //         {.pin = 2, .keyCode = 80},
-    //         {.pin = 3, .keyCode = 82},
-    //         {.pin = 4, .keyCode = 81},
-    //         {.pin = 5, .keyCode = 79},
-    // };
+/**
+ * @brief Loads the list of keymaps from memory
+ * into the provided keyMap list.
+ * 
+ * @param keyMapList The keyMap list to store the result.
+ */
+void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
+{
+    unsigned int packetAdress = 0;
+    DataPacket *dataPtr = new DataPacket();
+    DataPacket packet = *dataPtr;
+    unsigned int packetSize;
 
-    Key keyMapWASD[normalKeyCount] = {
-        // Key map WASD
-        {.pin = 2, .keyCode = 4},
-        {.pin = 3, .keyCode = 26},
-        {.pin = 4, .keyCode = 22},
-        {.pin = 5, .keyCode = 7},
-    };
+    bool foundPacket = false;
+    do
+    {
+        foundPacket = ParsePacketFromEEPROM(packetAdress, packet, packetSize);
+        if (!foundPacket)
+            packetAdress++;
 
-    Key keyMapNumbers[normalKeyCount] = {
-        // Key map Arrow keys
-        {.pin = 2, .keyCode = 30},
-        {.pin = 3, .keyCode = 31},
-        {.pin = 4, .keyCode = 32},
-        {.pin = 5, .keyCode = 33},
-    };
+        if (packetAdress >= EEPROM.length())
+        {
+            // Serial.println("Failed to read data from memory!");
+            // delay(100);
 
-    // availableKeyMaps.Add(keyMapArrows);
-    availableKeyMaps.Add(keyMapWASD);
-    availableKeyMaps.Add(keyMapNumbers);
+            // TODO: Implement error code.
+            return;
+        }
+    } while (!foundPacket && packetAdress < EEPROM.length());
+
+    // Serial.println("Began loading...");
+    // delay(100);
+
+    // Convert
+    unsigned int amountOfKeys = packet.payloadLength / sizeof(Key);
+    Key payloadAsKeys[normalKeyCount * amountOfKeys];
+    for (unsigned int i = 0; i < amountOfKeys; i++)
+    {
+        payloadAsKeys[i] = ((Key *)packet.payload)[i];
+    }
+
+    unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
+    for (unsigned int i = 0; i < amountOfKeymaps; i++) // For each keymap
+    {
+        Key *keyMap = new Key[normalKeyCount];
+        for (unsigned int j = 0; j < normalKeyCount; j++) // For each key in a keymap
+        {
+            keyMap[j] = payloadAsKeys[i * normalKeyCount + j];
+        }
+        keyMapList.Add(keyMap);
+    }
+
+    // // print
+    // Serial.println("Data:");
+    // for (unsigned int i = 0; i < keyMapList.length; i++)
+    // {
+    //     Serial.println("{");
+    //     for (unsigned int j = 0; j < normalKeyCount; j++)
+    //     {
+    //         Serial.print("    .pin: ");
+    //         Serial.println((*keyMapList[i])[j].pin);
+    //         Serial.print("    .keyCode: ");
+    //         Serial.println((*keyMapList[i])[j].keyCode);
+    //     }
+    //     Serial.println("}");
+    // }
+    // delay(100);
+
+    // Serial.println("DATA:::::");
+    // for(int i = 0; i < packet.payloadLength; i++) {
+    //     Serial.println(packet.payload[i], HEX);
+    // }
+    // Serial.println(":::::");
+
+    // Serial.println("Finished loading.");
+
+    // Serial.println();
+    // Serial.print("Packet size: ");
+    // Serial.println(packetSize);
+    // delay(100);
+
+    eepromAdress = packetAdress + packetSize;
+    delete (dataPtr);
 }
 
 /**
@@ -241,10 +356,10 @@ void ExecuteSpecialCommands()
 
 // Key setup WASD
 // Key keys[4] = {
-//     {.pin = 2, .keyCode = 4},
-//     {.pin = 3, .keyCode = 26},
-//     {.pin = 4, .keyCode = 22},
-//     {.pin = 5, .keyCode = 7},
+// {.pin = 2, .keyCode = 4},
+// {.pin = 3, .keyCode = 26},
+// {.pin = 4, .keyCode = 22},
+// {.pin = 5, .keyCode = 7},
 // };
 
 // Key setup Arrow keys
