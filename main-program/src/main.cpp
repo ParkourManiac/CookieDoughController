@@ -15,6 +15,7 @@ void ChangeKeyMap(Key *keyMap);
 void ReadPinValueForKeys();
 void SendKeyInfo();
 void ExecuteSpecialCommands();
+void debounceRead(Key& key);
 
 // Public variables
 const int normalKeyCount = 4;
@@ -49,7 +50,9 @@ void setup()
     Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
     while (!Serial)
-        ; // Wait for serial port to start.
+    {
+        // Wait for serial port to start.
+    }
 
     // for(unsigned int i = 0; i < EEPROM.length(); i++) {
     //     EEPROM.write(i, 0);
@@ -91,6 +94,8 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be test
         for (unsigned int j = 0; j < normalKeyCount; j++)
         {
             unsigned int pos = i * normalKeyCount + j;
+            // TODO: maybe we need to reset the key value and old value before saving?
+            // Maybe we should break apart {key.value, key.oldValue} from {key.pin, key.keycode}?
             serializedKeyMaps[pos] = (*keyMapList[i])[j];
         }
     }
@@ -277,7 +282,8 @@ void ReadPinValueForKeys()
     for (int i = 0; i < normalKeyCount; i++)
     {
         Key &key = currentKeyMap[i];
-        key.value = !digitalRead(key.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+        //key.value = !digitalRead(key.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+        debounceRead(key);
     }
 
     for (SpecialKey &specialKey : specialKeys)
@@ -335,8 +341,9 @@ void ExecuteSpecialCommands()
                 // Activate corresponding function
                 switch (specialKey.function)
                 {
-                // case toggleEditMode:
-                //     ToggleEditMode();
+                case toggleEditMode:
+                    // ToggleEditMode();
+                    break;
                 case cycleKeyMap:
                     CycleKeyMap();
                     break;
@@ -353,6 +360,48 @@ void ExecuteSpecialCommands()
 
         specialKey.oldValue = specialKey.value;
     }
+}
+
+
+/**
+ * @brief Reads and updates the value of a
+ * keys pin with the debounced input.
+ * 
+ * @param key The key to be updated.
+ */
+void debounceRead(Key& key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <50ms the input would not be registered.
+{
+    unsigned int debounceDelay = 25; // TODO: This balance needs to be play tested.
+
+     // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+    bool pinState = !digitalRead(key.pin);
+
+    if (pinState != key.oldPinState) // If the pin state has changed...
+    {
+        key.lastDebounceTime = millis();
+        // Print debounce catches.
+        //Serial.print("he");
+    }
+
+    unsigned long timePassedSinceDebounce = (millis() - key.lastDebounceTime);
+    // If we've waited long enough since last debounce...
+    if (timePassedSinceDebounce > debounceDelay) 
+    {
+        // And if the old state is not already the new state...
+        if(pinState != key.value) 
+        {
+            key.value = pinState;
+            
+            // Print debounce catches.
+            // if(key.value) {
+            //     Serial.print(" hej");
+            // } else {Serial.print(" hå");}
+            // Serial.println();
+        }
+    }
+
+    
+    key.oldPinState = pinState;
 }
 
 // Miscellaneous

@@ -9,6 +9,8 @@ struct Key {
     int keyCode;
     bool value;
     bool oldValue;
+    unsigned long lastDebounceTime;
+    bool oldPinState;
 };
 
 /**
