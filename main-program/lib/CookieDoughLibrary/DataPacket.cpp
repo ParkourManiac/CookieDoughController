@@ -4,6 +4,15 @@
 #include <Arduino.h>
 
 // TODO: Needs to be tested.
+/**
+ * @brief Parses a DataPacket from the eeprom.
+ * 
+ * @param adress The eeprom adress of the DataPackets start position.
+ * @param packet The DataPacket where the result will be stored.
+ * @param packetSize The complete size of the parsed DataPacket in bytes.
+ * @return true When we successfully parsed the DataPacket from the eeprom.
+ * @return false When the adress couldn't be parsed as a DataPacket.
+ */
 bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int &packetSize)
 {
     packetSize = 0;
@@ -66,6 +75,17 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
 }
 
 // TODO: NEEDS TO BE TESTED
+/**
+ * @brief Saves the given data as a DataPacket on the eeprom.
+ * Note: The DataPacket is the wrapper for the data.
+ * 
+ * @param adress The adress where we want to save the DataPacket.
+ * @param data The information we want to store (in the form of an array of bytes).
+ * @param dataSize The size of the data in bytes.
+ * @param packetSize The complete size of the DataPacket that was saved to the eeprom.
+ * @return true When we successfully saved the DataPacket to the eeprom.
+ * @return false When we were unsuccessful in saving the DataPacket to the eeprom.
+ */
 bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSize, unsigned int &packetSize) 
 {
     packetSize = 0;
@@ -117,6 +137,14 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     return true; // Package saved successfully.
 }
 
+/**
+ * @brief Calculates a CRC for the given array of bytes.
+ * 
+ * @param data The data we want to generate a CRC for.
+ * @param length The size of the data in bytes.
+ * (The length of the array of bytes).
+ * @return unsigned long Returns the CRC generated from the data.
+ */
 unsigned long CalculateCRC(uint8_t *data, unsigned int length)
 {
 
