@@ -33,6 +33,7 @@ void LinkedList<T>::Insert(size_t index, T item)
     {
         if (head == nullptr)
         {
+            delete(newNode);
             Add(item);
             return; // Will prevent adding to length twice.
         }
@@ -64,6 +65,7 @@ void LinkedList<T>::Insert(size_t index, T item)
         else
         {
             // Throw error: Out of range.
+            delete(newNode);
             return;
         }
     }
@@ -151,7 +153,7 @@ Node<T>* LinkedList<T>::GetNodeAtIndex(size_t idx)
         return nullptr; // Throw error: List is empty.
 
     Node<T> *current = head;
-    int currentIndex = 0;
+    unsigned int currentIndex = 0;
 
     while (currentIndex < idx)
     {

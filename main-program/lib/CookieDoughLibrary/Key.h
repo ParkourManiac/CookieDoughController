@@ -1,3 +1,6 @@
+#ifndef KEY_H
+#define KEY_H
+
 /**
  * @brief Used to setup a pin to behave as a keyboard key.
  */
@@ -25,3 +28,5 @@ struct SpecialKey {
     bool value;
     bool oldValue;
 };
+
+#endif
