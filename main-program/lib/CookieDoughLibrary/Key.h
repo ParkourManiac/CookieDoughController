@@ -15,6 +15,7 @@ struct Key {
  * @brief Used to specify the functionality of a SpecialKey.
  */
 enum SpecialFunction {
+    toggleEditMode,  /**< Toggle between edit (keymap) mode and controller mode. */
     cycleKeyMap,  /**< Cycle between available key maps. */
     toggleDefaultKeyMap /**< Toggle between the default and custom key map. */
 };
