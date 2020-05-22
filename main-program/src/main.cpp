@@ -101,8 +101,10 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Save something t
     bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, packetSize);
     if (!success)
     {
-        Serial.println("Failed to write data to memory!");
-        delay(100);
+        // Serial.println("Failed to write data to memory!");
+        // delay(100);
+
+        // TODO: Implement error code.
     }
     eepromAdress += packetSize;
 
@@ -126,14 +128,16 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
 
         if (packetAdress >= EEPROM.length())
         {
-            Serial.println("Failed to read data from memory!");
-            delay(100);
+            // Serial.println("Failed to read data from memory!");
+            // delay(100);
+
+            // TODO: Implement error code.
             return;
         }
     } while (!foundPacket && packetAdress < EEPROM.length());
 
-    Serial.println("Began loading...");
-    delay(100);
+    // Serial.println("Began loading...");
+    // delay(100);
 
     // Convert
     unsigned int amountOfKeys = packet.payloadLength / sizeof(Key);
@@ -155,20 +159,20 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
     }
 
     // print
-    Serial.println("Data:");
-    for (unsigned int i = 0; i < keyMapList.length; i++)
-    {
-        Serial.println("{");
-        for (unsigned int j = 0; j < normalKeyCount; j++)
-        {
-            Serial.print("    .pin: ");
-            Serial.println((*keyMapList[i])[j].pin);
-            Serial.print("    .keyCode: ");
-            Serial.println((*keyMapList[i])[j].keyCode);
-        }
-        Serial.println("}");
-    }
-    delay(100);
+    // Serial.println("Data:");
+    // for (unsigned int i = 0; i < keyMapList.length; i++)
+    // {
+    //     Serial.println("{");
+    //     for (unsigned int j = 0; j < normalKeyCount; j++)
+    //     {
+    //         Serial.print("    .pin: ");
+    //         Serial.println((*keyMapList[i])[j].pin);
+    //         Serial.print("    .keyCode: ");
+    //         Serial.println((*keyMapList[i])[j].keyCode);
+    //     }
+    //     Serial.println("}");
+    // }
+    // delay(100);
 
     // Serial.println("DATA:::::");
     // for(int i = 0; i < packet.payloadLength; i++) {
@@ -176,12 +180,12 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
     // }
     // Serial.println(":::::");
 
-    Serial.println("Finished loading.");
+    // Serial.println("Finished loading.");
 
-    Serial.println();
-    Serial.print("Packet size: ");
-    Serial.println(packetSize);
-    delay(100);
+    // Serial.println();
+    // Serial.print("Packet size: ");
+    // Serial.println(packetSize);
+    // delay(100);
 
     eepromAdress = packetAdress + packetSize;
     delete (dataPtr);
