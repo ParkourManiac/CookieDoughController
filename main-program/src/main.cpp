@@ -15,30 +15,29 @@ void ChangeKeyMap(Key *keyMap);
 void ReadPinValueForKeys();
 void SendKeyInfo();
 void ExecuteSpecialCommands();
-void debounceRead(Key& key);
+void debounceRead(Key &key);
 
 // Public variables
 const int normalKeyCount = 4;
 
 Key defaultKeyMap[normalKeyCount] = {
     // Key map Arrow keys
-    {.pin = 2, .keyCode = 80},
-    {.pin = 3, .keyCode = 82},
-    {.pin = 4, .keyCode = 81},
-    {.pin = 5, .keyCode = 79},
+    Key(2, 80),
+    Key(3, 82),
+    Key(4, 81),
+    Key(5, 79),
 };
 
 SpecialKey specialKeys[3] = {
-    {.pin = 10, .function = cycleKeyMap},
-    {.pin = 11, .function = cycleKeyMap},
-    {.pin = 12, .function = toggleDefaultKeyMap}, // This one should never change.
+    SpecialKey(10, cycleKeyMap),
+    SpecialKey(11, cycleKeyMap),
+    SpecialKey(12, toggleDefaultKeyMap), // This one should never change.
 };
 
 Key *currentKeyMap = defaultKeyMap;
 int customKeyMapIndex = 0;
 LinkedList<Key *> *availableKeyMapsPtr = new LinkedList<Key *>();
 LinkedList<Key *> availableKeyMaps = *availableKeyMapsPtr;
-//LinkedList<Key *> availableKeyMaps = *(new LinkedList<Key*>());
 
 uint8_t buf[8] = {0}; // Keyboard report buffer.
 
@@ -70,6 +69,8 @@ void setup()
     availableKeyMaps.Clear();
     LoadKeyMapsFromMemory(availableKeyMaps);
     ConfigurePinsAsKeys();
+
+    
 }
 
 void loop()
@@ -96,6 +97,7 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be test
             unsigned int pos = i * normalKeyCount + j;
             // TODO: maybe we need to reset the key value and old value before saving?
             // Maybe we should break apart {key.value, key.oldValue} from {key.pin, key.keycode}?
+
             serializedKeyMaps[pos] = (*keyMapList[i])[j];
         }
     }
@@ -245,9 +247,13 @@ void CycleKeyMap()
     int nextIndex = (isDefault) ? customKeyMapIndex : customKeyMapIndex + 1;
 
     customKeyMapIndex = nextIndex % availableKeyMaps.length;
-    Key *nextKeyMap = *(availableKeyMaps[customKeyMapIndex]);
+    Key **nextKeyMapPtr = availableKeyMaps[customKeyMapIndex];
 
-    ChangeKeyMap(nextKeyMap);
+    if (nextKeyMapPtr != nullptr)
+    {
+        Key *nextKeyMap = *(nextKeyMapPtr);
+        ChangeKeyMap(nextKeyMap);
+    }
 }
 
 /**
@@ -267,17 +273,22 @@ void ChangeKeyMap(Key *keyMap)
  */
 void ToggleDefaultKeyMap()
 {
-    if (currentKeyMap != defaultKeyMap)
+    if (currentKeyMap != defaultKeyMap) {
         ChangeKeyMap(defaultKeyMap);
-    else
-        ChangeKeyMap(*(availableKeyMaps[customKeyMapIndex]));
+    }
+    else {
+        Key **keyMapPtr = availableKeyMaps[customKeyMapIndex]; 
+        if(keyMapPtr != nullptr) {
+            ChangeKeyMap(*(keyMapPtr));
+        }
+    }
 }
 
 /**
  * @brief Reads and updates the pin values of
  *  the current keymap and special keys.
  */
-void ReadPinValueForKeys()
+void ReadPinValueForKeys() // TODO: Fix debouncer for special keys.
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -286,7 +297,7 @@ void ReadPinValueForKeys()
         debounceRead(key);
     }
 
-    for (SpecialKey &specialKey : specialKeys)
+    for (SpecialKey &specialKey : specialKeys) // TODO: Handle debounce.
     {
         specialKey.value = !digitalRead(specialKey.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
     }
@@ -296,7 +307,7 @@ void ReadPinValueForKeys()
  * @brief Writes the keypress events to the buffer and sends them to the computer. 
  */
 void SendKeyInfo()
-{ // TODO: Handle debounce.
+{
     for (int i = 0; i < normalKeyCount; i++)
     {
         Key &key = currentKeyMap[i];
@@ -329,7 +340,8 @@ void SendKeyInfo()
  * @brief Executes the corresponding special function when a special key is pressed.
  */
 void ExecuteSpecialCommands()
-{ // TODO: Handle debounce.
+{
+
     for (SpecialKey &specialKey : specialKeys)
     {
         if (specialKey.oldValue != specialKey.value)
@@ -342,7 +354,7 @@ void ExecuteSpecialCommands()
                 switch (specialKey.function)
                 {
                 case toggleEditMode:
-                    // ToggleEditMode();
+                    //ToggleEditMode();
                     break;
                 case cycleKeyMap:
                     CycleKeyMap();
@@ -362,18 +374,17 @@ void ExecuteSpecialCommands()
     }
 }
 
-
 /**
  * @brief Reads and updates the value of a
  * keys pin with the debounced input.
  * 
  * @param key The key to be updated.
  */
-void debounceRead(Key& key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <50ms the input would not be registered.
+void debounceRead(Key &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <50ms the input would not be registered.
 {
     unsigned int debounceDelay = 25; // TODO: This balance needs to be play tested.
 
-     // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+    // Invert input signal. Pullup is active low. 1 = off. 0 = on.
     bool pinState = !digitalRead(key.pin);
 
     if (pinState != key.oldPinState) // If the pin state has changed...
@@ -385,13 +396,13 @@ void debounceRead(Key& key) // TODO: This causes a slight input delay. Consider 
 
     unsigned long timePassedSinceDebounce = (millis() - key.lastDebounceTime);
     // If we've waited long enough since last debounce...
-    if (timePassedSinceDebounce > debounceDelay) 
+    if (timePassedSinceDebounce > debounceDelay)
     {
         // And if the old state is not already the new state...
-        if(pinState != key.value) 
+        if (pinState != key.value)
         {
             key.value = pinState;
-            
+
             // Print debounce catches.
             // if(key.value) {
             //     Serial.print(" hej");
@@ -400,7 +411,6 @@ void debounceRead(Key& key) // TODO: This causes a slight input delay. Consider 
         }
     }
 
-    
     key.oldPinState = pinState;
 }
 
