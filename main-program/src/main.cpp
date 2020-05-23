@@ -18,6 +18,7 @@ void ExecuteSpecialCommands();
 void ToggleEditMode();
 void ResetEditMode();
 void EditMode();
+void SignalLedEditMode();
 void debounceRead(IPinState &key);
 
 // Public variables
@@ -47,10 +48,16 @@ uint8_t buf[8] = {0}; // Keyboard report buffer.
 unsigned int eepromAdress = 0;
 
 bool editmode = false;
-Key *editmodeSelectedKey;
+Key *editmodeSelectedKey = nullptr;
 int editmodeKeysPressed = 0;
 int editmodeKeyCode = 0;
-bool editmodeShouldAddValue;
+bool editmodeShouldAddValue = false;
+
+int editmodeBlinksPerSignal = 3;
+bool editmodeLedIsOn = false;
+unsigned long editmodeNextBlinkCycle = 0;
+unsigned long editmodeNextBlinkCycleOff = 0;
+int editmodeCurrentBlink = 0;
 
 // PROGRAM
 void setup()
@@ -400,19 +407,25 @@ void ToggleEditMode()
     if (currentKeyMap == defaultKeyMap)
         return;
 
-
     editmode = !editmode;
-    if (editmode)
-    { 
-        // Reset editmode before it starts.
-        ResetEditMode();
-    }
+
+    ResetEditMode();
 }
 
-void ResetEditMode() {
+void ResetEditMode()
+{
+    // Reset editmode
     editmodeSelectedKey = nullptr;
     editmodeKeysPressed = 0;
     editmodeKeyCode = 0;
+    editmodeShouldAddValue = false;
+
+    // Reset led signal
+    editmodeNextBlinkCycle = 0;
+    editmodeNextBlinkCycleOff = 0;
+    editmodeCurrentBlink = 0;
+    digitalWrite(LED_BUILTIN, LOW);
+    editmodeLedIsOn = false;
 }
 
 void EditMode()
@@ -429,12 +442,12 @@ void EditMode()
                 // Keypress
                 editmodeKeysPressed += 1;
 
-                if(editmodeSelectedKey == nullptr) 
+                if (editmodeSelectedKey == nullptr)
                 {
                     editmodeSelectedKey = &key;
                 }
 
-                if(!editmodeShouldAddValue)
+                if (!editmodeShouldAddValue)
                 {
                     editmodeShouldAddValue = true;
                 }
@@ -444,19 +457,19 @@ void EditMode()
                 digitalWrite(LED_BUILTIN, LOW);
 
                 // Keyrelease
-                if(editmodeSelectedKey != nullptr) 
+                if (editmodeSelectedKey != nullptr)
                 {
-                    if(editmodeShouldAddValue) 
+                    if (editmodeShouldAddValue)
                     {
                         editmodeShouldAddValue = false;
                         // If more than one key was held down when letting this one go...
-                        if(editmodeKeysPressed >= 2) 
+                        if (editmodeKeysPressed >= 2)
                         {
                             // Add raise value of keycode.
                             int exponent = editmodeKeysPressed - 2;
                             int numberToAdd = pow(10, exponent);
-                            
-                            // editmodeKeyCode += numberToAdd;
+                            editmodeKeyCode += numberToAdd;
+
                             // Serial.print("Inputed keycode: ");
                             // Serial.print(editmodeKeyCode);
                             // Serial.print(", for pin: ");
@@ -467,10 +480,9 @@ void EditMode()
                     }
 
                     // If we are letting go of the last key...
-                    if(editmodeKeysPressed == 1) 
+                    if (editmodeKeysPressed == 1)
                     {
                         editmodeSelectedKey->keyCode = editmodeKeyCode;
-
 
                         // Serial.println("Applied keycode to key.");
                         // Serial.print("Updated key: .pin = ");
@@ -484,13 +496,61 @@ void EditMode()
             }
 
             // Serial.println(editmodeKeysPressed);
-            // TODO: Reset if we are not pressing any keys.
-            if(editmodeKeysPressed == 0) {
+            // If we released all keys...
+            if (editmodeKeysPressed == 0)
+            {
                 ResetEditMode();
             }
         }
 
         key.oldValue = key.value;
+    }
+
+    // Signal that we are in edit mode.
+    if (editmodeKeysPressed == 0)
+    {
+        SignalLedEditMode();
+    }
+}
+
+/**
+ * @brief When this function is called inside the loop it will
+ * produce an "editmode" signal by flashing the LED 13.
+ */
+void SignalLedEditMode() {
+    unsigned long currentTime = millis();
+
+    // if its time to turn off led...
+    if (editmodeLedIsOn)
+    {
+        if(editmodeNextBlinkCycleOff < currentTime) {
+            digitalWrite(LED_BUILTIN, LOW);
+            editmodeLedIsOn = false;
+            editmodeNextBlinkCycle = currentTime + 100;
+        }
+    }
+    else
+    {
+        // If its time to blink...
+        if (editmodeNextBlinkCycle < currentTime)
+        {
+            // If we should pulse...
+            if (editmodeCurrentBlink < editmodeBlinksPerSignal)
+            {
+                digitalWrite(LED_BUILTIN, HIGH);
+                editmodeLedIsOn = true;
+
+                editmodeCurrentBlink++;
+                editmodeNextBlinkCycle = currentTime + 200;
+            }
+            else // we are done pulsing...
+            {
+                editmodeCurrentBlink = 0;
+                editmodeNextBlinkCycle = currentTime + 2000;
+            }
+
+            editmodeNextBlinkCycleOff = currentTime + 200;
+        }
     }
 }
 
