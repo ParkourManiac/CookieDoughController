@@ -57,10 +57,10 @@ void setup()
     //     EEPROM.write(i, 0);
     // }
     // Key keys[normalKeyCount] = {
-    //     {.pin = 2, .keyCode = 4},
-    //     {.pin = 3, .keyCode = 26},
-    //     {.pin = 4, .keyCode = 22},
-    //     {.pin = 5, .keyCode = 7},
+    //     Key(2, 4),
+    //     Key(3, 26),
+    //     Key(4, 22),
+    //     Key(5, 7),
     // };
     // eepromAdress = 50;
     // availableKeyMaps.Add(keys);
@@ -88,8 +88,9 @@ void loop()
  */
 void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be tested.
 {
-    unsigned int serializedSize = sizeof(Key[keyMapList.length * normalKeyCount]);
-    Key *serializedKeyMaps = new Key[keyMapList.length * normalKeyCount];
+    unsigned int serializedSize = sizeof(BareKeyboardKey[keyMapList.length * normalKeyCount]);
+    // Key *serializedKeyMaps = new Key[keyMapList.length * normalKeyCount];
+    BareKeyboardKey *serializedKeyMaps = new BareKeyboardKey[keyMapList.length * normalKeyCount];
     for (unsigned int i = 0; i < keyMapList.length; i++)
     {
         for (unsigned int j = 0; j < normalKeyCount; j++)
@@ -98,7 +99,7 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be test
             // TODO: maybe we need to reset the key value and old value before saving?
             // Maybe we should break apart {key.value, key.oldValue} from {key.pin, key.keycode}?
 
-            serializedKeyMaps[pos] = (*keyMapList[i])[j];
+            serializedKeyMaps[pos] = (BareKeyboardKey) (*keyMapList[i])[j];
         }
     }
 
@@ -160,11 +161,11 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
     // delay(100);
 
     // Convert
-    unsigned int amountOfKeys = packet.payloadLength / sizeof(Key);
-    Key payloadAsKeys[normalKeyCount * amountOfKeys];
+    unsigned int amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
+    BareKeyboardKey payloadAsKeys[normalKeyCount * amountOfKeys];
     for (unsigned int i = 0; i < amountOfKeys; i++)
     {
-        payloadAsKeys[i] = ((Key *)packet.payload)[i];
+        payloadAsKeys[i] = ((BareKeyboardKey *)packet.payload)[i];
     }
 
     unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
@@ -173,7 +174,9 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
         Key *keyMap = new Key[normalKeyCount];
         for (unsigned int j = 0; j < normalKeyCount; j++) // For each key in a keymap
         {
-            keyMap[j] = payloadAsKeys[i * normalKeyCount + j];
+            BareKeyboardKey currentKey = payloadAsKeys[i * normalKeyCount + j];
+            keyMap[j].pin = currentKey.pin;
+            keyMap[j].keyCode = currentKey.keyCode;
         }
         keyMapList.Add(keyMap);
     }
@@ -380,9 +383,9 @@ void ExecuteSpecialCommands()
  * 
  * @param key The key to be updated.
  */
-void debounceRead(IPinState &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <25ms the input would not be registered.
+void debounceRead(IPinState &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
 {
-    unsigned int debounceDelay = 25; // TODO: This balance needs to be play tested.
+    unsigned int debounceDelay = 30; // TODO: This balance needs to be play tested.
 
     // Invert input signal. Pullup is active low. 1 = off. 0 = on.
     bool pinState = !digitalRead(key.pin);
@@ -391,8 +394,8 @@ void debounceRead(IPinState &key) // TODO: This causes a slight input delay. Con
     if (pinState != key.oldPinState) 
     {
         key.lastDebounceTime = millis();
-        // Print debounce catches.
-        Serial.print("he");
+        // // Print debounce catches.
+        // Serial.print("he");
     }
 
     unsigned long timePassedSinceDebounce = (millis() - key.lastDebounceTime);
@@ -404,11 +407,11 @@ void debounceRead(IPinState &key) // TODO: This causes a slight input delay. Con
         {
             key.value = pinState;
 
-            // Print debounce catches.
-            if(key.value) {
-                Serial.print(" hej");
-            } else {Serial.print(" hå");}
-            Serial.println();
+            // // Print debounce catches.
+            // if(key.value) {
+            //     Serial.print(" hej");
+            // } else {Serial.print(" hå");}
+            // Serial.println();
         }
     }
 

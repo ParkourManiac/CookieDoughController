@@ -11,7 +11,7 @@ struct IKey
 };
 
 /**
- * @brief Contains the pin state and debounce values of the pin.
+ * @brief Contains the pin, pin state and debounce values of the pin.
  */
 struct IPinState : virtual IKey
 {
@@ -23,8 +23,8 @@ struct IPinState : virtual IKey
 
 
 /**
- * @brief The definition of a pin as a keyboard key.
- * Note: Contains no state. Is used as an alternative to
+ * @brief The bare minimum to define a pin as a keyboard key.
+ * Note: Contains no state.
  */
 struct BareKeyboardKey : virtual IKey
 {
@@ -61,7 +61,7 @@ enum SpecialFunction
  * Contains both the definition of the special function and 
  * the state of the corresponding pin.
  */
-struct SpecialKey : virtual IPinState, virtual IKey
+struct SpecialKey : virtual IPinState
 {
     SpecialFunction function; /**< The special function tied to the key. */
 
