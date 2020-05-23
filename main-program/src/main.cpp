@@ -15,7 +15,7 @@ void ChangeKeyMap(Key *keyMap);
 void ReadPinValueForKeys();
 void SendKeyInfo();
 void ExecuteSpecialCommands();
-void debounceRead(Key &key);
+void debounceRead(IPinState &key);
 
 // Public variables
 const int normalKeyCount = 4;
@@ -299,7 +299,7 @@ void ReadPinValueForKeys() // TODO: Fix debouncer for special keys.
 
     for (SpecialKey &specialKey : specialKeys) // TODO: Handle debounce.
     {
-        specialKey.value = !digitalRead(specialKey.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+        debounceRead(specialKey); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
     }
 }
 
@@ -380,18 +380,19 @@ void ExecuteSpecialCommands()
  * 
  * @param key The key to be updated.
  */
-void debounceRead(Key &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <50ms the input would not be registered.
+void debounceRead(IPinState &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <25ms the input would not be registered.
 {
     unsigned int debounceDelay = 25; // TODO: This balance needs to be play tested.
 
     // Invert input signal. Pullup is active low. 1 = off. 0 = on.
     bool pinState = !digitalRead(key.pin);
 
-    if (pinState != key.oldPinState) // If the pin state has changed...
+    // If the pin state has changed...
+    if (pinState != key.oldPinState) 
     {
         key.lastDebounceTime = millis();
         // Print debounce catches.
-        //Serial.print("he");
+        Serial.print("he");
     }
 
     unsigned long timePassedSinceDebounce = (millis() - key.lastDebounceTime);
@@ -404,10 +405,10 @@ void debounceRead(Key &key) // TODO: This causes a slight input delay. Consider 
             key.value = pinState;
 
             // Print debounce catches.
-            // if(key.value) {
-            //     Serial.print(" hej");
-            // } else {Serial.print(" hå");}
-            // Serial.println();
+            if(key.value) {
+                Serial.print(" hej");
+            } else {Serial.print(" hå");}
+            Serial.println();
         }
     }
 

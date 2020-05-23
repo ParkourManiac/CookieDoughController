@@ -2,17 +2,6 @@
 #define KEY_H
 
 /**
- * @brief Contains the pin state and debounce values of the pin.
- */
-struct IPinState
-{
-    bool value = false;                 /** The value of the pin. true = active, false = inactive. */
-    bool oldValue = false;              /** The previous value of the pin. */
-    unsigned long lastDebounceTime = 0; /** The time, in milliseconds, of the latest change in pin state. */
-    bool oldPinState = false;           /** The previous pin state. */
-};
-
-/**
  * @brief Used to marks a pin as a key.
  * Contains the pin number.
  */
@@ -22,10 +11,22 @@ struct IKey
 };
 
 /**
- * @brief The definition of a pin as a keyboard key.
- * Note: Contains no state.
+ * @brief Contains the pin state and debounce values of the pin.
  */
-struct BareKeyboardKey : public IKey
+struct IPinState : virtual IKey
+{
+    bool value = false;                 /** The value of the pin. true = active, false = inactive. */
+    bool oldValue = false;              /** The previous value of the pin. */
+    unsigned long lastDebounceTime = 0; /** The time, in milliseconds, of the latest change in pin state. */
+    bool oldPinState = false;           /** The previous pin state. */
+};
+
+
+/**
+ * @brief The definition of a pin as a keyboard key.
+ * Note: Contains no state. Is used as an alternative to
+ */
+struct BareKeyboardKey : virtual IKey
 {
     int keyCode; /** The keyboard keycode. */
 };
@@ -35,7 +36,7 @@ struct BareKeyboardKey : public IKey
  * Contains both the definition of the keyboard key and 
  * the state of the corresponding pin.
  */
-struct Key : public BareKeyboardKey, public IPinState
+struct Key : virtual BareKeyboardKey, virtual IPinState
 {
     Key() {}
     Key(int _pin, int _keyCode)
@@ -60,7 +61,7 @@ enum SpecialFunction
  * Contains both the definition of the special function and 
  * the state of the corresponding pin.
  */
-struct SpecialKey : public IKey, public IPinState
+struct SpecialKey : virtual IPinState, virtual IKey
 {
     SpecialFunction function; /**< The special function tied to the key. */
 
