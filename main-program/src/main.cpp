@@ -15,6 +15,9 @@ void ChangeKeyMap(Key *keyMap);
 void ReadPinValueForKeys();
 void SendKeyInfo();
 void ExecuteSpecialCommands();
+void ToggleEditMode();
+void ResetEditMode();
+void EditMode();
 void debounceRead(IPinState &key);
 
 // Public variables
@@ -29,7 +32,7 @@ Key defaultKeyMap[normalKeyCount] = {
 };
 
 SpecialKey specialKeys[3] = {
-    SpecialKey(10, cycleKeyMap),
+    SpecialKey(10, toggleEditMode),
     SpecialKey(11, cycleKeyMap),
     SpecialKey(12, toggleDefaultKeyMap), // This one should never change.
 };
@@ -42,6 +45,12 @@ LinkedList<Key *> availableKeyMaps = *availableKeyMapsPtr;
 uint8_t buf[8] = {0}; // Keyboard report buffer.
 
 unsigned int eepromAdress = 0;
+
+bool editmode = false;
+Key *editmodeSelectedKey;
+int editmodeKeysPressed = 0;
+int editmodeKeyCode = 0;
+bool editmodeShouldAddValue;
 
 // PROGRAM
 void setup()
@@ -69,15 +78,20 @@ void setup()
     availableKeyMaps.Clear();
     LoadKeyMapsFromMemory(availableKeyMaps);
     ConfigurePinsAsKeys();
-
-    
 }
 
 void loop()
 {
     ReadPinValueForKeys();
     ExecuteSpecialCommands();
-    SendKeyInfo();
+    if (editmode)
+    {
+        EditMode();
+    }
+    else
+    {
+        SendKeyInfo();
+    }
 }
 
 /**
@@ -99,7 +113,7 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be test
             // TODO: maybe we need to reset the key value and old value before saving?
             // Maybe we should break apart {key.value, key.oldValue} from {key.pin, key.keycode}?
 
-            serializedKeyMaps[pos] = (BareKeyboardKey) (*keyMapList[i])[j];
+            serializedKeyMaps[pos] = (BareKeyboardKey)(*keyMapList[i])[j];
         }
     }
 
@@ -276,12 +290,15 @@ void ChangeKeyMap(Key *keyMap)
  */
 void ToggleDefaultKeyMap()
 {
-    if (currentKeyMap != defaultKeyMap) {
+    if (currentKeyMap != defaultKeyMap)
+    {
         ChangeKeyMap(defaultKeyMap);
     }
-    else {
-        Key **keyMapPtr = availableKeyMaps[customKeyMapIndex]; 
-        if(keyMapPtr != nullptr) {
+    else
+    {
+        Key **keyMapPtr = availableKeyMaps[customKeyMapIndex];
+        if (keyMapPtr != nullptr)
+        {
             ChangeKeyMap(*(keyMapPtr));
         }
     }
@@ -291,7 +308,7 @@ void ToggleDefaultKeyMap()
  * @brief Reads and updates the pin values of
  *  the current keymap and special keys.
  */
-void ReadPinValueForKeys() // TODO: Fix debouncer for special keys.
+void ReadPinValueForKeys()
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -357,7 +374,7 @@ void ExecuteSpecialCommands()
                 switch (specialKey.function)
                 {
                 case toggleEditMode:
-                    //ToggleEditMode();
+                    ToggleEditMode();
                     break;
                 case cycleKeyMap:
                     CycleKeyMap();
@@ -377,6 +394,106 @@ void ExecuteSpecialCommands()
     }
 }
 
+void ToggleEditMode()
+{
+    // Prevent editing the default key map.
+    if (currentKeyMap == defaultKeyMap)
+        return;
+
+
+    editmode = !editmode;
+    if (editmode)
+    { 
+        // Reset editmode before it starts.
+        ResetEditMode();
+    }
+}
+
+void ResetEditMode() {
+    editmodeSelectedKey = nullptr;
+    editmodeKeysPressed = 0;
+    editmodeKeyCode = 0;
+}
+
+void EditMode()
+{
+    for (int i = 0; i < normalKeyCount; i++)
+    {
+        Key &key = currentKeyMap[i];
+        if (key.oldValue != key.value)
+        {
+            if (key.value)
+            {
+                digitalWrite(LED_BUILTIN, HIGH);
+
+                // Keypress
+                editmodeKeysPressed += 1;
+
+                if(editmodeSelectedKey == nullptr) 
+                {
+                    editmodeSelectedKey = &key;
+                }
+
+                if(!editmodeShouldAddValue)
+                {
+                    editmodeShouldAddValue = true;
+                }
+            }
+            else
+            {
+                digitalWrite(LED_BUILTIN, LOW);
+
+                // Keyrelease
+                if(editmodeSelectedKey != nullptr) 
+                {
+                    if(editmodeShouldAddValue) 
+                    {
+                        editmodeShouldAddValue = false;
+                        // If more than one key was held down when letting this one go...
+                        if(editmodeKeysPressed >= 2) 
+                        {
+                            // Add raise value of keycode.
+                            int exponent = editmodeKeysPressed - 2;
+                            int numberToAdd = pow(10, exponent);
+                            
+                            // editmodeKeyCode += numberToAdd;
+                            // Serial.print("Inputed keycode: ");
+                            // Serial.print(editmodeKeyCode);
+                            // Serial.print(", for pin: ");
+                            // Serial.print(editmodeSelectedKey->pin);
+                            // Serial.print(", keycode: ");
+                            // Serial.println(editmodeSelectedKey->keyCode);
+                        }
+                    }
+
+                    // If we are letting go of the last key...
+                    if(editmodeKeysPressed == 1) 
+                    {
+                        editmodeSelectedKey->keyCode = editmodeKeyCode;
+
+
+                        // Serial.println("Applied keycode to key.");
+                        // Serial.print("Updated key: .pin = ");
+                        // Serial.print(editmodeSelectedKey->pin);
+                        // Serial.print(", .keyCode = ");
+                        // Serial.println(editmodeSelectedKey->keyCode);
+                    }
+                }
+
+                editmodeKeysPressed -= 1;
+            }
+
+            // Serial.println(editmodeKeysPressed);
+            // TODO: Reset if we are not pressing any keys.
+            if(editmodeKeysPressed == 0) {
+                ResetEditMode();
+            }
+        }
+
+        key.oldValue = key.value;
+    }
+}
+
 /**
  * @brief Reads and updates the value of a
  * keys pin with the debounced input.
@@ -391,7 +508,7 @@ void debounceRead(IPinState &key) // TODO: This causes a slight input delay. Con
     bool pinState = !digitalRead(key.pin);
 
     // If the pin state has changed...
-    if (pinState != key.oldPinState) 
+    if (pinState != key.oldPinState)
     {
         key.lastDebounceTime = millis();
         // // Print debounce catches.
