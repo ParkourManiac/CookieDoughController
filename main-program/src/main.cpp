@@ -379,7 +379,7 @@ void ReadPinValueForKeys()
 /**
  * @brief Writes the keypress events to the buffer and sends them to the computer. 
  */
-void SendKeyInfo()
+void SendKeyInfo() // TODO: FORLOOP IS NOT EFFICIENT.
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -390,18 +390,58 @@ void SendKeyInfo()
             {
                 digitalWrite(LED_BUILTIN, HIGH);
 
-                // Send keypress
-                buf[2] = key.keyCode;
-                Serial.write(buf, 8);
+                // Find empty slot
+                int index = 2; // 2 = Start position for keys.
+                bool foundEmpty = false;
+                for (int i = 2; i < 8 && !foundEmpty; i++)
+                {
+                    foundEmpty = buf[i] == 0;
+                    if (foundEmpty)
+                        index = i;
+                }
+
+                if (foundEmpty)
+                {
+                    // Send keypress
+                    buf[index] = key.keyCode;
+                    Serial.write(buf, 8);
+                }
             }
             else
             {
                 digitalWrite(LED_BUILTIN, LOW);
 
-                // Send release keypress
-                buf[0] = 0;
-                buf[2] = 0;
-                Serial.write(buf, 8);
+                // Find empty slot
+                int index = 2; // 2 = Start position for keys.
+                bool foundKeyCode = false;
+                for (int i = 2; i < 8 && !foundKeyCode; i++)
+                {
+                    foundKeyCode = buf[i] == key.keyCode;
+                    if (foundKeyCode)
+                        index = i;
+                }
+
+                if (foundKeyCode)
+                {
+                    // Remove keycode from buffer
+                    buf[index] = 0;
+
+                    bool bufIsEmpty = true;
+                    for (int i = 2; i < 8; i++)
+                    {
+                        if (buf[i] != 0)
+                        {
+                            bufIsEmpty = false;
+                            break;
+                        }
+                    }
+
+                    if(bufIsEmpty)
+                        buf[0] = 0;
+
+                    // Send release keypress
+                    Serial.write(buf, 8);
+                }
             }
         }
 
@@ -635,7 +675,7 @@ void ToggleEditMode()
 
     editmode = !editmode;
 
-    if (editmode) // If we enter editmode...
+    if (editmode && availableKeyMaps.length > 0) // If we enter editmode...
     {
         CopyCurrentKeyMapToTemporary();
     }
