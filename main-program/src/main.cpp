@@ -21,7 +21,7 @@ void ToggleEditMode();
 void ResetEditMode();
 void CopyCurrentKeyMapToTemporary();
 void ResetCurrentKeyMapToTemporaryCopy();
-void CreateNewKeyMap();
+bool CreateNewKeyMap();
 void EditMode();
 void SignalLedEditMode();
 void DebounceRead(IPinState &key);
@@ -298,10 +298,12 @@ void ConfigurePinsAsKeys()
  */
 void CycleKeyMap()
 {
-    if(availableKeyMaps.length <= 0) {
+    if (availableKeyMaps.length <= 0)
+    {
         // We can't cycle through 0 keymaps...
         // Signal that something is wrong.
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++)
+        {
             digitalWrite(LED_BUILTIN, HIGH);
             delay(50);
             digitalWrite(LED_BUILTIN, LOW);
@@ -341,7 +343,7 @@ void ChangeKeyMap(Key *keyMap)
  */
 void ToggleDefaultKeyMap()
 {
-    if (currentKeyMap != defaultKeyMap)
+    if (currentKeyMap != defaultKeyMap || availableKeyMaps.length <= 0)
     {
         ChangeKeyMap(defaultKeyMap);
     }
@@ -431,9 +433,18 @@ void ExecuteSpecialCommands()
                 case cycleKeyMap:
                 {
                     if (editmode)
-                        CreateNewKeyMap();
+                    {
+                        ToggleEditMode(); // Exit editmode to save the keyMap.
+                        bool success = CreateNewKeyMap();
+                        if (success)
+                        {
+                            ToggleEditMode();
+                        }
+                    }
                     else
+                    {
                         CycleKeyMap();
+                    }
                     break;
                 }
                 case toggleDefaultKeyMap:
@@ -461,7 +472,7 @@ void ExecuteSpecialCommands()
                         // if we did a long press in editmode...
                         if (wasALongPress)
                         {
-                            Serial.println("Long press, released. Save to memory..."); // DEBUG
+                            // Serial.println("Long press, released. Save to memory..."); // DEBUG
                             SaveControllerSettings();
                         }
                     }
@@ -480,7 +491,7 @@ void ExecuteSpecialCommands()
                         bool wasALongPress = (millis() - specialKey.timeOfActivation) > longPressDuration;
                         if (wasALongPress)
                         {
-                            Serial.println("Long press, released. Delete keymap..."); // DEBUG
+                            // Serial.println("Long press, released. Delete keymap..."); // DEBUG
                             DeleteCurrentKeyMap();
                         }
                     }
@@ -488,7 +499,7 @@ void ExecuteSpecialCommands()
                 }
                 }
 
-                Serial.println((millis() - specialKey.timeOfActivation)); // DEBUG
+                //Serial.println((millis() - specialKey.timeOfActivation)); // DEBUG
             }
         }
 
@@ -502,10 +513,10 @@ void SaveControllerSettings()
 
     unsigned long timeNeeded = availableKeyMaps.length * normalKeyCount * sizeof(BareKeyboardKey) * 5;
 
-    // DEBUG
-    Serial.print("Time needed to save: ");
-    Serial.println(timeNeeded);
-    // DEBUG
+    // // DEBUG
+    // Serial.print("Time needed to save: ");
+    // Serial.println(timeNeeded);
+    // // DEBUG
 
     // Signal that we are saving. Loop will wait for 800ms total.
     for (int i = 0; i < 4; i++)
@@ -539,7 +550,7 @@ void DeleteCurrentKeyMap()
     // in our list and we are not trying to
     // delete the default keymap...
 
-    Key **removedKeyMapPtr = new Key*;
+    Key **removedKeyMapPtr = new Key *;
     bool success = availableKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr);
     // If we successfully removed the keymap...
     if (success)
@@ -549,7 +560,7 @@ void DeleteCurrentKeyMap()
         // If we deleted the last object in the list...
         if (availableKeyMaps.length <= 0)
         {
-            Serial.print("Switched to default keymap"); // DEBUG
+            // Serial.print("Switched to default keymap"); // DEBUG
             ChangeKeyMap(defaultKeyMap);
             customKeyMapIndex = 0;
         }
@@ -564,14 +575,14 @@ void DeleteCurrentKeyMap()
             nextKeyMapPtr = availableKeyMaps[customKeyMapIndex];
             if (nextKeyMapPtr != nullptr)
             {
-                Serial.print("Switched to keymap "); // DEBUG
-                Serial.print(customKeyMapIndex);     // DEBUG
+                // Serial.print("Switched to keymap "); // DEBUG
+                // Serial.print(customKeyMapIndex);     // DEBUG
                 ChangeKeyMap(*nextKeyMapPtr);
             }
             else
             {
-                Serial.print("Failed to delete keymap at "); // DEBUG
-                Serial.println(customKeyMapIndex); // DEBUG
+                // Serial.print("Failed to delete keymap at "); // DEBUG
+                // Serial.println(customKeyMapIndex);           // DEBUG
                 // TODO: Throw error. We failed to retrieve the keymap at position customKeyMapIndex.
             }
         }
@@ -584,26 +595,43 @@ void DeleteCurrentKeyMap()
     else
     {
         // TODO: Throw error. We failed to delete the keyMap.
-        Serial.print("Something went really wrong..."); // DEBUG
-        Serial.println(customKeyMapIndex); // DEBUG
+        // Serial.print("Something went really wrong..."); // DEBUG
+        // Serial.println(customKeyMapIndex);              // DEBUG
     }
 
-    delete(removedKeyMapPtr);
+    delete (removedKeyMapPtr);
     ToggleEditMode();
 
-    // DEBUG
-    Serial.print("Amount of keymaps left: ");
-    Serial.println(availableKeyMaps.length);
-    Serial.print("Current position: ");
-    Serial.println(customKeyMapIndex);
-    // DEBUG
+    // // DEBUG
+    // Serial.print("Amount of keymaps left: ");
+    // Serial.println(availableKeyMaps.length);
+    // Serial.print("Current position: ");
+    // Serial.println(customKeyMapIndex);
+    // // DEBUG
 }
 
 void ToggleEditMode()
 {
     // Prevent editing the default key map.
     if (currentKeyMap == defaultKeyMap)
-        return;
+    {
+        // If we are trying to go into
+        // editmode when we have no keymaps...
+        if (availableKeyMaps.length <= 0 && !editmode)
+        {
+            bool success = CreateNewKeyMap();
+            if (!success)
+            {
+                // Error we failed to create the keymap...
+                return;
+            }
+        }
+        else
+        {
+            // We don't want to edit the default keyMap...
+            return;
+        }
+    }
 
     editmode = !editmode;
 
@@ -644,101 +672,100 @@ void ResetCurrentKeyMapToTemporaryCopy()
     if (currentKeyMap == defaultKeyMap)
         return;
 
-    // DEBUG
-    Serial.println();
-    Serial.println("Applying temp to current keymap...");
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        Serial.print("Temp .pin ");
-        Serial.print(editmodeTempCopy[i].pin);
-        Serial.print(", .keyCode ");
-        Serial.print(editmodeTempCopy[i].keyCode);
-        Serial.print(" -> ");
+    // // DEBUG
+    // Serial.println();
+    // Serial.println("Applying temp to current keymap...");
+    // for (int i = 0; i < normalKeyCount; i++)
+    // {
+    //     Serial.print("Temp .pin ");
+    //     Serial.print(editmodeTempCopy[i].pin);
+    //     Serial.print(", .keyCode ");
+    //     Serial.print(editmodeTempCopy[i].keyCode);
+    //     Serial.print(" -> ");
 
-        Serial.print("Current .pin ");
-        Serial.print(currentKeyMap[i].pin);
-        Serial.print(", .keyCode ");
-        Serial.print(currentKeyMap[i].keyCode);
-        Serial.println(".");
-    }
-    delay(100);
-    // DEBUG
+    //     Serial.print("Current .pin ");
+    //     Serial.print(currentKeyMap[i].pin);
+    //     Serial.print(", .keyCode ");
+    //     Serial.print(currentKeyMap[i].keyCode);
+    //     Serial.println(".");
+    // }
+    // delay(100);
+    // // DEBUG
 
     for (int i = 0; i < normalKeyCount; i++)
     {
         currentKeyMap[i] = editmodeTempCopy[i];
     }
 
-    // DEBUG
-    Serial.println();
-    Serial.println("New current keymap:");
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        Serial.print("Current .pin = ");
-        Serial.print(currentKeyMap[i].pin);
-        Serial.print(", .keyCode = ");
-        Serial.println(currentKeyMap[i].keyCode);
-    }
-    delay(100);
-    // DEBUG
+    // // DEBUG
+    // Serial.println();
+    // Serial.println("current keymap reset to:");
+    // for (int i = 0; i < normalKeyCount; i++)
+    // {
+    //     Serial.print("Current .pin = ");
+    //     Serial.print(currentKeyMap[i].pin);
+    //     Serial.print(", .keyCode = ");
+    //     Serial.println(currentKeyMap[i].keyCode);
+    // }
+    // delay(100);
+    // // DEBUG
 }
 
-void CreateNewKeyMap()
+bool CreateNewKeyMap()
 {
-    if (editmode)
+    bool successful = false;
+    // TODO: Implement real check to see if the arduino can
+    // fit another keymap to stack/heap/memory.
+    bool weHaveSpaceLeft = availableKeyMaps.length < 10;
+
+    if (weHaveSpaceLeft)
     {
-        ToggleEditMode();
-
-        // TODO: Implement real check to see if the arduino can
-        // fit another keymap to stack/heap/memory.
-        bool weHaveSpaceLeft = availableKeyMaps.length < 10;
-
-        if (weHaveSpaceLeft)
+        Key *newKeyMap = new Key[normalKeyCount]; // TODO: Maybe remove "new"?
+        // Copy the default values to the new keyMap.
+        for (int i = 0; i < normalKeyCount; i++)
         {
-            Key *newKeyMap = new Key[normalKeyCount]; // TODO: Maybe remove "new"?
-            // Copy the default values to the new keyMap.
-            for (int i = 0; i < normalKeyCount; i++)
-            {
-                newKeyMap[i] = defaultKeyMap[i];
-            }
+            newKeyMap[i] = defaultKeyMap[i];
+        }
 
-            // Add it to the list and set it to the current keymap.
-            availableKeyMaps.Add(newKeyMap);
-            int indexOfNewKeyMap = availableKeyMaps.length - 1;
-            Key **lastKeyMapPtr = availableKeyMaps[indexOfNewKeyMap];
-            if (lastKeyMapPtr != nullptr)
-            {
-                ChangeKeyMap(*lastKeyMapPtr);
-                customKeyMapIndex = indexOfNewKeyMap;
-                ToggleEditMode();
+        // Add it to the list and set it to the current keymap.
+        availableKeyMaps.Add(newKeyMap);
+        int indexOfNewKeyMap = availableKeyMaps.length - 1;
+        Key **lastKeyMapPtr = availableKeyMaps[indexOfNewKeyMap];
+        if (lastKeyMapPtr != nullptr)
+        {
+            ChangeKeyMap(*lastKeyMapPtr);
+            customKeyMapIndex = indexOfNewKeyMap;
 
-                // DEBUG
-                Serial.println();
-                Serial.println("New current keymap:");
-                for (int i = 0; i < normalKeyCount; i++)
-                {
-                    Serial.print("Current .pin = ");
-                    Serial.print(currentKeyMap[i].pin);
-                    Serial.print(", .keyCode = ");
-                    Serial.println(currentKeyMap[i].keyCode);
-                }
-                Serial.print("Amount of keymaps: ");
-                Serial.println(availableKeyMaps.length);
-                delay(100);
-                // DEBUG
-            }
-            else
-            {
-                Serial.println("Something messed up"); // DEBUG
-                // TODO: Error we failed to retrieve the newly added keymap.
-            }
+            successful = true;
+
+            // // DEBUG
+            // Serial.println();
+            // Serial.println("New current keymap:");
+            // for (int i = 0; i < normalKeyCount; i++)
+            // {
+            //     Serial.print("Current .pin = ");
+            //     Serial.print(currentKeyMap[i].pin);
+            //     Serial.print(", .keyCode = ");
+            //     Serial.println(currentKeyMap[i].keyCode);
+            // }
+            // Serial.print("Amount of keymaps: ");
+            // Serial.println(availableKeyMaps.length);
+            // delay(100);
+            // // DEBUG
         }
         else
         {
-            Serial.println("We don't have enought space to create another keymap..."); // DEBUG
-            // TODO: Error we don't have space to create another keyMap.
+            // Serial.println("Something messed up"); // DEBUG
+            // TODO: Error we failed to retrieve the newly added keymap.
         }
     }
+    else
+    {
+        // Serial.println("We don't have enought space to create another keymap..."); // DEBUG
+        // TODO: Error we don't have space to create another keyMap.
+    }
+
+    return successful;
 }
 
 void EditMode()
