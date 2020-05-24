@@ -17,6 +17,7 @@ struct IPinState : virtual IKey
 {
     bool value = false;                 /** The value of the pin. true = active, false = inactive. */
     bool oldValue = false;              /** The previous value of the pin. */
+    unsigned long timeOfActivation = 0;    /** The time of the last activation. */
     unsigned long lastDebounceTime = 0; /** The time, in milliseconds, of the latest change in pin state. */
     bool oldPinState = false;           /** The previous pin state. */
 };

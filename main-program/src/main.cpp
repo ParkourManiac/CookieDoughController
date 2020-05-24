@@ -15,6 +15,8 @@ void ChangeKeyMap(Key *keyMap);
 void ReadPinValueForKeys();
 void SendKeyInfo();
 void ExecuteSpecialCommands();
+void SaveControllerSettings();
+void DeleteCurrentKeyMap();
 void ToggleEditMode();
 void ResetEditMode();
 void CopyCurrentKeyMapToTemporary();
@@ -22,7 +24,7 @@ void ResetCurrentKeyMapToTemporaryCopy();
 void CreateNewKeyMap();
 void EditMode();
 void SignalLedEditMode();
-void debounceRead(IPinState &key);
+void DebounceRead(IPinState &key);
 
 // Public variables
 const int normalKeyCount = 4;
@@ -42,13 +44,14 @@ SpecialKey specialKeys[3] = {
 };
 
 Key *currentKeyMap = defaultKeyMap;
-int customKeyMapIndex = 0;
+unsigned int customKeyMapIndex = 0;
 LinkedList<Key *> *availableKeyMapsPtr = new LinkedList<Key *>();
 LinkedList<Key *> availableKeyMaps = *availableKeyMapsPtr;
 
 uint8_t buf[8] = {0}; // Keyboard report buffer.
 
 unsigned int eepromAdress = 0;
+unsigned int nextFreeEepromAdress = 0;
 
 bool editmode = false;
 Key *editmodeSelectedKey = nullptr;
@@ -57,11 +60,13 @@ int editmodeKeysPressed = 0;
 int editmodeKeyCode = 0;
 bool editmodeShouldAddValue = false;
 
-int editmodeBlinksPerSignal = 3;
+const int editmodeBlinksPerSignal = 3;
 bool editmodeLedIsOn = false;
 unsigned long editmodeNextBlinkCycle = 0;
 unsigned long editmodeNextBlinkCycleOff = 0;
 int editmodeCurrentBlink = 0;
+
+const float longPressDuration = 4000;
 
 // PROGRAM
 void setup()
@@ -82,7 +87,7 @@ void setup()
     //     Key(4, 22),
     //     Key(5, 7),
     // };
-    // eepromAdress = 50;
+    // nextFreeEepromAdress = 50;
     // availableKeyMaps.Add(keys);
     // SaveKeyMapsToMemory(availableKeyMaps);
 
@@ -163,6 +168,7 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be test
     // delay(100);
     // // DEBUG
     unsigned int packetSize;
+    // TODO: Change this to write to nextFreeEepromAdress and invalidate the old one at eepromAdress.
     bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, packetSize);
     if (!success)
     {
@@ -171,7 +177,7 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be test
 
         // TODO: Implement error code.
     }
-    eepromAdress += packetSize;
+    nextFreeEepromAdress += packetSize;
 
     delay(500);
     delete (serializedKeyMaps);
@@ -260,7 +266,8 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
     // Serial.println(packetSize);
     // delay(100);
 
-    eepromAdress = packetAdress + packetSize;
+    eepromAdress = packetAdress;
+    nextFreeEepromAdress = packetAdress + packetSize;
     delete (dataPtr);
 }
 
@@ -291,9 +298,17 @@ void ConfigurePinsAsKeys()
  */
 void CycleKeyMap()
 {
-    // TODO: If default is selected, don't increment.
-    // Switch to the same normal keymap.
-
+    if(availableKeyMaps.length <= 0) {
+        // We can't cycle through 0 keymaps...
+        // Signal that something is wrong.
+        for(int i = 0; i < 5; i++) {
+            digitalWrite(LED_BUILTIN, HIGH);
+            delay(50);
+            digitalWrite(LED_BUILTIN, LOW);
+            delay(50);
+        }
+        return;
+    }
     // If we are using the default. Switch back to the
     // previous keymap. Otherwise move to the next.
     bool isDefault = (currentKeyMap == defaultKeyMap);
@@ -350,12 +365,12 @@ void ReadPinValueForKeys()
     {
         Key &key = currentKeyMap[i];
         //key.value = !digitalRead(key.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
-        debounceRead(key);
+        DebounceRead(key);
     }
 
     for (SpecialKey &specialKey : specialKeys) // TODO: Handle debounce.
     {
-        debounceRead(specialKey); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+        DebounceRead(specialKey); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
     }
 }
 
@@ -409,30 +424,179 @@ void ExecuteSpecialCommands()
                 switch (specialKey.function)
                 {
                 case toggleEditMode:
-                    ToggleEditMode();
+                {
+                    // See below. Toggled on release.
                     break;
+                }
                 case cycleKeyMap:
+                {
                     if (editmode)
                         CreateNewKeyMap();
                     else
                         CycleKeyMap();
                     break;
+                }
                 case toggleDefaultKeyMap:
+                {
                     if (editmode)
                         ResetCurrentKeyMapToTemporaryCopy();
                     else
                         ToggleDefaultKeyMap();
                     break;
                 }
+                }
             }
-            else
+            else // If we released the button...
             {
                 digitalWrite(LED_BUILTIN, LOW);
+
+                switch (specialKey.function)
+                {
+                case toggleEditMode:
+                {
+                    bool wasALongPress = false;
+                    if (editmode)
+                    {
+                        wasALongPress = (millis() - specialKey.timeOfActivation) > longPressDuration;
+                        // if we did a long press in editmode...
+                        if (wasALongPress)
+                        {
+                            Serial.println("Long press, released. Save to memory..."); // DEBUG
+                            SaveControllerSettings();
+                        }
+                    }
+
+                    ToggleEditMode();
+                    break;
+                }
+                case cycleKeyMap:
+                {
+                    break;
+                }
+                case toggleDefaultKeyMap:
+                {
+                    if (editmode)
+                    {
+                        bool wasALongPress = (millis() - specialKey.timeOfActivation) > longPressDuration;
+                        if (wasALongPress)
+                        {
+                            Serial.println("Long press, released. Delete keymap..."); // DEBUG
+                            DeleteCurrentKeyMap();
+                        }
+                    }
+                    break;
+                }
+                }
+
+                Serial.println((millis() - specialKey.timeOfActivation)); // DEBUG
             }
         }
 
         specialKey.oldValue = specialKey.value;
     }
+}
+
+void SaveControllerSettings()
+{
+    SaveKeyMapsToMemory(availableKeyMaps);
+
+    unsigned long timeNeeded = availableKeyMaps.length * normalKeyCount * sizeof(BareKeyboardKey) * 5;
+
+    // DEBUG
+    Serial.print("Time needed to save: ");
+    Serial.println(timeNeeded);
+    // DEBUG
+
+    // Signal that we are saving. Loop will wait for 800ms total.
+    for (int i = 0; i < 4; i++)
+    {
+        digitalWrite(LED_BUILTIN, LOW);
+        delay(100);
+        digitalWrite(LED_BUILTIN, HIGH);
+        delay(100);
+    }
+
+    // Wait remaining time
+    if (timeNeeded > 800)
+    {
+        delay(timeNeeded - 800);
+    }
+
+    delay(200); // Overshoot with 200ms.
+    digitalWrite(LED_BUILTIN, LOW);
+}
+
+void DeleteCurrentKeyMap()
+{
+    if (!editmode)
+        return;
+    if (availableKeyMaps.length <= 0)
+        return;
+    if (currentKeyMap == defaultKeyMap)
+        return;
+    // If we did not return above:
+    // We are in editmode, we have atleast one keymap
+    // in our list and we are not trying to
+    // delete the default keymap...
+
+    Key **removedKeyMapPtr = new Key*;
+    bool success = availableKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr);
+    // If we successfully removed the keymap...
+    if (success)
+    {
+        Key **nextKeyMapPtr = nullptr;
+
+        // If we deleted the last object in the list...
+        if (availableKeyMaps.length <= 0)
+        {
+            Serial.print("Switched to default keymap"); // DEBUG
+            ChangeKeyMap(defaultKeyMap);
+            customKeyMapIndex = 0;
+        }
+        else // the list still contains a keymap...
+        {
+            // If the current keymap index is out of range...
+            if (customKeyMapIndex >= availableKeyMaps.length)
+            {
+                customKeyMapIndex = availableKeyMaps.length - 1;
+            }
+
+            nextKeyMapPtr = availableKeyMaps[customKeyMapIndex];
+            if (nextKeyMapPtr != nullptr)
+            {
+                Serial.print("Switched to keymap "); // DEBUG
+                Serial.print(customKeyMapIndex);     // DEBUG
+                ChangeKeyMap(*nextKeyMapPtr);
+            }
+            else
+            {
+                Serial.print("Failed to delete keymap at "); // DEBUG
+                Serial.println(customKeyMapIndex); // DEBUG
+                // TODO: Throw error. We failed to retrieve the keymap at position customKeyMapIndex.
+            }
+        }
+
+        if (*removedKeyMapPtr != nullptr) // TODO: Is this needed?
+        {
+            delete (*removedKeyMapPtr);
+        }
+    }
+    else
+    {
+        // TODO: Throw error. We failed to delete the keyMap.
+        Serial.print("Something went really wrong..."); // DEBUG
+        Serial.println(customKeyMapIndex); // DEBUG
+    }
+
+    delete(removedKeyMapPtr);
+    ToggleEditMode();
+
+    // DEBUG
+    Serial.print("Amount of keymaps left: ");
+    Serial.println(availableKeyMaps.length);
+    Serial.print("Current position: ");
+    Serial.println(customKeyMapIndex);
+    // DEBUG
 }
 
 void ToggleEditMode()
@@ -528,7 +692,7 @@ void CreateNewKeyMap()
         // TODO: Implement real check to see if the arduino can
         // fit another keymap to stack/heap/memory.
         bool weHaveSpaceLeft = availableKeyMaps.length < 10;
-        
+
         if (weHaveSpaceLeft)
         {
             Key *newKeyMap = new Key[normalKeyCount]; // TODO: Maybe remove "new"?
@@ -716,9 +880,10 @@ void SignalLedEditMode()
  * 
  * @param key The key to be updated.
  */
-void debounceRead(IPinState &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
+void DebounceRead(IPinState &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
 {
     unsigned int debounceDelay = 30; // TODO: This balance needs to be play tested.
+    unsigned long currentTime = millis();
 
     // Invert input signal. Pullup is active low. 1 = off. 0 = on.
     bool pinState = !digitalRead(key.pin);
@@ -726,12 +891,12 @@ void debounceRead(IPinState &key) // TODO: This causes a slight input delay. Con
     // If the pin state has changed...
     if (pinState != key.oldPinState)
     {
-        key.lastDebounceTime = millis();
+        key.lastDebounceTime = currentTime;
         // // Print debounce catches.
         // Serial.print("he");
     }
 
-    unsigned long timePassedSinceDebounce = (millis() - key.lastDebounceTime);
+    unsigned long timePassedSinceDebounce = (currentTime - key.lastDebounceTime);
     // If we've waited long enough since last debounce...
     if (timePassedSinceDebounce > debounceDelay)
     {
@@ -739,6 +904,11 @@ void debounceRead(IPinState &key) // TODO: This causes a slight input delay. Con
         if (pinState != key.value)
         {
             key.value = pinState;
+
+            if (key.value)
+            {
+                key.timeOfActivation = currentTime;
+            }
 
             // // Print debounce catches.
             // if(key.value) {
