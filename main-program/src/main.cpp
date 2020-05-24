@@ -17,6 +17,9 @@ void SendKeyInfo();
 void ExecuteSpecialCommands();
 void ToggleEditMode();
 void ResetEditMode();
+void CopyCurrentKeyMapToTemporary();
+void ResetCurrentKeyMapToTemporaryCopy();
+void CreateNewKeyMap();
 void EditMode();
 void SignalLedEditMode();
 void debounceRead(IPinState &key);
@@ -49,6 +52,7 @@ unsigned int eepromAdress = 0;
 
 bool editmode = false;
 Key *editmodeSelectedKey = nullptr;
+Key *editmodeTempCopy = new Key[normalKeyCount];
 int editmodeKeysPressed = 0;
 int editmodeKeyCode = 0;
 bool editmodeShouldAddValue = false;
@@ -85,6 +89,31 @@ void setup()
     availableKeyMaps.Clear();
     LoadKeyMapsFromMemory(availableKeyMaps);
     ConfigurePinsAsKeys();
+
+    // // DEBUG
+    // Serial.println();
+    // Serial.println("New current keymap:");
+    // for(int i = 0; i < normalKeyCount; i++) {
+    //     Serial.print("Current .pin = ");
+    //     Serial.print(currentKeyMap[i].pin);
+    //     Serial.print(", .keyCode = ");
+    //     Serial.println(currentKeyMap[i].keyCode);
+    // }
+    // delay(100);
+
+    // for (unsigned int i = 0; i < availableKeyMaps.length; i++)
+    // {
+    //     Serial.println("{");
+    //     for (unsigned int j = 0; j < normalKeyCount; j++)
+    //     {
+    //         Serial.print("    .pin: ");
+    //         Serial.println((*availableKeyMaps[i])[j].pin);
+    //         Serial.print("    .keyCode: ");
+    //         Serial.println((*availableKeyMaps[i])[j].keyCode);
+    //     }
+    //     Serial.println("}");
+    // }
+    // // DEBUG
 }
 
 void loop()
@@ -183,10 +212,10 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
 
     // Convert
     unsigned int amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
-    BareKeyboardKey payloadAsKeys[normalKeyCount * amountOfKeys];
+    BareKeyboardKey payloadAsBareKeys[normalKeyCount * amountOfKeys];
     for (unsigned int i = 0; i < amountOfKeys; i++)
     {
-        payloadAsKeys[i] = ((BareKeyboardKey *)packet.payload)[i];
+        payloadAsBareKeys[i] = ((BareKeyboardKey *)packet.payload)[i];
     }
 
     unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
@@ -195,7 +224,7 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
         Key *keyMap = new Key[normalKeyCount];
         for (unsigned int j = 0; j < normalKeyCount; j++) // For each key in a keymap
         {
-            BareKeyboardKey currentKey = payloadAsKeys[i * normalKeyCount + j];
+            BareKeyboardKey currentKey = payloadAsBareKeys[i * normalKeyCount + j];
             keyMap[j].pin = currentKey.pin;
             keyMap[j].keyCode = currentKey.keyCode;
         }
@@ -303,10 +332,10 @@ void ToggleDefaultKeyMap()
     }
     else
     {
-        Key **keyMapPtr = availableKeyMaps[customKeyMapIndex];
-        if (keyMapPtr != nullptr)
+        Key **lastKeyMapPtr = availableKeyMaps[customKeyMapIndex];
+        if (lastKeyMapPtr != nullptr)
         {
-            ChangeKeyMap(*(keyMapPtr));
+            ChangeKeyMap(*(lastKeyMapPtr));
         }
     }
 }
@@ -368,7 +397,6 @@ void SendKeyInfo()
  */
 void ExecuteSpecialCommands()
 {
-
     for (SpecialKey &specialKey : specialKeys)
     {
         if (specialKey.oldValue != specialKey.value)
@@ -384,10 +412,16 @@ void ExecuteSpecialCommands()
                     ToggleEditMode();
                     break;
                 case cycleKeyMap:
-                    CycleKeyMap();
+                    if (editmode)
+                        CreateNewKeyMap();
+                    else
+                        CycleKeyMap();
                     break;
                 case toggleDefaultKeyMap:
-                    ToggleDefaultKeyMap();
+                    if (editmode)
+                        ResetCurrentKeyMapToTemporaryCopy();
+                    else
+                        ToggleDefaultKeyMap();
                     break;
                 }
             }
@@ -409,6 +443,11 @@ void ToggleEditMode()
 
     editmode = !editmode;
 
+    if (editmode) // If we enter editmode...
+    {
+        CopyCurrentKeyMapToTemporary();
+    }
+
     ResetEditMode();
 }
 
@@ -426,6 +465,116 @@ void ResetEditMode()
     editmodeCurrentBlink = 0;
     digitalWrite(LED_BUILTIN, LOW);
     editmodeLedIsOn = false;
+}
+
+void CopyCurrentKeyMapToTemporary()
+{
+    for (int i = 0; i < normalKeyCount; i++)
+    {
+        editmodeTempCopy[i] = currentKeyMap[i];
+    }
+}
+
+void ResetCurrentKeyMapToTemporaryCopy()
+{
+    if (currentKeyMap == defaultKeyMap)
+        return;
+
+    // DEBUG
+    Serial.println();
+    Serial.println("Applying temp to current keymap...");
+    for (int i = 0; i < normalKeyCount; i++)
+    {
+        Serial.print("Temp .pin ");
+        Serial.print(editmodeTempCopy[i].pin);
+        Serial.print(", .keyCode ");
+        Serial.print(editmodeTempCopy[i].keyCode);
+        Serial.print(" -> ");
+
+        Serial.print("Current .pin ");
+        Serial.print(currentKeyMap[i].pin);
+        Serial.print(", .keyCode ");
+        Serial.print(currentKeyMap[i].keyCode);
+        Serial.println(".");
+    }
+    delay(100);
+    // DEBUG
+
+    for (int i = 0; i < normalKeyCount; i++)
+    {
+        currentKeyMap[i] = editmodeTempCopy[i];
+    }
+
+    // DEBUG
+    Serial.println();
+    Serial.println("New current keymap:");
+    for (int i = 0; i < normalKeyCount; i++)
+    {
+        Serial.print("Current .pin = ");
+        Serial.print(currentKeyMap[i].pin);
+        Serial.print(", .keyCode = ");
+        Serial.println(currentKeyMap[i].keyCode);
+    }
+    delay(100);
+    // DEBUG
+}
+
+void CreateNewKeyMap()
+{
+    if (editmode)
+    {
+        ToggleEditMode();
+
+        // TODO: Implement real check to see if the arduino can
+        // fit another keymap to stack/heap/memory.
+        bool weHaveSpaceLeft = availableKeyMaps.length < 10;
+        
+        if (weHaveSpaceLeft)
+        {
+            Key *newKeyMap = new Key[normalKeyCount]; // TODO: Maybe remove "new"?
+            // Copy the default values to the new keyMap.
+            for (int i = 0; i < normalKeyCount; i++)
+            {
+                newKeyMap[i] = defaultKeyMap[i];
+            }
+
+            // Add it to the list and set it to the current keymap.
+            availableKeyMaps.Add(newKeyMap);
+            int indexOfNewKeyMap = availableKeyMaps.length - 1;
+            Key **lastKeyMapPtr = availableKeyMaps[indexOfNewKeyMap];
+            if (lastKeyMapPtr != nullptr)
+            {
+                ChangeKeyMap(*lastKeyMapPtr);
+                customKeyMapIndex = indexOfNewKeyMap;
+                ToggleEditMode();
+
+                // DEBUG
+                Serial.println();
+                Serial.println("New current keymap:");
+                for (int i = 0; i < normalKeyCount; i++)
+                {
+                    Serial.print("Current .pin = ");
+                    Serial.print(currentKeyMap[i].pin);
+                    Serial.print(", .keyCode = ");
+                    Serial.println(currentKeyMap[i].keyCode);
+                }
+                Serial.print("Amount of keymaps: ");
+                Serial.println(availableKeyMaps.length);
+                delay(100);
+                // DEBUG
+            }
+            else
+            {
+                Serial.println("Something messed up"); // DEBUG
+                // TODO: Error we failed to retrieve the newly added keymap.
+            }
+        }
+        else
+        {
+            Serial.println("We don't have enought space to create another keymap..."); // DEBUG
+            // TODO: Error we don't have space to create another keyMap.
+        }
+    }
 }
 
 void EditMode()
@@ -470,12 +619,14 @@ void EditMode()
                             int numberToAdd = pow(10, exponent);
                             editmodeKeyCode += numberToAdd;
 
+                            // // DEBUG
                             // Serial.print("Inputed keycode: ");
                             // Serial.print(editmodeKeyCode);
                             // Serial.print(", for pin: ");
                             // Serial.print(editmodeSelectedKey->pin);
                             // Serial.print(", keycode: ");
                             // Serial.println(editmodeSelectedKey->keyCode);
+                            // // DEBUG
                         }
                     }
 
@@ -484,18 +635,21 @@ void EditMode()
                     {
                         editmodeSelectedKey->keyCode = editmodeKeyCode;
 
+                        // // DEBUG
                         // Serial.println("Applied keycode to key.");
                         // Serial.print("Updated key: .pin = ");
                         // Serial.print(editmodeSelectedKey->pin);
                         // Serial.print(", .keyCode = ");
                         // Serial.println(editmodeSelectedKey->keyCode);
+                        // // DEBUG
                     }
                 }
 
                 editmodeKeysPressed -= 1;
             }
 
-            // Serial.println(editmodeKeysPressed);
+            // Serial.println(editmodeKeysPressed); // DEBUG
+
             // If we released all keys...
             if (editmodeKeysPressed == 0)
             {
@@ -517,13 +671,15 @@ void EditMode()
  * @brief When this function is called inside the loop it will
  * produce an "editmode" signal by flashing the LED 13.
  */
-void SignalLedEditMode() {
+void SignalLedEditMode()
+{
     unsigned long currentTime = millis();
 
     // if its time to turn off led...
     if (editmodeLedIsOn)
     {
-        if(editmodeNextBlinkCycleOff < currentTime) {
+        if (editmodeNextBlinkCycleOff < currentTime)
+        {
             digitalWrite(LED_BUILTIN, LOW);
             editmodeLedIsOn = false;
             editmodeNextBlinkCycle = currentTime + 100;
