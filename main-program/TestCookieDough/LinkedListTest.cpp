@@ -609,4 +609,45 @@ void ClearList_LengthIsZero() {
     ASSERT_TEST(list.length == 0);
 }
 
+void CheckIsEmptyWhenListHasNoItems_ReturnsTrue() {
+    LinkedList<int> list;
+    ASSERT_TEST(list.IsEmpty() == true);
+}
+
+void CheckIsEmptyWhenNotEmpty_ReturnsFalse() {
+    LinkedList<int> list;
+
+    list.Add(0);
+
+    ASSERT_TEST(list.IsEmpty() == false);
+}
+
+void CheckIsEmptyAfterInsertingItem_ReturnsFalse() {
+    LinkedList<int> list;
+
+    list.Insert(0, 0);
+
+    ASSERT_TEST(list.IsEmpty() == false);
+}
+
+void CheckIsEmptyAfterBecomingEmpty_ReturnsTrue() {
+    LinkedList<int> list;
+
+    list.Add(0);
+    list.RemoveAtIndex(0);
+
+    ASSERT_TEST(list.IsEmpty() == true);
+}
+
+void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse() {
+    LinkedList<int> list;
+
+    list.Add(0);
+    list.Add(1);
+    list.Add(2);
+    list.RemoveAtIndex(0);
+
+    ASSERT_TEST(list.IsEmpty() == false);
+}
+
 // TODO: void ClearList_AllMemoryIsFreed()

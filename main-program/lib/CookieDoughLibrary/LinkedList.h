@@ -34,6 +34,14 @@ public:
     unsigned int length = 0;
 
     /**
+     * @brief Returns true if the list is empty.
+     * 
+     * @return true When the list is empty.
+     * @return false When the list contains one or more items.
+     */
+    bool IsEmpty();
+
+    /**
      * @brief Add the item to the end of the list.
      * 
      * @param item The item to be added.

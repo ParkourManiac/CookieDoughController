@@ -3,6 +3,11 @@
 
 #include "LinkedList.h"
 
+template<class T>
+bool LinkedList<T>::IsEmpty() {
+    return head == nullptr;
+}
+
 template <class T>
 void LinkedList<T>::Add(T item)
 {

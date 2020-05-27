@@ -25,6 +25,7 @@ bool CreateNewKeyMap();
 void EditMode();
 void SignalLedEditMode();
 void DebounceRead(IPinState &key);
+void SignalErrorToUser();
 
 // Public variables
 const int normalKeyCount = 4;
@@ -45,8 +46,8 @@ SpecialKey specialKeys[3] = {
 
 Key *currentKeyMap = defaultKeyMap;
 unsigned int customKeyMapIndex = 0;
-LinkedList<Key *> *availableKeyMapsPtr = new LinkedList<Key *>();
-LinkedList<Key *> availableKeyMaps = *availableKeyMapsPtr;
+LinkedList<Key *> *customKeyMapsPtr = new LinkedList<Key *>();
+LinkedList<Key *> customKeyMaps = *customKeyMapsPtr;
 
 uint8_t buf[8] = {0}; // Keyboard report buffer.
 
@@ -88,11 +89,11 @@ void setup()
     //     Key(5, 7),
     // };
     // nextFreeEepromAdress = 50;
-    // availableKeyMaps.Add(keys);
-    // SaveKeyMapsToMemory(availableKeyMaps);
+    // customKeyMaps.Add(keys);
+    // SaveKeyMapsToMemory(customKeyMaps);
 
-    availableKeyMaps.Clear();
-    LoadKeyMapsFromMemory(availableKeyMaps);
+    customKeyMaps.Clear();
+    LoadKeyMapsFromMemory(customKeyMaps);
     ConfigurePinsAsKeys();
 
     // // DEBUG
@@ -106,15 +107,15 @@ void setup()
     // }
     // delay(100);
 
-    // for (unsigned int i = 0; i < availableKeyMaps.length; i++)
+    // for (unsigned int i = 0; i < customKeyMaps.length; i++)
     // {
     //     Serial.println("{");
     //     for (unsigned int j = 0; j < normalKeyCount; j++)
     //     {
     //         Serial.print("    .pin: ");
-    //         Serial.println((*availableKeyMaps[i])[j].pin);
+    //         Serial.println((*customKeyMaps[i])[j].pin);
     //         Serial.print("    .keyCode: ");
-    //         Serial.println((*availableKeyMaps[i])[j].keyCode);
+    //         Serial.println((*customKeyMaps[i])[j].keyCode);
     //     }
     //     Serial.println("}");
     // }
@@ -237,7 +238,7 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
         keyMapList.Add(keyMap);
     }
 
-    // // print
+    // // DEBUG
     // Serial.println("Data:");
     // for (unsigned int i = 0; i < keyMapList.length; i++)
     // {
@@ -252,6 +253,7 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
     //     Serial.println("}");
     // }
     // delay(100);
+    // // DEBUG
 
     // Serial.println("DATA:::::");
     // for(int i = 0; i < packet.payloadLength; i++) {
@@ -298,26 +300,20 @@ void ConfigurePinsAsKeys()
  */
 void CycleKeyMap()
 {
-    if (availableKeyMaps.length <= 0)
+    if (customKeyMaps.IsEmpty())
     {
-        // We can't cycle through 0 keymaps...
-        // Signal that something is wrong.
-        for (int i = 0; i < 5; i++)
-        {
-            digitalWrite(LED_BUILTIN, HIGH);
-            delay(50);
-            digitalWrite(LED_BUILTIN, LOW);
-            delay(50);
-        }
+        // We can't cycle through an empty list of keymaps...
+        SignalErrorToUser();
         return;
     }
+
     // If we are using the default. Switch back to the
     // previous keymap. Otherwise move to the next.
     bool isDefault = (currentKeyMap == defaultKeyMap);
     int nextIndex = (isDefault) ? customKeyMapIndex : customKeyMapIndex + 1;
 
-    customKeyMapIndex = nextIndex % availableKeyMaps.length;
-    Key **nextKeyMapPtr = availableKeyMaps[customKeyMapIndex];
+    customKeyMapIndex = nextIndex % customKeyMaps.length;
+    Key **nextKeyMapPtr = customKeyMaps[customKeyMapIndex];
 
     if (nextKeyMapPtr != nullptr)
     {
@@ -343,13 +339,20 @@ void ChangeKeyMap(Key *keyMap)
  */
 void ToggleDefaultKeyMap()
 {
-    if (currentKeyMap != defaultKeyMap || availableKeyMaps.length <= 0)
+    bool toggleToDefault = currentKeyMap != defaultKeyMap;
+    if (toggleToDefault)
     {
         ChangeKeyMap(defaultKeyMap);
     }
+    else if (customKeyMaps.IsEmpty())
+    {
+        // We can't toggle to custom if the list is empty.
+        SignalErrorToUser();
+    }
     else
     {
-        Key **lastKeyMapPtr = availableKeyMaps[customKeyMapIndex];
+        // Toggle to custom keymap.
+        Key **lastKeyMapPtr = customKeyMaps[customKeyMapIndex];
         if (lastKeyMapPtr != nullptr)
         {
             ChangeKeyMap(*(lastKeyMapPtr));
@@ -436,7 +439,7 @@ void SendKeyInfo() // TODO: FORLOOP IS NOT EFFICIENT.
                         }
                     }
 
-                    if(bufIsEmpty)
+                    if (bufIsEmpty)
                         buf[0] = 0;
 
                     // Send release keypress
@@ -549,9 +552,9 @@ void ExecuteSpecialCommands()
 
 void SaveControllerSettings()
 {
-    SaveKeyMapsToMemory(availableKeyMaps);
+    SaveKeyMapsToMemory(customKeyMaps);
 
-    unsigned long timeNeeded = availableKeyMaps.length * normalKeyCount * sizeof(BareKeyboardKey) * 5;
+    unsigned long timeNeeded = customKeyMaps.length * normalKeyCount * sizeof(BareKeyboardKey) * 5;
 
     // // DEBUG
     // Serial.print("Time needed to save: ");
@@ -581,7 +584,7 @@ void DeleteCurrentKeyMap()
 {
     if (!editmode)
         return;
-    if (availableKeyMaps.length <= 0)
+    if (customKeyMaps.IsEmpty())
         return;
     if (currentKeyMap == defaultKeyMap)
         return;
@@ -590,74 +593,114 @@ void DeleteCurrentKeyMap()
     // in our list and we are not trying to
     // delete the default keymap...
 
+    // DEBUG
+    for (unsigned int i = 0; i < customKeyMaps.length; i++)
+    {
+        Serial.println(" Before deleting{");
+        for (unsigned int j = 0; j < normalKeyCount; j++)
+        {
+            Serial.print("    .pin: ");
+            Serial.println((*customKeyMaps[i])[j].pin);
+            Serial.print("    .keyCode: ");
+            Serial.println((*customKeyMaps[i])[j].keyCode);
+        }
+        Serial.println("}");
+    }
+    delay(100);
+    // DEBUG
+
     Key **removedKeyMapPtr = new Key *;
-    bool success = availableKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr);
+    bool success = customKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr);
     // If we successfully removed the keymap...
     if (success)
     {
         Key **nextKeyMapPtr = nullptr;
 
         // If we deleted the last object in the list...
-        if (availableKeyMaps.length <= 0)
+        if (customKeyMaps.IsEmpty())
         {
-            // Serial.print("Switched to default keymap"); // DEBUG
+            Serial.println("Switched to default keymap"); // DEBUG
             ChangeKeyMap(defaultKeyMap);
             customKeyMapIndex = 0;
         }
         else // the list still contains a keymap...
         {
             // If the current keymap index is out of range...
-            if (customKeyMapIndex >= availableKeyMaps.length)
+            if (customKeyMapIndex >= customKeyMaps.length)
             {
-                customKeyMapIndex = availableKeyMaps.length - 1;
+                customKeyMapIndex = customKeyMaps.length - 1;
             }
 
-            nextKeyMapPtr = availableKeyMaps[customKeyMapIndex];
+            nextKeyMapPtr = customKeyMaps[customKeyMapIndex];
             if (nextKeyMapPtr != nullptr)
             {
-                // Serial.print("Switched to keymap "); // DEBUG
-                // Serial.print(customKeyMapIndex);     // DEBUG
+                Serial.print("Switched to keymap "); // DEBUG
+                Serial.println(customKeyMapIndex);   // DEBUG
                 ChangeKeyMap(*nextKeyMapPtr);
             }
             else
             {
-                // Serial.print("Failed to delete keymap at "); // DEBUG
-                // Serial.println(customKeyMapIndex);           // DEBUG
+                Serial.print("Failed to delete keymap at "); // DEBUG
+                Serial.println(customKeyMapIndex);           // DEBUG
                 // TODO: Throw error. We failed to retrieve the keymap at position customKeyMapIndex.
             }
         }
 
         if (*removedKeyMapPtr != nullptr) // TODO: Is this needed?
         {
+            Serial.println("Deleted pointer... *removedKeyMapPtr"); // DEBUG
             delete (*removedKeyMapPtr);
         }
     }
     else
     {
         // TODO: Throw error. We failed to delete the keyMap.
-        // Serial.print("Something went really wrong..."); // DEBUG
-        // Serial.println(customKeyMapIndex);              // DEBUG
+        Serial.print("Something went really wrong..."); // DEBUG
+        Serial.println(customKeyMapIndex);              // DEBUG
     }
 
     delete (removedKeyMapPtr);
+    Serial.println("Deleted pointer... removedKeyMapPtr"); // DEBUG
     ToggleEditMode();
 
-    // // DEBUG
-    // Serial.print("Amount of keymaps left: ");
-    // Serial.println(availableKeyMaps.length);
-    // Serial.print("Current position: ");
-    // Serial.println(customKeyMapIndex);
-    // // DEBUG
+    // DEBUG
+    Serial.print("Amount of keymaps left: ");
+    Serial.println(customKeyMaps.length);
+    Serial.print("Current position: ");
+    Serial.println(customKeyMapIndex);
+    // DEBUG
+
+    // DEBUG
+    Serial.println(" After deleting {");
+    for (unsigned int i = 0; i < customKeyMaps.length; i++)
+    {
+        for (unsigned int j = 0; j < normalKeyCount; j++)
+        {
+            Serial.print("    .pin: ");
+            Serial.println((*customKeyMaps[i])[j].pin);
+            Serial.print("    .keyCode: ");
+            Serial.println((*customKeyMaps[i])[j].keyCode);
+        }
+        Serial.println("}");
+    }
+    if (customKeyMaps.length == 0)
+    {
+        Serial.println("avaiableKeyMaps is Empty");
+    }
+    delay(100);
+    // DEBUG
 }
 
 void ToggleEditMode()
 {
-    // Prevent editing the default key map.
-    if (currentKeyMap == defaultKeyMap)
+    bool enteringEditMode = !editmode;
+
+    // If we are trying to start editing the default keymap...
+    if (currentKeyMap == defaultKeyMap && enteringEditMode)
     {
         // If we are trying to go into
         // editmode when we have no keymaps...
-        if (availableKeyMaps.length <= 0 && !editmode)
+        if (customKeyMaps.IsEmpty())
         {
             bool success = CreateNewKeyMap();
             if (!success)
@@ -675,7 +718,7 @@ void ToggleEditMode()
 
     editmode = !editmode;
 
-    if (editmode && availableKeyMaps.length > 0) // If we enter editmode...
+    if (editmode && customKeyMaps.length > 0) // If we enter editmode...
     {
         CopyCurrentKeyMapToTemporary();
     }
@@ -712,43 +755,43 @@ void ResetCurrentKeyMapToTemporaryCopy()
     if (currentKeyMap == defaultKeyMap)
         return;
 
-    // // DEBUG
-    // Serial.println();
-    // Serial.println("Applying temp to current keymap...");
-    // for (int i = 0; i < normalKeyCount; i++)
-    // {
-    //     Serial.print("Temp .pin ");
-    //     Serial.print(editmodeTempCopy[i].pin);
-    //     Serial.print(", .keyCode ");
-    //     Serial.print(editmodeTempCopy[i].keyCode);
-    //     Serial.print(" -> ");
+    // DEBUG
+    Serial.println();
+    Serial.println("Applying temp to current keymap...");
+    for (int i = 0; i < normalKeyCount; i++)
+    {
+        Serial.print("Temp .pin ");
+        Serial.print(editmodeTempCopy[i].pin);
+        Serial.print(", .keyCode ");
+        Serial.print(editmodeTempCopy[i].keyCode);
+        Serial.print(" -> ");
 
-    //     Serial.print("Current .pin ");
-    //     Serial.print(currentKeyMap[i].pin);
-    //     Serial.print(", .keyCode ");
-    //     Serial.print(currentKeyMap[i].keyCode);
-    //     Serial.println(".");
-    // }
-    // delay(100);
-    // // DEBUG
+        Serial.print("Current .pin ");
+        Serial.print(currentKeyMap[i].pin);
+        Serial.print(", .keyCode ");
+        Serial.print(currentKeyMap[i].keyCode);
+        Serial.println(".");
+    }
+    delay(100);
+    // DEBUG
 
     for (int i = 0; i < normalKeyCount; i++)
     {
         currentKeyMap[i] = editmodeTempCopy[i];
     }
+    ResetEditMode();
 
-    // // DEBUG
-    // Serial.println();
-    // Serial.println("current keymap reset to:");
-    // for (int i = 0; i < normalKeyCount; i++)
-    // {
-    //     Serial.print("Current .pin = ");
-    //     Serial.print(currentKeyMap[i].pin);
-    //     Serial.print(", .keyCode = ");
-    //     Serial.println(currentKeyMap[i].keyCode);
-    // }
-    // delay(100);
-    // // DEBUG
+    // DEBUG
+    Serial.println("Current keymap reset to:");
+    for (int i = 0; i < normalKeyCount; i++)
+    {
+        Serial.print("Current .pin = ");
+        Serial.print(currentKeyMap[i].pin);
+        Serial.print(", .keyCode = ");
+        Serial.println(currentKeyMap[i].keyCode);
+    }
+    delay(100);
+    // DEBUG
 }
 
 bool CreateNewKeyMap()
@@ -756,7 +799,7 @@ bool CreateNewKeyMap()
     bool successful = false;
     // TODO: Implement real check to see if the arduino can
     // fit another keymap to stack/heap/memory.
-    bool weHaveSpaceLeft = availableKeyMaps.length < 10;
+    bool weHaveSpaceLeft = customKeyMaps.length < 10;
 
     if (weHaveSpaceLeft)
     {
@@ -765,12 +808,13 @@ bool CreateNewKeyMap()
         for (int i = 0; i < normalKeyCount; i++)
         {
             newKeyMap[i] = defaultKeyMap[i];
+            newKeyMap[i].keyCode = 4; // "a" key.
         }
 
         // Add it to the list and set it to the current keymap.
-        availableKeyMaps.Add(newKeyMap);
-        int indexOfNewKeyMap = availableKeyMaps.length - 1;
-        Key **lastKeyMapPtr = availableKeyMaps[indexOfNewKeyMap];
+        customKeyMaps.Add(newKeyMap);
+        int indexOfNewKeyMap = customKeyMaps.length - 1;
+        Key **lastKeyMapPtr = customKeyMaps[indexOfNewKeyMap];
         if (lastKeyMapPtr != nullptr)
         {
             ChangeKeyMap(*lastKeyMapPtr);
@@ -789,7 +833,7 @@ bool CreateNewKeyMap()
             //     Serial.println(currentKeyMap[i].keyCode);
             // }
             // Serial.print("Amount of keymaps: ");
-            // Serial.println(availableKeyMaps.length);
+            // Serial.println(customKeyMaps.length);
             // delay(100);
             // // DEBUG
         }
@@ -986,6 +1030,20 @@ void DebounceRead(IPinState &key) // TODO: This causes a slight input delay. Con
     }
 
     key.oldPinState = pinState;
+}
+
+void SignalErrorToUser()
+{
+    // We can't cycle through 0 keymaps...
+    // Signal that something is wrong.
+    for (int i = 0; i < 5; i++)
+    {
+        digitalWrite(LED_BUILTIN, HIGH);
+        delay(50);
+        digitalWrite(LED_BUILTIN, LOW);
+        delay(50);
+    }
+    return;
 }
 
 // Miscellaneous

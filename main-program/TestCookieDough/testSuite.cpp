@@ -54,6 +54,11 @@ void RemoveAllItemsInList_LengthIsZero();
 void ClearList_HeadIsNullptr();
 void ClearList_TailIsNullptr();
 void ClearList_LengthIsZero();
+void CheckIsEmptyWhenListHasNoItems_ReturnsTrue();
+void CheckIsEmptyWhenNotEmpty_ReturnsFalse();
+void CheckIsEmptyAfterInsertingItem_ReturnsFalse();
+void CheckIsEmptyAfterBecomingEmpty_ReturnsTrue();
+void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
@@ -109,4 +114,9 @@ void RunTests()
 	RUN_TEST(ClearList_HeadIsNullptr);
 	RUN_TEST(ClearList_TailIsNullptr);
 	RUN_TEST(ClearList_LengthIsZero);
+	RUN_TEST(CheckIsEmptyWhenListHasNoItems_ReturnsTrue);
+	RUN_TEST(CheckIsEmptyWhenNotEmpty_ReturnsFalse);
+	RUN_TEST(CheckIsEmptyAfterInsertingItem_ReturnsFalse);
+	RUN_TEST(CheckIsEmptyAfterBecomingEmpty_ReturnsTrue);
+	RUN_TEST(CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse);
 }
