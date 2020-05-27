@@ -25,6 +25,8 @@ bool CreateNewKeyMap();
 void EditMode();
 void SignalLedEditMode();
 void DebounceRead(IPinState &key);
+bool OnKeyPress(IPinState &key);
+bool OnKeyRelease(IPinState &key);
 void SignalErrorToUser();
 
 // Public variables
@@ -152,9 +154,6 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be test
         for (unsigned int j = 0; j < normalKeyCount; j++)
         {
             unsigned int pos = i * normalKeyCount + j;
-            // TODO: maybe we need to reset the key value and old value before saving?
-            // Maybe we should break apart {key.value, key.oldValue} from {key.pin, key.keycode}?
-
             serializedKeyMaps[pos] = (BareKeyboardKey)(*keyMapList[i])[j];
         }
     }
@@ -382,73 +381,69 @@ void ReadPinValueForKeys()
 /**
  * @brief Writes the keypress events to the buffer and sends them to the computer. 
  */
-void SendKeyInfo() // TODO: FORLOOP IS NOT EFFICIENT.
+void SendKeyInfo() 
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
         Key &key = currentKeyMap[i];
-        if (key.oldValue != key.value)
+
+        if (OnKeyPress(key))
         {
-            if (key.value)
+            digitalWrite(LED_BUILTIN, HIGH);
+
+            // Find empty slot
+            int index = 2; // 2 = Start position for keys.
+            bool foundEmpty = false;
+            for (int i = 2; i < 8 && !foundEmpty; i++) // TODO: FORLOOP MIGHT NOT BE EFFICIENT.
             {
-                digitalWrite(LED_BUILTIN, HIGH);
-
-                // Find empty slot
-                int index = 2; // 2 = Start position for keys.
-                bool foundEmpty = false;
-                for (int i = 2; i < 8 && !foundEmpty; i++)
-                {
-                    foundEmpty = buf[i] == 0;
-                    if (foundEmpty)
-                        index = i;
-                }
-
+                foundEmpty = buf[i] == 0;
                 if (foundEmpty)
-                {
-                    // Send keypress
-                    buf[index] = key.keyCode;
-                    Serial.write(buf, 8);
-                }
+                    index = i;
             }
-            else
+
+            if (foundEmpty)
             {
-                digitalWrite(LED_BUILTIN, LOW);
-
-                // Find empty slot
-                int index = 2; // 2 = Start position for keys.
-                bool foundKeyCode = false;
-                for (int i = 2; i < 8 && !foundKeyCode; i++)
-                {
-                    foundKeyCode = buf[i] == key.keyCode;
-                    if (foundKeyCode)
-                        index = i;
-                }
-
-                if (foundKeyCode)
-                {
-                    // Remove keycode from buffer
-                    buf[index] = 0;
-
-                    bool bufIsEmpty = true;
-                    for (int i = 2; i < 8; i++)
-                    {
-                        if (buf[i] != 0)
-                        {
-                            bufIsEmpty = false;
-                            break;
-                        }
-                    }
-
-                    if (bufIsEmpty)
-                        buf[0] = 0;
-
-                    // Send release keypress
-                    Serial.write(buf, 8);
-                }
+                // Send keypress
+                buf[index] = key.keyCode;
+                Serial.write(buf, 8);
             }
         }
+        else if(OnKeyRelease(key))
+        {
+            digitalWrite(LED_BUILTIN, LOW);
 
-        key.oldValue = key.value;
+            // Find empty slot
+            int index = 2; // 2 = Start position for keys.
+            bool foundKeyCode = false;
+            for (int i = 2; i < 8 && !foundKeyCode; i++) // TODO: FORLOOP MIGHT NOT BE EFFICIENT.
+            {
+                foundKeyCode = buf[i] == key.keyCode;
+                if (foundKeyCode)
+                    index = i;
+            }
+
+            if (foundKeyCode)
+            {
+                // Remove keycode from buffer
+                buf[index] = 0;
+
+                bool bufIsEmpty = true;
+                for (int i = 2; i < 8; i++) // TODO: FORLOOP MIGHT NOT BE EFFICIENT.
+                {
+                    if (buf[i] != 0)
+                    {
+                        bufIsEmpty = false;
+                        break;
+                    }
+                }
+
+                if (bufIsEmpty)
+                    buf[0] = 0;
+
+                // Send release keypress
+                Serial.write(buf, 8);
+            }
+        }
     }
 }
 
@@ -545,8 +540,6 @@ void ExecuteSpecialCommands()
                 //Serial.println((millis() - specialKey.timeOfActivation)); // DEBUG
             }
         }
-
-        specialKey.oldValue = specialKey.value;
     }
 }
 
@@ -852,87 +845,85 @@ bool CreateNewKeyMap()
     return successful;
 }
 
-void EditMode()
+void EditMode() // TODO: Check if working... Changed to OnKeyPress and refactored. Might not work? Create tests for this.
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
         Key &key = currentKeyMap[i];
-        if (key.oldValue != key.value)
+
+        if (OnKeyPress(key))
         {
-            if (key.value)
+            digitalWrite(LED_BUILTIN, HIGH);
+            editmodeKeysPressed += 1;
+
+            Serial.println("Keypress."); // DEBUG
+            Serial.print("Keys pressed: "); // DEBUG
+            Serial.println(editmodeKeysPressed); // DEBUG
+
+            if (editmodeSelectedKey == nullptr)
             {
-                digitalWrite(LED_BUILTIN, HIGH);
+                editmodeSelectedKey = &key;
 
-                // Keypress
-                editmodeKeysPressed += 1;
-
-                if (editmodeSelectedKey == nullptr)
-                {
-                    editmodeSelectedKey = &key;
-                }
-
-                if (!editmodeShouldAddValue)
-                {
-                    editmodeShouldAddValue = true;
-                }
-            }
-            else
-            {
-                digitalWrite(LED_BUILTIN, LOW);
-
-                // Keyrelease
-                if (editmodeSelectedKey != nullptr)
-                {
-                    if (editmodeShouldAddValue)
-                    {
-                        editmodeShouldAddValue = false;
-                        // If more than one key was held down when letting this one go...
-                        if (editmodeKeysPressed >= 2)
-                        {
-                            // Add raise value of keycode.
-                            int exponent = editmodeKeysPressed - 2;
-                            int numberToAdd = pow(10, exponent);
-                            editmodeKeyCode += numberToAdd;
-
-                            // // DEBUG
-                            // Serial.print("Inputed keycode: ");
-                            // Serial.print(editmodeKeyCode);
-                            // Serial.print(", for pin: ");
-                            // Serial.print(editmodeSelectedKey->pin);
-                            // Serial.print(", keycode: ");
-                            // Serial.println(editmodeSelectedKey->keyCode);
-                            // // DEBUG
-                        }
-                    }
-
-                    // If we are letting go of the last key...
-                    if (editmodeKeysPressed == 1)
-                    {
-                        editmodeSelectedKey->keyCode = editmodeKeyCode;
-
-                        // // DEBUG
-                        // Serial.println("Applied keycode to key.");
-                        // Serial.print("Updated key: .pin = ");
-                        // Serial.print(editmodeSelectedKey->pin);
-                        // Serial.print(", .keyCode = ");
-                        // Serial.println(editmodeSelectedKey->keyCode);
-                        // // DEBUG
-                    }
-                }
-
-                editmodeKeysPressed -= 1;
+                Serial.print("Selected key: "); // DEBUG
+                Serial.println(editmodeSelectedKey->pin); // DEBUG
             }
 
-            // Serial.println(editmodeKeysPressed); // DEBUG
-
-            // If we released all keys...
-            if (editmodeKeysPressed == 0)
+            if (!editmodeShouldAddValue && editmodeKeysPressed > 1)
             {
-                ResetEditMode();
+                // If two or more keys are held down we should add a value...
+                editmodeShouldAddValue = true;
             }
         }
+        else if (OnKeyRelease(key))
+        {
+            Serial.println("Keyrelease."); // DEBUG
+            digitalWrite(LED_BUILTIN, LOW);
 
-        key.oldValue = key.value;
+            if (editmodeSelectedKey != nullptr)
+            {
+                if (editmodeShouldAddValue)
+                {
+                    // Raise value of keycode.
+                    int exponent = editmodeKeysPressed - 2;
+                    int numberToAdd = pow(10, exponent);
+                    editmodeKeyCode += numberToAdd;
+
+                    editmodeShouldAddValue = false;
+                    
+                    // DEBUG
+                    Serial.print("Inputed keycode: ");
+                    Serial.print(editmodeKeyCode);
+                    Serial.print(", (for pin: ");
+                    Serial.print(editmodeSelectedKey->pin);
+                    Serial.print(", keycode: ");
+                    Serial.print(editmodeSelectedKey->keyCode);
+                    Serial.println(")");
+                    // DEBUG
+                }
+            } 
+            else 
+                Serial.println("Selected is nullptr!"); // DEBUG
+
+            editmodeKeysPressed -= 1;
+
+            // If we are releasing the last pressed key...
+            if (editmodeKeysPressed <= 0)
+            {
+                editmodeSelectedKey->keyCode = editmodeKeyCode;
+
+                // DEBUG
+                Serial.print("Updated key: .pin = ");
+                Serial.print(editmodeSelectedKey->pin);
+                Serial.print(", .keyCode = ");
+                Serial.println(editmodeSelectedKey->keyCode);
+                // DEBUG
+
+                ResetEditMode();
+            }
+
+            Serial.print("Amount of keys pressed: "); // DEBUG
+            Serial.println(editmodeKeysPressed); // DEBUG
+        }
     }
 
     // Signal that we are in edit mode.
@@ -993,6 +984,7 @@ void SignalLedEditMode()
  */
 void DebounceRead(IPinState &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
 {
+    key.oldValue = key.value;
     unsigned int debounceDelay = 30; // TODO: This balance needs to be play tested.
     unsigned long currentTime = millis();
 
@@ -1030,6 +1022,16 @@ void DebounceRead(IPinState &key) // TODO: This causes a slight input delay. Con
     }
 
     key.oldPinState = pinState;
+}
+
+bool OnKeyPress(IPinState &key)
+{
+    return (key.oldValue != key.value && key.value);
+}
+
+bool OnKeyRelease(IPinState &key)
+{
+    return (key.oldValue != key.value && !key.value);
 }
 
 void SignalErrorToUser()
