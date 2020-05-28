@@ -5,28 +5,22 @@
 #include <Key.h>
 #include <LinkedList.h>
 #include <LinkedList.cpp>
+#include <EditMode.h>
 
 // HEADER
 void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList);
 void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList);
-void ConfigurePinsAsKeys();
 void CycleKeyMap();
 void ChangeKeyMap(Key *keyMap);
-void ReadPinValueForKeys();
 void SendKeyInfo();
 void ExecuteSpecialCommands();
+void ToggleEditMode(); 
 void SaveControllerSettings();
 void DeleteCurrentKeyMap();
-void ToggleEditMode();
-void ResetEditMode();
-void CopyCurrentKeyMapToTemporary();
-void ResetCurrentKeyMapToTemporaryCopy();
 bool CreateNewKeyMap();
-void EditMode();
-void SignalLedEditMode();
-void DebounceRead(IPinState &key);
-bool OnKeyPress(IPinState &key);
-bool OnKeyRelease(IPinState &key);
+
+
+
 void SignalErrorToUser();
 
 // Public variables
@@ -40,7 +34,9 @@ Key defaultKeyMap[normalKeyCount] = {
     Key(5, 79),
 };
 
-SpecialKey specialKeys[3] = {
+const int specialKeyCount = 3;
+
+SpecialKey specialKeys[specialKeyCount] = {
     SpecialKey(10, toggleEditMode),
     SpecialKey(11, cycleKeyMap),
     SpecialKey(12, toggleDefaultKeyMap), // This one should never change.
@@ -56,18 +52,7 @@ uint8_t buf[8] = {0}; // Keyboard report buffer.
 unsigned int eepromAdress = 0;
 unsigned int nextFreeEepromAdress = 0;
 
-bool editmode = false;
-Key *editmodeSelectedKey = nullptr;
-Key *editmodeTempCopy = new Key[normalKeyCount];
-int editmodeKeysPressed = 0;
-int editmodeKeyCode = 0;
-bool editmodeShouldAddValue = false;
-
-const int editmodeBlinksPerSignal = 3;
-bool editmodeLedIsOn = false;
-unsigned long editmodeNextBlinkCycle = 0;
-unsigned long editmodeNextBlinkCycleOff = 0;
-int editmodeCurrentBlink = 0;
+EditMode editmode = EditMode(true);
 
 const float longPressDuration = 4000;
 
@@ -96,7 +81,8 @@ void setup()
 
     customKeyMaps.Clear();
     LoadKeyMapsFromMemory(customKeyMaps);
-    ConfigurePinsAsKeys();
+    ConfigurePinsForKeyMap((IKey) *currentKeyMap, normalKeyCount);
+    ConfigurePinsForKeyMap((IKey) *specialKeys, specialKeyCount);
 
     // // DEBUG
     // Serial.println();
@@ -126,11 +112,13 @@ void setup()
 
 void loop()
 {
-    ReadPinValueForKeys();
+    ReadPinValuesForKeyMap(currentKeyMap, normalKeyCount);
+    ReadPinValuesForKeyMap(specialKeys, specialKeyCount);
+
     ExecuteSpecialCommands();
-    if (editmode)
+    if (editmode.enabled)
     {
-        EditMode();
+        editmode.EditModeLoop(currentKeyMap);
     }
     else
     {
@@ -272,22 +260,7 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
     delete (dataPtr);
 }
 
-/**
- * @brief Configures pins marked as Key or SpecialKey to act as input pins with internal pullups.
- */
-void ConfigurePinsAsKeys()
-{
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        Key &key = currentKeyMap[i];
-        pinMode(key.pin, INPUT_PULLUP);
-    }
 
-    for (SpecialKey &specialKey : specialKeys)
-    {
-        pinMode(specialKey.pin, INPUT_PULLUP);
-    }
-}
 
 /**
  * @brief Switches to the next keyMap configuration in the list
@@ -330,7 +303,7 @@ void CycleKeyMap()
 void ChangeKeyMap(Key *keyMap)
 {
     currentKeyMap = keyMap;
-    ConfigurePinsAsKeys();
+    ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
 }
 
 /**
@@ -360,28 +333,9 @@ void ToggleDefaultKeyMap()
 }
 
 /**
- * @brief Reads and updates the pin values of
- *  the current keymap and special keys.
- */
-void ReadPinValueForKeys()
-{
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        Key &key = currentKeyMap[i];
-        //key.value = !digitalRead(key.pin); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
-        DebounceRead(key);
-    }
-
-    for (SpecialKey &specialKey : specialKeys) // TODO: Handle debounce.
-    {
-        DebounceRead(specialKey); // Invert input signal. Pullup is active low. 1 = off. 0 = on.
-    }
-}
-
-/**
  * @brief Writes the keypress events to the buffer and sends them to the computer. 
  */
-void SendKeyInfo() 
+void SendKeyInfo()
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -408,7 +362,7 @@ void SendKeyInfo()
                 Serial.write(buf, 8);
             }
         }
-        else if(OnKeyRelease(key))
+        else if (OnKeyRelease(key))
         {
             digitalWrite(LED_BUILTIN, LOW);
 
@@ -470,7 +424,7 @@ void ExecuteSpecialCommands()
                 }
                 case cycleKeyMap:
                 {
-                    if (editmode)
+                    if (editmode.enabled)
                     {
                         ToggleEditMode(); // Exit editmode to save the keyMap.
                         bool success = CreateNewKeyMap();
@@ -487,10 +441,20 @@ void ExecuteSpecialCommands()
                 }
                 case toggleDefaultKeyMap:
                 {
-                    if (editmode)
-                        ResetCurrentKeyMapToTemporaryCopy();
+                    if (editmode.enabled)
+                    {
+                        if (currentKeyMap != defaultKeyMap)
+                        {
+                            editmode.RestoreKeyMapToTemporaryCopy(currentKeyMap);
+                        } else 
+                        {
+                            SignalErrorToUser();
+                        }
+                    }
                     else
+                    {
                         ToggleDefaultKeyMap();
+                    }
                     break;
                 }
                 }
@@ -504,10 +468,10 @@ void ExecuteSpecialCommands()
                 case toggleEditMode:
                 {
                     bool wasALongPress = false;
-                    if (editmode)
+                    if (editmode.enabled)
                     {
-                        wasALongPress = (millis() - specialKey.timeOfActivation) > longPressDuration;
-                        // if we did a long press in editmode...
+                        wasALongPress = OnLongPress(specialKey, longPressDuration);
+                        // if we did a long press in editmode....
                         if (wasALongPress)
                         {
                             // Serial.println("Long press, released. Save to memory..."); // DEBUG
@@ -524,10 +488,9 @@ void ExecuteSpecialCommands()
                 }
                 case toggleDefaultKeyMap:
                 {
-                    if (editmode)
+                    if (editmode.enabled)
                     {
-                        bool wasALongPress = (millis() - specialKey.timeOfActivation) > longPressDuration;
-                        if (wasALongPress)
+                        if (OnLongPress(specialKey, longPressDuration))
                         {
                             // Serial.println("Long press, released. Delete keymap..."); // DEBUG
                             DeleteCurrentKeyMap();
@@ -540,6 +503,38 @@ void ExecuteSpecialCommands()
                 //Serial.println((millis() - specialKey.timeOfActivation)); // DEBUG
             }
         }
+    }
+}
+
+void ToggleEditMode() {
+    bool enteringEditMode = !editmode.enabled;
+
+    // If we are trying to start editing the default keymap...
+    if (currentKeyMap == defaultKeyMap && enteringEditMode)
+    {
+        // If we are trying to go into
+        // editmode when we have no keymaps...
+        if (customKeyMaps.IsEmpty())
+        {
+            bool success = CreateNewKeyMap();
+            if (!success)
+            {
+                // Error we failed to create the keymap...
+                return;
+            }
+        }
+        else
+        {
+            // We don't want to edit the default keyMap...
+            return;
+        }
+    }
+
+    editmode.Toggle();
+
+    if (editmode.enabled && customKeyMaps.length > 0) // If we enter ...
+    {
+        editmode.CopyKeyMapToTemporary(currentKeyMap);
     }
 }
 
@@ -575,7 +570,7 @@ void SaveControllerSettings()
 
 void DeleteCurrentKeyMap()
 {
-    if (!editmode)
+    if (!editmode.enabled)
         return;
     if (customKeyMaps.IsEmpty())
         return;
@@ -684,109 +679,6 @@ void DeleteCurrentKeyMap()
     // DEBUG
 }
 
-void ToggleEditMode()
-{
-    bool enteringEditMode = !editmode;
-
-    // If we are trying to start editing the default keymap...
-    if (currentKeyMap == defaultKeyMap && enteringEditMode)
-    {
-        // If we are trying to go into
-        // editmode when we have no keymaps...
-        if (customKeyMaps.IsEmpty())
-        {
-            bool success = CreateNewKeyMap();
-            if (!success)
-            {
-                // Error we failed to create the keymap...
-                return;
-            }
-        }
-        else
-        {
-            // We don't want to edit the default keyMap...
-            return;
-        }
-    }
-
-    editmode = !editmode;
-
-    if (editmode && customKeyMaps.length > 0) // If we enter editmode...
-    {
-        CopyCurrentKeyMapToTemporary();
-    }
-
-    ResetEditMode();
-}
-
-void ResetEditMode()
-{
-    // Reset editmode
-    editmodeSelectedKey = nullptr;
-    editmodeKeysPressed = 0;
-    editmodeKeyCode = 0;
-    editmodeShouldAddValue = false;
-
-    // Reset led signal
-    editmodeNextBlinkCycle = 0;
-    editmodeNextBlinkCycleOff = 0;
-    editmodeCurrentBlink = 0;
-    digitalWrite(LED_BUILTIN, LOW);
-    editmodeLedIsOn = false;
-}
-
-void CopyCurrentKeyMapToTemporary()
-{
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        editmodeTempCopy[i] = currentKeyMap[i];
-    }
-}
-
-void ResetCurrentKeyMapToTemporaryCopy()
-{
-    if (currentKeyMap == defaultKeyMap)
-        return;
-
-    // DEBUG
-    Serial.println();
-    Serial.println("Applying temp to current keymap...");
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        Serial.print("Temp .pin ");
-        Serial.print(editmodeTempCopy[i].pin);
-        Serial.print(", .keyCode ");
-        Serial.print(editmodeTempCopy[i].keyCode);
-        Serial.print(" -> ");
-
-        Serial.print("Current .pin ");
-        Serial.print(currentKeyMap[i].pin);
-        Serial.print(", .keyCode ");
-        Serial.print(currentKeyMap[i].keyCode);
-        Serial.println(".");
-    }
-    delay(100);
-    // DEBUG
-
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        currentKeyMap[i] = editmodeTempCopy[i];
-    }
-    ResetEditMode();
-
-    // DEBUG
-    Serial.println("Current keymap reset to:");
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        Serial.print("Current .pin = ");
-        Serial.print(currentKeyMap[i].pin);
-        Serial.print(", .keyCode = ");
-        Serial.println(currentKeyMap[i].keyCode);
-    }
-    delay(100);
-    // DEBUG
-}
-
 bool CreateNewKeyMap()
 {
     bool successful = false;
@@ -843,195 +735,6 @@ bool CreateNewKeyMap()
     }
 
     return successful;
-}
-
-void EditMode() // TODO: Check if working... Changed to OnKeyPress and refactored. Might not work? Create tests for this.
-{
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        Key &key = currentKeyMap[i];
-
-        if (OnKeyPress(key))
-        {
-            digitalWrite(LED_BUILTIN, HIGH);
-            editmodeKeysPressed += 1;
-
-            Serial.println("Keypress."); // DEBUG
-            Serial.print("Keys pressed: "); // DEBUG
-            Serial.println(editmodeKeysPressed); // DEBUG
-
-            if (editmodeSelectedKey == nullptr)
-            {
-                editmodeSelectedKey = &key;
-
-                Serial.print("Selected key: "); // DEBUG
-                Serial.println(editmodeSelectedKey->pin); // DEBUG
-            }
-
-            if (!editmodeShouldAddValue && editmodeKeysPressed > 1)
-            {
-                // If two or more keys are held down we should add a value...
-                editmodeShouldAddValue = true;
-            }
-        }
-        else if (OnKeyRelease(key))
-        {
-            Serial.println("Keyrelease."); // DEBUG
-            digitalWrite(LED_BUILTIN, LOW);
-
-            if (editmodeSelectedKey != nullptr)
-            {
-                if (editmodeShouldAddValue)
-                {
-                    // Raise value of keycode.
-                    int exponent = editmodeKeysPressed - 2;
-                    int numberToAdd = pow(10, exponent);
-                    editmodeKeyCode += numberToAdd;
-
-                    editmodeShouldAddValue = false;
-                    
-                    // DEBUG
-                    Serial.print("Inputed keycode: ");
-                    Serial.print(editmodeKeyCode);
-                    Serial.print(", (for pin: ");
-                    Serial.print(editmodeSelectedKey->pin);
-                    Serial.print(", keycode: ");
-                    Serial.print(editmodeSelectedKey->keyCode);
-                    Serial.println(")");
-                    // DEBUG
-                }
-            } 
-            else 
-                Serial.println("Selected is nullptr!"); // DEBUG
-
-            editmodeKeysPressed -= 1;
-
-            // If we are releasing the last pressed key...
-            if (editmodeKeysPressed <= 0)
-            {
-                editmodeSelectedKey->keyCode = editmodeKeyCode;
-
-                // DEBUG
-                Serial.print("Updated key: .pin = ");
-                Serial.print(editmodeSelectedKey->pin);
-                Serial.print(", .keyCode = ");
-                Serial.println(editmodeSelectedKey->keyCode);
-                // DEBUG
-
-                ResetEditMode();
-            }
-
-            Serial.print("Amount of keys pressed: "); // DEBUG
-            Serial.println(editmodeKeysPressed); // DEBUG
-        }
-    }
-
-    // Signal that we are in edit mode.
-    if (editmodeKeysPressed == 0)
-    {
-        SignalLedEditMode();
-    }
-}
-
-/**
- * @brief When this function is called inside the loop it will
- * produce an "editmode" signal by flashing the LED 13.
- */
-void SignalLedEditMode()
-{
-    unsigned long currentTime = millis();
-
-    // if its time to turn off led...
-    if (editmodeLedIsOn)
-    {
-        if (editmodeNextBlinkCycleOff < currentTime)
-        {
-            digitalWrite(LED_BUILTIN, LOW);
-            editmodeLedIsOn = false;
-            editmodeNextBlinkCycle = currentTime + 100;
-        }
-    }
-    else
-    {
-        // If its time to blink...
-        if (editmodeNextBlinkCycle < currentTime)
-        {
-            // If we should pulse...
-            if (editmodeCurrentBlink < editmodeBlinksPerSignal)
-            {
-                digitalWrite(LED_BUILTIN, HIGH);
-                editmodeLedIsOn = true;
-
-                editmodeCurrentBlink++;
-                editmodeNextBlinkCycle = currentTime + 200;
-            }
-            else // we are done pulsing...
-            {
-                editmodeCurrentBlink = 0;
-                editmodeNextBlinkCycle = currentTime + 2000;
-            }
-
-            editmodeNextBlinkCycleOff = currentTime + 200;
-        }
-    }
-}
-
-/**
- * @brief Reads and updates the value of a
- * keys pin with the debounced input.
- * 
- * @param key The key to be updated.
- */
-void DebounceRead(IPinState &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
-{
-    key.oldValue = key.value;
-    unsigned int debounceDelay = 30; // TODO: This balance needs to be play tested.
-    unsigned long currentTime = millis();
-
-    // Invert input signal. Pullup is active low. 1 = off. 0 = on.
-    bool pinState = !digitalRead(key.pin);
-
-    // If the pin state has changed...
-    if (pinState != key.oldPinState)
-    {
-        key.lastDebounceTime = currentTime;
-        // // Print debounce catches.
-        // Serial.print("he");
-    }
-
-    unsigned long timePassedSinceDebounce = (currentTime - key.lastDebounceTime);
-    // If we've waited long enough since last debounce...
-    if (timePassedSinceDebounce > debounceDelay)
-    {
-        // And if the old state is not already the new state...
-        if (pinState != key.value)
-        {
-            key.value = pinState;
-
-            if (key.value)
-            {
-                key.timeOfActivation = currentTime;
-            }
-
-            // // Print debounce catches.
-            // if(key.value) {
-            //     Serial.print(" hej");
-            // } else {Serial.print(" hå");}
-            // Serial.println();
-        }
-    }
-
-    key.oldPinState = pinState;
-}
-
-bool OnKeyPress(IPinState &key)
-{
-    return (key.oldValue != key.value && key.value);
-}
-
-bool OnKeyRelease(IPinState &key)
-{
-    return (key.oldValue != key.value && !key.value);
 }
 
 void SignalErrorToUser()
