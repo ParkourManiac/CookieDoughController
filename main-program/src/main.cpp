@@ -597,7 +597,8 @@ void DeleteCurrentKeyMap()
     delay(100);
     // DEBUG
 
-    Key **removedKeyMapPtr = new Key *;
+    // TODO: Try replacing **removedKeyMapPtr with *removedKeyMapPtr and pass in &removedKeyMapPtr to the function RemoveAtIndex.
+    Key **removedKeyMapPtr = new Key *; 
     bool success = customKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr);
     // If we successfully removed the keymap...
     if (success)
