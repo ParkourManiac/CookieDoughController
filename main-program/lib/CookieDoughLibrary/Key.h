@@ -1,6 +1,7 @@
 #ifndef KEY_H
 #define KEY_H
 
+
 /**
  * @brief Used to marks a pin as a key.
  * Contains the pin number.
@@ -73,16 +74,30 @@ struct SpecialKey : virtual IPinState
 };
 
 /**
- * @brief Configures the pins of the provided keys
- * to act as input pins with internal pullups.
+ * @brief Configures the pin of the provided key
+ * to act as an input pin with internal pullup.
+ * 
  */
-void ConfigurePinsForKeyMap(IKey *keyMap, int keyMapLength);
+void ConfigurePinForKey(IKey &key);
 
 /**
- * @brief Reads and updates the pin state of
- * the provided keyMap.
+ * @brief Will try to convert the given type into IKey and 
+ * configures the pins of the provided keymap
+ * to act as input pins with internal pullups.
+ * 
+ * @tparam T The type of key to be used. 
+ * NOTE: Must inherit from the base class IKey.
+ * @param keyMap The keymap to be configured.
+ * @param keyMapLength The length of the keyMap.
  */
-void ReadPinValuesForKeyMap(IPinState *keyMap, int keyMapLength);
+template <class T>
+void ConfigurePinsForKeyMap(T *keyMap, int keyMapLength)
+{
+    for (int i = 0; i < keyMapLength; i++)
+    {
+        ConfigurePinForKey((IKey &) keyMap[i]);
+    }
+}
 
 /**
  * @brief Reads and updates the pin state of a
@@ -91,6 +106,19 @@ void ReadPinValuesForKeyMap(IPinState *keyMap, int keyMapLength);
  * @param key The key to be updated.
  */
 void DebounceRead(IPinState &key);
+
+/**
+ * @brief Reads and updates the pin state of
+ * the provided keyMap.
+ */
+template <class T>
+void ReadPinValuesForKeyMap(T *keyMap, int keyMapLength)
+{
+    for (int i = 0; i < keyMapLength; i++)
+    {
+        DebounceRead((IPinState&) keyMap[i]);
+    }
+}
 
 /**
  * @brief Checks if the key was just pressed.

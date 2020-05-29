@@ -59,6 +59,7 @@ void CheckIsEmptyWhenNotEmpty_ReturnsFalse();
 void CheckIsEmptyAfterInsertingItem_ReturnsFalse();
 void CheckIsEmptyAfterBecomingEmpty_ReturnsTrue();
 void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
+void ConfigurePinAsKey_CallsDigitalReadWithRightPin();
 
 void RunTests() 
 {
@@ -119,4 +120,5 @@ void RunTests()
 	RUN_TEST(CheckIsEmptyAfterInsertingItem_ReturnsFalse);
 	RUN_TEST(CheckIsEmptyAfterBecomingEmpty_ReturnsTrue);
 	RUN_TEST(CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse);
+	RUN_TEST(ConfigurePinAsKey_CallsDigitalReadWithRightPin);
 }

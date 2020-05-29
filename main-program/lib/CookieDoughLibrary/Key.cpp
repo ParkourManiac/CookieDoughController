@@ -1,31 +1,9 @@
 #include "Key.h"
 #include <Arduino.h>
 
-// TODO: Convert into Configuring only one key, then loop through them in main.cpp.
-void ConfigurePinsForKeyMap(IKey *keyMap, int keyMapLength)
+void ConfigurePinForKey(IKey &key)
 {
-    for (int i = 0; i < keyMapLength; i++)
-    {
-        IKey &key = keyMap[i];
-        pinMode(key.pin, INPUT_PULLUP);
-
-        Serial.print("Configured pin (");        // DEBUG
-        Serial.print(key.pin);                   // DEBUG
-        Serial.println(") as Internal_Pullup."); // DEBUG
-    }
-}
-
-void ReadPinValuesForKeyMap(IPinState *keyMap, int keyMapLength)
-{
-    for (int i = 0; i < keyMapLength; i++)
-    {
-        IPinState &key = keyMap[i];
-        DebounceRead(key);
-
-        Serial.print("Read input for pin (");    // DEBUG
-        Serial.print(key.pin);                   // DEBUG
-        Serial.println(") as Internal_Pullup."); // DEBUG
-    }
+    pinMode(key.pin, INPUT_PULLUP);
 }
 
 void DebounceRead(IPinState &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.

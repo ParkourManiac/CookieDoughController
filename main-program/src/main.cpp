@@ -81,8 +81,8 @@ void setup()
 
     customKeyMaps.Clear();
     LoadKeyMapsFromMemory(customKeyMaps);
-    ConfigurePinsForKeyMap((IKey) *currentKeyMap, normalKeyCount);
-    ConfigurePinsForKeyMap((IKey) *specialKeys, specialKeyCount);
+    ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount);
+    ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount);
 
     // // DEBUG
     // Serial.println();
