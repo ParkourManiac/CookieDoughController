@@ -1,4 +1,8 @@
+#ifndef TEST_H
+#define TEST_H
+
 #include <stdio.h>
+#include "testSuite.h"
 
 /**
  * @brief Tests if a condition is successful.
@@ -13,7 +17,11 @@
 printf("\033[0;33m"); \
 printf(#functionName); \
 printf("\033[0m" "\n"); \
-functionName();
+functionName(); \
+ResetMocks();
 
 void PrintResults();
 void Test(bool eval, const char* code, const char* file, unsigned long line);
+
+
+#endif

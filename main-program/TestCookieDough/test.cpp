@@ -1,5 +1,4 @@
 #include "test.h"
-#include "testSuite.h"
 
 /**
  * @brief Stores useful information about a test result.
