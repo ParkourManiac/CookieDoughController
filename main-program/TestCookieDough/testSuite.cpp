@@ -124,3 +124,9 @@ void RunTests()
 	RUN_TEST(ConfigurePinAsKey_KeyIsCorrectlyParsedAsIKey);
 	RUN_TEST(ConfigurePinAsKey_SpecialKeyIsCorrectlyParsedAsIKey);
 }
+
+
+void ResetMocks() 
+{
+}
+
