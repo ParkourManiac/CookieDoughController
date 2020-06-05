@@ -19,28 +19,34 @@ else:
                     allMethodNames.append(match)
 
     # Reads/grabs all Fake functions and their parameters in folder "Fakes".
-    currentDir = sys.argv[1] + '/Fakes'
+    fakesDir = sys.argv[1] + '/Fakes/'
     allMockableFunctions = []
-    for fileName in os.listdir(currentDir):
+    for fileName in os.listdir(fakesDir):
         if fileName.endswith(".h"):
-            with open(currentDir + fileName, "r") as file:
+            with open(fakesDir + fileName, "r") as file:
                 text = file.read()
-                regex = r"(?<=\n)([^\(\n]+)\s([^\(\n]+)\(([^\)]*)\)"
+                regex = r"([^\(\)\;\n]+)\s([^\(\)\;\n]+)\(([^\)\;]*)\)(?=\;)"
                 matches = re.findall(regex, text)
 
                 for match in matches:
-                    returnType = match.group(1)
-                    nameOfFunction = match.group(2)
+                    returnType = match[0]
+                    nameOfFunction = match[1]
 
-                    rawParameters = match.group(3).split(",")
+                    rawParameters = match[2].split(",")
                     parameters = []
                     for rawParameter in rawParameters:
-                        parameterParts = rawParameter.strip().split()
-                        parameterName = parameterParts.pop(len(parameterParts) - 1)
-                        parameterType = " ".join(parameterParts)
-                        # TODO: CONTINUE EXTRACTING INFO FROM PARAMETER AND STORE PARAMETER AS DICTIONARY.
+                        if len(rawParameter) > 0:
+                            parameterParts = rawParameter.strip().split()
+                            parameterName = parameterParts.pop(len(parameterParts) - 1)
+                            parameterType = " ".join(parameterParts)
 
-                    allMockableFunctions.append(match)
+                            newParameter = { 'name': parameterName, 'type': parameterType }
+                            parameters.append(newParameter)
+                            # TODO: CONTINUE EXTRACTING INFO FROM PARAMETER AND STORE PARAMETER AS DICTIONARY.
+
+                    newFunction = { 'returnType': returnType, 'name': nameOfFunction, 'parameters': parameters}
+                    allMockableFunctions.append(newFunction)
+                    print(newFunction)
 
     with open(currentDir + "testSuite.cpp", "w") as file:
         # Write tests to RunTest function.

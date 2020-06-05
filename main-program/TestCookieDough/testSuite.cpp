@@ -2,6 +2,8 @@
 #include "testSuite.h" 
 #include "test.h"
 
+void ConfigurePinAsKey_KeyIsCorrectlyParsedAsIKey();
+void ConfigurePinAsKey_SpecialKeyIsCorrectlyParsedAsIKey();
 void GetFirstNode_GetsFirstNode();
 void GetSecondNode_GetsSecondNode();
 void GetNodeInTheMiddleOfList_GetsNode();
@@ -59,11 +61,11 @@ void CheckIsEmptyWhenNotEmpty_ReturnsFalse();
 void CheckIsEmptyAfterInsertingItem_ReturnsFalse();
 void CheckIsEmptyAfterBecomingEmpty_ReturnsTrue();
 void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
-void ConfigurePinAsKey_KeyIsCorrectlyParsedAsIKey();
-void ConfigurePinAsKey_SpecialKeyIsCorrectlyParsedAsIKey();
 
 void RunTests() 
 {
+	RUN_TEST(ConfigurePinAsKey_KeyIsCorrectlyParsedAsIKey);
+	RUN_TEST(ConfigurePinAsKey_SpecialKeyIsCorrectlyParsedAsIKey);
 	RUN_TEST(GetFirstNode_GetsFirstNode);
 	RUN_TEST(GetSecondNode_GetsSecondNode);
 	RUN_TEST(GetNodeInTheMiddleOfList_GetsNode);
@@ -121,8 +123,6 @@ void RunTests()
 	RUN_TEST(CheckIsEmptyAfterInsertingItem_ReturnsFalse);
 	RUN_TEST(CheckIsEmptyAfterBecomingEmpty_ReturnsTrue);
 	RUN_TEST(CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse);
-	RUN_TEST(ConfigurePinAsKey_KeyIsCorrectlyParsedAsIKey);
-	RUN_TEST(ConfigurePinAsKey_SpecialKeyIsCorrectlyParsedAsIKey);
 }
 
 
