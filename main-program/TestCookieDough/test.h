@@ -41,7 +41,9 @@ void Test(bool eval, const char *code, const char *file, unsigned long line);
  */
 void ResetMockData();
 
-
+/**
+ * @brief Enables the virtual terminal processing for windows so that the window can display colors.
+ */
 void SetupColors();
 
 /**
