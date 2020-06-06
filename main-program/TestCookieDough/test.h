@@ -1,6 +1,10 @@
 #ifndef TEST_H
 #define TEST_H
 
+#if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
+#include <windows.h>
+#endif
+
 // IMPORTANT: To run a test please run your function in the file
 // testSuite.cpp RunTests() function using the macro RUN_TEST(functionName).
 #include <stdio.h>
@@ -53,7 +57,7 @@ void ResetMockData();
  * Example: 'RUN_TEST(MyFunction);'
  */
 #define RUN_TEST(functionName) \
-    printf("\033[0;33m");      \
+    printf("\033[1;33m");      \
     printf(#functionName);     \
     printf("\033[0m"           \
            "\n");              \
