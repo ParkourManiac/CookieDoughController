@@ -41,6 +41,9 @@ void Test(bool eval, const char *code, const char *file, unsigned long line);
  */
 void ResetMockData();
 
+
+void SetupColors();
+
 /**
  * @brief The max amount of test we can write.
  * Note: Just increase this value if more tests are needed.
