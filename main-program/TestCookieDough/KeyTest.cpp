@@ -3,8 +3,9 @@
 #include <stdint.h>
 
 extern uint8_t pinMode_param_pin;
+extern unsigned int pinMode_invocations;
 
-void ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedAsIKey() 
+void ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedToIKey() 
 {
     int expectedPin = 2;
     Key key = Key(expectedPin, 1337);
@@ -14,15 +15,31 @@ void ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedAsIKey()
     ASSERT_TEST(expectedPin == pinMode_param_pin);
 }
 
-void ConfigurePinAsKey_PinOfSpecialKeyIsCorrectlyParsedAsIKey() 
+void ConfigurePinAsKey_PinOfSpecialKeyIsCorrectlyParsedToIKey() 
 {
     int expectedPin = 2;
-    Key key = Key(expectedPin, 1337); 
+    SpecialKey key = SpecialKey(expectedPin, toggleDefaultKeyMap); 
 
     ConfigurePinForKey(key);
-    
-    // TODO: We didn't even call the function and it passes!? Reset the Fakes values between each test or find other solution.
-    // Maybe generate .cpp file containing the inputted parameters and the hardcoded return value. Do this using python and take functions from Fakes/*.h headerfiles. 
 
     ASSERT_TEST(expectedPin == pinMode_param_pin);
+}
+
+void ConfigurePinAsKey_IKeysPinIsPassedToPinMode() 
+{
+    int expectedPin = 2;
+    IKey key = IKey { .pin = expectedPin}; 
+
+    ConfigurePinForKey(key);
+
+    ASSERT_TEST(expectedPin == pinMode_param_pin);
+}
+
+void ConfigurePinAsKey_CallsPinModeOnce() 
+{
+    SpecialKey key = SpecialKey(2, toggleDefaultKeyMap); 
+
+    ConfigurePinForKey(key);
+
+    ASSERT_TEST(1 == pinMode_invocations);
 }

@@ -4,8 +4,10 @@
 
 #include "Fakes/Arduino.h"
 
-void ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedAsIKey();
-void ConfigurePinAsKey_PinOfSpecialKeyIsCorrectlyParsedAsIKey();
+void ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedToIKey();
+void ConfigurePinAsKey_PinOfSpecialKeyIsCorrectlyParsedToIKey();
+void ConfigurePinAsKey_IKeysPinIsPassedToPinMode();
+void ConfigurePinAsKey_CallsPinModeOnce();
 void GetFirstNode_GetsFirstNode();
 void GetSecondNode_GetsSecondNode();
 void GetNodeInTheMiddleOfList_GetsNode();
@@ -66,8 +68,10 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
-	RUN_TEST(ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedAsIKey);
-	RUN_TEST(ConfigurePinAsKey_PinOfSpecialKeyIsCorrectlyParsedAsIKey);
+	RUN_TEST(ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedToIKey);
+	RUN_TEST(ConfigurePinAsKey_PinOfSpecialKeyIsCorrectlyParsedToIKey);
+	RUN_TEST(ConfigurePinAsKey_IKeysPinIsPassedToPinMode);
+	RUN_TEST(ConfigurePinAsKey_CallsPinModeOnce);
 	RUN_TEST(GetFirstNode_GetsFirstNode);
 	RUN_TEST(GetSecondNode_GetsSecondNode);
 	RUN_TEST(GetNodeInTheMiddleOfList_GetsNode);
