@@ -2,8 +2,10 @@
 #include "testSuite.h" 
 #include "test.h"
 
-void ConfigurePinAsKey_KeyIsCorrectlyParsedAsIKey();
-void ConfigurePinAsKey_SpecialKeyIsCorrectlyParsedAsIKey();
+#include "Fakes/Arduino.h"
+
+void ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedAsIKey();
+void ConfigurePinAsKey_PinOfSpecialKeyIsCorrectlyParsedAsIKey();
 void GetFirstNode_GetsFirstNode();
 void GetSecondNode_GetsSecondNode();
 void GetNodeInTheMiddleOfList_GetsNode();
@@ -64,8 +66,8 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
-	RUN_TEST(ConfigurePinAsKey_KeyIsCorrectlyParsedAsIKey);
-	RUN_TEST(ConfigurePinAsKey_SpecialKeyIsCorrectlyParsedAsIKey);
+	RUN_TEST(ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedAsIKey);
+	RUN_TEST(ConfigurePinAsKey_PinOfSpecialKeyIsCorrectlyParsedAsIKey);
 	RUN_TEST(GetFirstNode_GetsFirstNode);
 	RUN_TEST(GetSecondNode_GetsSecondNode);
 	RUN_TEST(GetNodeInTheMiddleOfList_GetsNode);
@@ -125,8 +127,44 @@ void RunTests()
 	RUN_TEST(CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse);
 }
 
+int digitalRead_return;
+unsigned int digitalRead_invocations = 0;
+uint8_t digitalRead_param_pin;
+int digitalRead(uint8_t pin)
+{
+	digitalRead_param_pin = pin;
+	digitalRead_invocations++;
+	return digitalRead_return;
+}
+
+unsigned int pinMode_invocations = 0;
+uint8_t pinMode_param_pin;
+uint8_t pinMode_param_mode;
+void pinMode(uint8_t pin, uint8_t mode)
+{
+	pinMode_param_pin = pin;
+	pinMode_param_mode = mode;
+	pinMode_invocations++;
+}
+
+unsigned long millis_return;
+unsigned int millis_invocations = 0;
+unsigned long millis()
+{
+	millis_invocations++;
+	return millis_return;
+}
+
 
 void ResetMocks() 
 {
+	digitalRead_param_pin = uint8_t();
+	digitalRead_invocations = 0;
+	digitalRead_return = int();
+	pinMode_param_pin = uint8_t();
+	pinMode_param_mode = uint8_t();
+	pinMode_invocations = 0;
+	millis_invocations = 0;
+	millis_return = long();
 }
 

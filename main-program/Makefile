@@ -9,7 +9,6 @@ compileTests: TestCookieDough
 	python $^/generateTestSuite.py TestCookieDough && \
 	g++ -Dprivate=public -ITestCookieDough/Fakes -std=c++11 -g \
 		-o $^/Testrun/latestTestRun $^/*.cpp \
-		./$^/Fakes/*.cpp \
 		./lib/CookieDoughLibrary/LinkedList.cpp \
 		./lib/CookieDoughLibrary/Key.cpp
 
