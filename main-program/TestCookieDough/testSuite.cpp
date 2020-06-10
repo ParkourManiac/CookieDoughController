@@ -4,10 +4,25 @@
 
 #include "Fakes/Arduino.h"
 
-void ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedToIKey();
-void ConfigurePinAsKey_PinOfSpecialKeyIsCorrectlyParsedToIKey();
-void ConfigurePinAsKey_IKeysPinIsPassedToPinMode();
-void ConfigurePinAsKey_CallsPinModeOnce();
+void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
+void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
+void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
+void ConfigurePinForKey_ConfiguresPinAsInputPullup();
+void ConfigurePinForKey_CallsPinModeOnce();
+void OnKeyPressPinStateWentFromInactiveToActive_ReturnsTrue();
+void OnKeyPressPinStateValueDidNotChange_ReturnsFalse();
+void OnKeyPressPinStateIsInactive_ReturnFalse();
+void OnKeyReleasePinStateChangedToInactive_ReturnTrue();
+void OnKeyReleasePinStateDidNotChange_ReturnFalse();
+void OnKeyReleasePinStateIsActive_ReturnFalse();
+void OnLongPressTimePassedIsNotGreaterThanLongPressDuration_ReturnFalse();
+void OnLongPressTimePassedIsGreaterThanLongPressDuration_ReturnTrue();
+void OnLongPressTimePassedIsEqualToLongPressDuration_ReturnTrue();
+void ConfigurePinsForKeyMap_InvokesPinModeForEachKey();
+void ConfigurePinsForKeyMap_CallsPinModeWithPinFromKeyMap();
+void ConfigurePinsForKeyMap_SetsUpPinAsInputPullup();
+void DebounceReadPinState_UpdatesPinStateOldValueWithPreviousPinStateValue();
+void DebounceReadPinState_ReadsStateOfPin();
 void GetFirstNode_GetsFirstNode();
 void GetSecondNode_GetsSecondNode();
 void GetNodeInTheMiddleOfList_GetsNode();
@@ -68,10 +83,25 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
-	RUN_TEST(ConfigurePinAsKey_PinOfTypeKeyIsCorrectlyParsedToIKey);
-	RUN_TEST(ConfigurePinAsKey_PinOfSpecialKeyIsCorrectlyParsedToIKey);
-	RUN_TEST(ConfigurePinAsKey_IKeysPinIsPassedToPinMode);
-	RUN_TEST(ConfigurePinAsKey_CallsPinModeOnce);
+	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
+	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
+	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);
+	RUN_TEST(ConfigurePinForKey_ConfiguresPinAsInputPullup);
+	RUN_TEST(ConfigurePinForKey_CallsPinModeOnce);
+	RUN_TEST(OnKeyPressPinStateWentFromInactiveToActive_ReturnsTrue);
+	RUN_TEST(OnKeyPressPinStateValueDidNotChange_ReturnsFalse);
+	RUN_TEST(OnKeyPressPinStateIsInactive_ReturnFalse);
+	RUN_TEST(OnKeyReleasePinStateChangedToInactive_ReturnTrue);
+	RUN_TEST(OnKeyReleasePinStateDidNotChange_ReturnFalse);
+	RUN_TEST(OnKeyReleasePinStateIsActive_ReturnFalse);
+	RUN_TEST(OnLongPressTimePassedIsNotGreaterThanLongPressDuration_ReturnFalse);
+	RUN_TEST(OnLongPressTimePassedIsGreaterThanLongPressDuration_ReturnTrue);
+	RUN_TEST(OnLongPressTimePassedIsEqualToLongPressDuration_ReturnTrue);
+	RUN_TEST(ConfigurePinsForKeyMap_InvokesPinModeForEachKey);
+	RUN_TEST(ConfigurePinsForKeyMap_CallsPinModeWithPinFromKeyMap);
+	RUN_TEST(ConfigurePinsForKeyMap_SetsUpPinAsInputPullup);
+	RUN_TEST(DebounceReadPinState_UpdatesPinStateOldValueWithPreviousPinStateValue);
+	RUN_TEST(DebounceReadPinState_ReadsStateOfPin);
 	RUN_TEST(GetFirstNode_GetsFirstNode);
 	RUN_TEST(GetSecondNode_GetsSecondNode);
 	RUN_TEST(GetNodeInTheMiddleOfList_GetsNode);

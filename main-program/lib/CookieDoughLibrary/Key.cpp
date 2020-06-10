@@ -6,7 +6,7 @@ void ConfigurePinForKey(IKey &key)
     pinMode(key.pin, INPUT_PULLUP);
 }
 
-void DebounceRead(IPinState &key) // TODO: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
+void DebounceRead(IPinState &key) // NOTE: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
 {
     key.oldValue = key.value;
     unsigned int debounceDelay = 30; // TODO: This balance needs to be play tested.
@@ -60,5 +60,5 @@ bool OnKeyRelease(IPinState &key)
 
 bool OnLongPress(IPinState key, unsigned int longPressDuration)
 {
-    return (millis() - key.timeOfActivation) > longPressDuration;
+    return (millis() - key.timeOfActivation) >= longPressDuration;
 }
