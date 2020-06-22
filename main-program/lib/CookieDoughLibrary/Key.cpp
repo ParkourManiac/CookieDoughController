@@ -6,7 +6,6 @@ void ConfigurePinForKey(IKey &key)
     pinMode(key.pin, INPUT_PULLUP);
 }
 
-// TODO: Refactor to not save the INVERTED old pin state. Save the true old pin state.
 void DebounceRead(IPinState &key) // NOTE: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
 {
     key.oldValue = key.value;
