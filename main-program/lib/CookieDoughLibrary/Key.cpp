@@ -13,8 +13,7 @@ void DebounceRead(IPinState &key) // NOTE: This causes a slight input delay. Con
     unsigned int debounceDelay = 30; // TODO: This balance needs to be play tested.
     unsigned long currentTime = millis();
 
-    // Invert input signal. Pullup is active low. 1 = off. 0 = on.
-    bool pinState = !digitalRead(key.pin);
+    bool pinState = digitalRead(key.pin);
 
     // If the pin state has changed...
     if (pinState != key.oldPinState)
@@ -28,10 +27,14 @@ void DebounceRead(IPinState &key) // NOTE: This causes a slight input delay. Con
     // If we've waited long enough since last debounce...
     if (timePassedSinceDebounce > debounceDelay)
     {
-        // And if the old state is not already the new state...
-        if (pinState != key.value)
+        // Invert key value to get pin state. Pullup is active low. 1 = off. 0 = on.
+        bool pinStateOfKey = !key.value; 
+
+        // If the state is outdated...
+        if (pinState != pinStateOfKey)
         {
-            key.value = pinState;
+            // Invert input signal. Pullup is active low. 1 = off. 0 = on.
+            key.value = !pinState;
 
             if (key.value)
             {

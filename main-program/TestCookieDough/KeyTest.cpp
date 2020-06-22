@@ -60,7 +60,7 @@ void ConfigurePinForKey_CallsPinModeOnce()
     ASSERT_TEST(1 == pinMode_invocations);
 }
 
-void OnKeyPressPinStateWentFromInactiveToActive_ReturnsTrue()
+void OnKeyPress_PinStateWentFromInactiveToActive_ReturnsTrue()
 {
     IPinState state;
     state.oldValue = false;
@@ -71,7 +71,7 @@ void OnKeyPressPinStateWentFromInactiveToActive_ReturnsTrue()
     ASSERT_TEST(result == true);
 }
 
-void OnKeyPressPinStateValueDidNotChange_ReturnsFalse()
+void OnKeyPress_PinStateValueDidNotChange_ReturnsFalse()
 {
     IPinState state;
     state.oldValue = true;
@@ -82,7 +82,7 @@ void OnKeyPressPinStateValueDidNotChange_ReturnsFalse()
     ASSERT_TEST(result == false);
 }
 
-void OnKeyPressPinStateIsInactive_ReturnFalse()
+void OnKeyPress_PinStateIsInactive_ReturnFalse()
 {
     IPinState state;
     state.value = false;
@@ -92,7 +92,7 @@ void OnKeyPressPinStateIsInactive_ReturnFalse()
     ASSERT_TEST(result == false);
 }
 
-void OnKeyReleasePinStateChangedToInactive_ReturnTrue()
+void OnKeyRelease_PinStateChangedToInactive_ReturnTrue()
 {
     IPinState state;
     state.oldValue = true;
@@ -103,7 +103,7 @@ void OnKeyReleasePinStateChangedToInactive_ReturnTrue()
     ASSERT_TEST(result == true);
 }
 
-void OnKeyReleasePinStateDidNotChange_ReturnFalse()
+void OnKeyRelease_PinStateDidNotChange_ReturnFalse()
 {
     IPinState state;
     state.oldValue = false;
@@ -114,7 +114,7 @@ void OnKeyReleasePinStateDidNotChange_ReturnFalse()
     ASSERT_TEST(result == false);
 }
 
-void OnKeyReleasePinStateIsActive_ReturnFalse()
+void OnKeyRelease_PinStateIsActive_ReturnFalse()
 {
     IPinState state;
     state.value = true;
@@ -124,7 +124,7 @@ void OnKeyReleasePinStateIsActive_ReturnFalse()
     ASSERT_TEST(result == false);
 }
 
-void OnLongPressTimePassedIsNotGreaterThanLongPressDuration_ReturnFalse()
+void OnLongPress_TimePassedIsNotGreaterThanLongPressDuration_ReturnFalse()
 {
     IPinState state;
     int currentTime = 0;
@@ -137,7 +137,7 @@ void OnLongPressTimePassedIsNotGreaterThanLongPressDuration_ReturnFalse()
     ASSERT_TEST(result == false);
 }
 
-void OnLongPressTimePassedIsGreaterThanLongPressDuration_ReturnTrue()
+void OnLongPress_TimePassedIsGreaterThanLongPressDuration_ReturnTrue()
 {
     IPinState state;
     int currentTime = 10;
@@ -150,7 +150,7 @@ void OnLongPressTimePassedIsGreaterThanLongPressDuration_ReturnTrue()
     ASSERT_TEST(result == true);
 }
 
-void OnLongPressTimePassedIsEqualToLongPressDuration_ReturnTrue()
+void OnLongPress_TimePassedIsEqualToLongPressDuration_ReturnTrue()
 {
     IPinState state;
     int currentTime = 5;
@@ -223,12 +223,13 @@ void DebounceRead_ReadsStateOfPin()
     ASSERT_TEST(digitalRead_param_pin == 3 && digitalRead_invocations == 1);
 }
 
-void DebounceRead_PinStateHasChanged_UpdatesLastDebounceTime() {
+void DebounceRead_PinStateHasChanged_UpdatesLastDebounceTime()
+{
     IPinState state;
-    unsigned long expectedDebounceTime = 1337; 
+    unsigned long expectedDebounceTime = 1337;
     millis_return = expectedDebounceTime;
     state.lastDebounceTime = 0;
-    state.oldPinState = false; // TODO: Refactor this to return the true pinState, not the inverted pin state.
+    state.oldPinState = true;
     digitalRead_return = false;
 
     DebounceRead(state);
@@ -236,12 +237,13 @@ void DebounceRead_PinStateHasChanged_UpdatesLastDebounceTime() {
     ASSERT_TEST(state.lastDebounceTime == expectedDebounceTime);
 }
 
-void DebounceRead_PinStateHasNotChanged_DoesNotUpdateLastDebounceTime() {
+void DebounceRead_PinStateHasNotChanged_DoesNotUpdateLastDebounceTime()
+{
     IPinState state;
-    unsigned long expectedDebounceTime = 0; 
+    unsigned long expectedDebounceTime = 0;
     state.lastDebounceTime = expectedDebounceTime;
     millis_return = 1337;
-    state.oldPinState = false; // TODO: Refactor this to return the true pinState, not the inverted pin state.
+    state.oldPinState = true;
     digitalRead_return = true;
 
     DebounceRead(state);
@@ -249,12 +251,14 @@ void DebounceRead_PinStateHasNotChanged_DoesNotUpdateLastDebounceTime() {
     ASSERT_TEST(state.lastDebounceTime == expectedDebounceTime);
 }
 
-void DebounceRead_DebounceTimeExceededAndValueIsOutdated_UpdateStateValue() {
-    digitalRead_return = true; // true = Button is released.
+void DebounceRead_DebounceTimeExceededAndValueIsOutdated_UpdateStateValue()
+{
     IPinState state;
     state.lastDebounceTime = 0;
-    state.value = true; // Button was previously pressed.
     millis_return = state.lastDebounceTime + 100000;
+    digitalRead_return = true; // true = Button is released.
+    state.oldPinState = true;
+    state.value = true; // Button was previously pressed.
     bool expected = false; // We expect the button to be released.
 
     DebounceRead(state);
@@ -262,27 +266,29 @@ void DebounceRead_DebounceTimeExceededAndValueIsOutdated_UpdateStateValue() {
     ASSERT_TEST(state.value == expected);
 }
 
-void DebounceRead_DebounceTimeExceededAndValueIsOutdatedAndTheNewValueIsActive_UpdateTheTimeOfActivation() {
-    bool currentPinState = false; // false = Button is pressed.
-    digitalRead_return = currentPinState;
+void DebounceRead_DebounceTimeExceededAndValueIsOutdatedAndTheNewValueIsActive_UpdateTheTimeOfActivation()
+{
     IPinState state;
-    state.oldPinState = !currentPinState; // TODO: Refactor so that oldPinState is not inverted.
     state.timeOfActivation = 0;
-    state.value = false; // Button was previously released.
     unsigned long expectedTimeOfActivation = state.lastDebounceTime + 100000;
     millis_return = expectedTimeOfActivation;
+    bool currentPinState = false; // false = Button is pressed.
+    digitalRead_return = currentPinState;
+    state.oldPinState = currentPinState;
+    state.value = false; // Button was previously released.
 
     DebounceRead(state);
 
     ASSERT_TEST(state.timeOfActivation == expectedTimeOfActivation);
 }
 
-void DebounceRead_ValueIsOutdatedButDebounceTimeIsNotExceeded_DoesNotUpdateStateValue() {
+void DebounceRead_ValueIsOutdatedButDebounceTimeIsNotExceeded_DoesNotUpdateStateValue()
+{
     digitalRead_return = true; // true = Button is released.
     IPinState state;
     state.lastDebounceTime = 0;
     millis_return = state.lastDebounceTime;
-    bool expected = true; // We expect the button to still be pressed.
+    bool expected = true;   // We expect the button to still be pressed.
     state.value = expected; // Button was previously pressed.
 
     DebounceRead(state);
@@ -290,12 +296,13 @@ void DebounceRead_ValueIsOutdatedButDebounceTimeIsNotExceeded_DoesNotUpdateState
     ASSERT_TEST(state.value == expected);
 }
 
-void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_DoesNotUpdateTheTimeOfActivation() {
+void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_DoesNotUpdateTheTimeOfActivation()
+{
     bool currentPinState = false; // false = Button is pressed.
     digitalRead_return = currentPinState;
     IPinState state;
-    state.oldPinState = !currentPinState; // TODO: Refactor so that oldPinState is not inverted.
-    state.value = true; // Button was previously released.
+    state.oldPinState = !currentPinState;
+    state.value = true;                   // Button was previously released.
     millis_return = state.lastDebounceTime + 100000;
     unsigned long expectedTimeOfActivation = 1337;
     state.timeOfActivation = expectedTimeOfActivation;
@@ -305,10 +312,11 @@ void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_D
     ASSERT_TEST(state.timeOfActivation == expectedTimeOfActivation);
 }
 
-void DebounceRead_OldPinStateIsUpdated() {
+void DebounceRead_OldPinStateIsUpdated()
+{
     IPinState state;
-    digitalRead_return = true; // Button is released.
-    state.oldPinState = true; // Button was pressed. // TODO: Refactor so that oldPinState is not inverted.
+    digitalRead_return = false;        // Button is pressed.
+    state.oldPinState = true;         // Button was released.
     bool expectedOldPinState = false; // We expect it to become released.
 
     DebounceRead(state);
@@ -316,4 +324,42 @@ void DebounceRead_OldPinStateIsUpdated() {
     ASSERT_TEST(state.oldPinState == expectedOldPinState);
 }
 
-// ReadPinValuesForKeyMap
+void ReadPinValuesForKeyMap_CallsDigitalReadForEachItem()
+{
+    int length = 2;
+    Key keymap[length] = {
+        Key(2, 1337),
+        Key(3, 1337),
+    };
+
+    ReadPinValuesForKeyMap(keymap, length);
+
+    ASSERT_TEST(digitalRead_invocations == length);
+}
+
+void ReadPinValuesForKeyMap_CorrectlyParsesKeyPin()
+{
+    int length = 1;
+    Key keymap[length] = {
+        Key(3, 1337),
+    };
+    int expectedPin = 3;
+
+    ReadPinValuesForKeyMap(keymap, length);
+
+    ASSERT_TEST(digitalRead_param_pin == expectedPin);
+}
+
+void ReadPinValuesForKeyMap_UpdatesStateForAllPins()
+{
+    digitalRead_return = true;
+    int length = 2;
+    Key keymap[length] = {
+        Key(2, 1337),
+        Key(3, 1337),
+    };
+
+    ReadPinValuesForKeyMap(keymap, length);
+
+    ASSERT_TEST(keymap[0].oldPinState == true && keymap[1].oldPinState == true);
+}
