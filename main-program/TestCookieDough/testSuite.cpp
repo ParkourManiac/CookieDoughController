@@ -2,6 +2,37 @@
 #include "testSuite.h" 
 #include "test.h"
 
+#include "Fakes/Arduino.h"
+
+void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
+void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
+void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
+void ConfigurePinForKey_ConfiguresPinAsInputPullup();
+void ConfigurePinForKey_CallsPinModeOnce();
+void OnKeyPress_PinStateWentFromInactiveToActive_ReturnsTrue();
+void OnKeyPress_PinStateValueDidNotChange_ReturnsFalse();
+void OnKeyPress_PinStateIsInactive_ReturnFalse();
+void OnKeyRelease_PinStateChangedToInactive_ReturnTrue();
+void OnKeyRelease_PinStateDidNotChange_ReturnFalse();
+void OnKeyRelease_PinStateIsActive_ReturnFalse();
+void OnLongPress_TimePassedIsNotGreaterThanLongPressDuration_ReturnFalse();
+void OnLongPress_TimePassedIsGreaterThanLongPressDuration_ReturnTrue();
+void OnLongPress_TimePassedIsEqualToLongPressDuration_ReturnTrue();
+void ConfigurePinsForKeyMap_InvokesPinModeForEachKey();
+void ConfigurePinsForKeyMap_CallsPinModeWithPinFromKeyMap();
+void ConfigurePinsForKeyMap_SetsUpPinAsInputPullup();
+void DebounceRead_UpdatesOldValueOfStateWithPreviousStateValue();
+void DebounceRead_ReadsStateOfPin();
+void DebounceRead_PinStateHasChanged_UpdatesLastDebounceTime();
+void DebounceRead_PinStateHasNotChanged_DoesNotUpdateLastDebounceTime();
+void DebounceRead_DebounceTimeExceededAndValueIsOutdated_UpdateStateValue();
+void DebounceRead_DebounceTimeExceededAndValueIsOutdatedAndTheNewValueIsActive_UpdateTheTimeOfActivation();
+void DebounceRead_ValueIsOutdatedButDebounceTimeIsNotExceeded_DoesNotUpdateStateValue();
+void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_DoesNotUpdateTheTimeOfActivation();
+void DebounceRead_OldPinStateIsUpdated();
+void ReadPinValuesForKeyMap_CallsDigitalReadForEachItem();
+void ReadPinValuesForKeyMap_CorrectlyParsesKeyPin();
+void ReadPinValuesForKeyMap_UpdatesStateForAllPins();
 void GetFirstNode_GetsFirstNode();
 void GetSecondNode_GetsSecondNode();
 void GetNodeInTheMiddleOfList_GetsNode();
@@ -59,11 +90,38 @@ void CheckIsEmptyWhenNotEmpty_ReturnsFalse();
 void CheckIsEmptyAfterInsertingItem_ReturnsFalse();
 void CheckIsEmptyAfterBecomingEmpty_ReturnsTrue();
 void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
-void ConfigurePinAsKey_KeyIsCorrectlyParsedAsIKey();
-void ConfigurePinAsKey_SpecialKeyIsCorrectlyParsedAsIKey();
 
 void RunTests() 
 {
+	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
+	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
+	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);
+	RUN_TEST(ConfigurePinForKey_ConfiguresPinAsInputPullup);
+	RUN_TEST(ConfigurePinForKey_CallsPinModeOnce);
+	RUN_TEST(OnKeyPress_PinStateWentFromInactiveToActive_ReturnsTrue);
+	RUN_TEST(OnKeyPress_PinStateValueDidNotChange_ReturnsFalse);
+	RUN_TEST(OnKeyPress_PinStateIsInactive_ReturnFalse);
+	RUN_TEST(OnKeyRelease_PinStateChangedToInactive_ReturnTrue);
+	RUN_TEST(OnKeyRelease_PinStateDidNotChange_ReturnFalse);
+	RUN_TEST(OnKeyRelease_PinStateIsActive_ReturnFalse);
+	RUN_TEST(OnLongPress_TimePassedIsNotGreaterThanLongPressDuration_ReturnFalse);
+	RUN_TEST(OnLongPress_TimePassedIsGreaterThanLongPressDuration_ReturnTrue);
+	RUN_TEST(OnLongPress_TimePassedIsEqualToLongPressDuration_ReturnTrue);
+	RUN_TEST(ConfigurePinsForKeyMap_InvokesPinModeForEachKey);
+	RUN_TEST(ConfigurePinsForKeyMap_CallsPinModeWithPinFromKeyMap);
+	RUN_TEST(ConfigurePinsForKeyMap_SetsUpPinAsInputPullup);
+	RUN_TEST(DebounceRead_UpdatesOldValueOfStateWithPreviousStateValue);
+	RUN_TEST(DebounceRead_ReadsStateOfPin);
+	RUN_TEST(DebounceRead_PinStateHasChanged_UpdatesLastDebounceTime);
+	RUN_TEST(DebounceRead_PinStateHasNotChanged_DoesNotUpdateLastDebounceTime);
+	RUN_TEST(DebounceRead_DebounceTimeExceededAndValueIsOutdated_UpdateStateValue);
+	RUN_TEST(DebounceRead_DebounceTimeExceededAndValueIsOutdatedAndTheNewValueIsActive_UpdateTheTimeOfActivation);
+	RUN_TEST(DebounceRead_ValueIsOutdatedButDebounceTimeIsNotExceeded_DoesNotUpdateStateValue);
+	RUN_TEST(DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_DoesNotUpdateTheTimeOfActivation);
+	RUN_TEST(DebounceRead_OldPinStateIsUpdated);
+	RUN_TEST(ReadPinValuesForKeyMap_CallsDigitalReadForEachItem);
+	RUN_TEST(ReadPinValuesForKeyMap_CorrectlyParsesKeyPin);
+	RUN_TEST(ReadPinValuesForKeyMap_UpdatesStateForAllPins);
 	RUN_TEST(GetFirstNode_GetsFirstNode);
 	RUN_TEST(GetSecondNode_GetsSecondNode);
 	RUN_TEST(GetNodeInTheMiddleOfList_GetsNode);
@@ -121,6 +179,46 @@ void RunTests()
 	RUN_TEST(CheckIsEmptyAfterInsertingItem_ReturnsFalse);
 	RUN_TEST(CheckIsEmptyAfterBecomingEmpty_ReturnsTrue);
 	RUN_TEST(CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse);
-	RUN_TEST(ConfigurePinAsKey_KeyIsCorrectlyParsedAsIKey);
-	RUN_TEST(ConfigurePinAsKey_SpecialKeyIsCorrectlyParsedAsIKey);
 }
+
+int digitalRead_return;
+unsigned int digitalRead_invocations = 0;
+uint8_t digitalRead_param_pin;
+int digitalRead(uint8_t pin)
+{
+	digitalRead_param_pin = pin;
+	digitalRead_invocations++;
+	return digitalRead_return;
+}
+
+unsigned int pinMode_invocations = 0;
+uint8_t pinMode_param_pin;
+uint8_t pinMode_param_mode;
+void pinMode(uint8_t pin, uint8_t mode)
+{
+	pinMode_param_pin = pin;
+	pinMode_param_mode = mode;
+	pinMode_invocations++;
+}
+
+unsigned long millis_return;
+unsigned int millis_invocations = 0;
+unsigned long millis()
+{
+	millis_invocations++;
+	return millis_return;
+}
+
+
+void ResetMocks() 
+{
+	digitalRead_param_pin = uint8_t();
+	digitalRead_invocations = 0;
+	digitalRead_return = int();
+	pinMode_param_pin = uint8_t();
+	pinMode_param_mode = uint8_t();
+	pinMode_invocations = 0;
+	millis_invocations = 0;
+	millis_return = long();
+}
+

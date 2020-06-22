@@ -1,7 +1,6 @@
 #ifndef KEY_H
 #define KEY_H
 
-
 /**
  * @brief Used to marks a pin as a key.
  * Contains the pin number.
@@ -95,7 +94,7 @@ void ConfigurePinsForKeyMap(T *keyMap, int keyMapLength)
 {
     for (int i = 0; i < keyMapLength; i++)
     {
-        ConfigurePinForKey((IKey &) keyMap[i]);
+        ConfigurePinForKey((IKey &)keyMap[i]);
     }
 }
 
@@ -116,7 +115,7 @@ void ReadPinValuesForKeyMap(T *keyMap, int keyMapLength)
 {
     for (int i = 0; i < keyMapLength; i++)
     {
-        DebounceRead((IPinState&) keyMap[i]);
+        DebounceRead((IPinState &)keyMap[i]);
     }
 }
 
