@@ -21,14 +21,16 @@ else:
     # Reads/grabs all Fake functions and their parameters in folder "Fakes".
     fakesDir = sys.argv[1] + '/Fakes/'
     allNeccessaryIncludes = []
-    allMockableFunctions = []
+    # allMockableFunctions = []
+    allMockableFiles = []
     for fileName in os.listdir(fakesDir):
         if fileName.endswith(".h"):
+            currentFile = { 'name': '', functions: [], classes = [] }
+
             with open(fakesDir + fileName, "r") as file:
                 text = file.read()
 
                 allNeccessaryIncludes.append(fileName)
-                #print(allNeccessaryIncludes)
 
                 regex = r"([^\(\)\;\n]+)\s([^\(\)\;\n]+)\(([^\)\;]*)\)(?=\;)"
                 matches = re.findall(regex, text)
@@ -50,8 +52,8 @@ else:
 
                     newFunction = { 'returnType': returnType, 'name': nameOfFunction, 'parameters': parameters}
                     allMockableFunctions.append(newFunction)
-                    #print(newFunction)
 
+    # Prints out the mocked functions.
     showMockedFunctions = '\nMocking functions: '
     for function in allMockableFunctions:
         showMockedFunctions += function['name'] + ". "
