@@ -10,7 +10,8 @@ compileTests: TestCookieDough
 	g++ -Dprivate=public -ITestCookieDough/Fakes -std=c++11 -g \
 		-o $^/Testrun/latestTestRun $^/*.cpp \
 		./lib/CookieDoughLibrary/LinkedList.cpp \
-		./lib/CookieDoughLibrary/Key.cpp
+		./lib/CookieDoughLibrary/Key.cpp \
+		./lib/CookieDoughLibrary/EditMode.cpp
 
 test: compileTests # "Dependent" on compileTests. ("compileTests" will run before this command).
 	./TestCookieDough/Testrun/latestTestRun

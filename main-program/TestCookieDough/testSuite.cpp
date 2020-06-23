@@ -4,6 +4,7 @@
 
 #include "Fakes/Arduino.h"
 
+void EditModeInitialized_NotEnabledByDefault();
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
@@ -93,6 +94,7 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
+	RUN_TEST(EditModeInitialized_NotEnabledByDefault);
 	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
 	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);
@@ -209,6 +211,26 @@ unsigned long millis()
 	return millis_return;
 }
 
+unsigned int digitalWrite_invocations = 0;
+uint8_t digitalWrite_param_pin;
+uint8_t digitalWrite_param_val;
+void digitalWrite(uint8_t pin, uint8_t val)
+{
+	digitalWrite_param_pin = pin;
+	digitalWrite_param_val = val;
+	digitalWrite_invocations++;
+}
+
+class Serial {     size_t print_return;
+unsigned int     size_t print_invocations = 0;
+const char     size_t print_param_*ifsh;
+class Serial {     size_t print(const char *ifsh)
+{
+	    size_t print_param_*ifsh = *ifsh;
+	    size_t print_invocations++;
+	return     size_t print_return;
+}
+
 
 void ResetMocks() 
 {
@@ -220,5 +242,11 @@ void ResetMocks()
 	pinMode_invocations = 0;
 	millis_invocations = 0;
 	millis_return = long();
+	digitalWrite_param_pin = uint8_t();
+	digitalWrite_param_val = uint8_t();
+	digitalWrite_invocations = 0;
+	    size_t print_param_*ifsh = char();
+	    size_t print_invocations = 0;
+	    size_t print_return = {();
 }
 

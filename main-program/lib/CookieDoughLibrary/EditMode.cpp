@@ -5,7 +5,7 @@ EditMode::EditMode(bool _useEditModeLedSignal)
 {
     useEditModeLedSignal = useEditModeLedSignal;
 }
-
+// TESTED THIS FAR: DEBUG
 void EditMode::Toggle()
 {
     enabled = !enabled;

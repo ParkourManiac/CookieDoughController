@@ -1,7 +1,7 @@
 #ifndef EDIT_MODE_H
 #define EDIT_MODE_H
 
-#include <Key.h>
+#include "Key.h"
 extern const int normalKeyCount; // TODO: Fix this dependency?
 
 
