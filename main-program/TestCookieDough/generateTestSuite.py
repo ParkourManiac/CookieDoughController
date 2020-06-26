@@ -17,21 +17,19 @@ def FindAllTestFunctions(dir):
     
     return testFunctions
 
-def FindAllMockableFunctions(dir):
+def FindAllMockableFiles(dir):
     # Reads/grabs all Fake functions and their parameters in folder "Fakes".
-    #allMockableFiles = []
+    mockableFiles = []
     # Mockable classes/structs    r"(class|struct)\s([^\{\(\)\}\s]+)\s?{([^\}]+)};"
     mockableFunctions = []
     neccessaryIncludes = []
     for fileName in os.listdir(dir):
         if fileName.endswith(".h"):
-            #currentFile = { 'name': '', 'functions': [], 'classes': [] }
-
             with open(dir + fileName, "r") as file:
-                text = file.read()
-
+                currentFile = { 'name': fileName, 'functions': [], 'classes': [] }
                 neccessaryIncludes.append(fileName)
-
+                
+                text = file.read()
                 regex = r"([^\(\)\;\n]+)\s([^\(\)\;\n]+)\(([^\)\;]*)\)(?=\;)"
                 matches = re.findall(regex, text)
 
@@ -52,19 +50,27 @@ def FindAllMockableFunctions(dir):
 
                     newFunction = { 'returnType': returnType, 'name': nameOfFunction, 'parameters': parameters}
                     mockableFunctions.append(newFunction)
+                    currentFile['functions'].append(newFunction)
+                
+                mockableFiles.append(currentFile)
     
-    return (mockableFunctions, neccessaryIncludes)
+    return mockableFiles
 
-def PrintMockedFunctions(mockedFunctions):
-    showMockedFunctions = '\nMocking functions: '
-    for function in mockedFunctions:
-        showMockedFunctions += function['name'] + ". "
+def PrintMockedFiles(mockedFiles):
+    showMockedFunctions = '\nMocking: \n'
+    for mockedFile in mockedFiles:
+        showMockedFunctions += '  ' + mockedFile['name'] + ' ('
+        for function in mockedFile['functions']:
+            showMockedFunctions += function['name']
+            if(function != mockedFile['functions'][-1]):
+                showMockedFunctions += ", "
+        showMockedFunctions += ')\n'
     print(showMockedFunctions)
 
-def WriteCodeForIncludingFakes(neccessaryIncludes, file):
+def WriteCodeForIncludingMockedLibraries(mockableFiles, file):
     # Write all includes needed for mocked functions.
-    for include in neccessaryIncludes:
-        file.write('#include \"Fakes/' + include + '\"\n')
+    for mockableFile in mockableFiles:
+        file.write('#include \"Fakes/' + mockableFile['name'] + '\"\n')
     file.write('\n')
 
 def WriteCodeForRunningTests(testFunctions, file):
@@ -80,47 +86,48 @@ def WriteCodeForRunningTests(testFunctions, file):
     
     file.write('}\n\n')
 
-def WriteCodeForMockedLibraries(mockedFunctions, file):
+def WriteCodeForMockedLibraries(mockableFiles, file):
     # Write global variables for mocked functions.
-    for mockableFunction in mockableFunctions:
-        if mockableFunction['returnType'] != 'void':
-            file.write(mockableFunction['returnType'] + ' ' + mockableFunction['name'] + '_' + 'return;\n')
-        file.write('unsigned int' + ' ' + mockableFunction['name'] + '_' + 'invocations = 0;\n')
+    for mockableFile in mockableFiles:
+        for mockableFunction in mockableFile['functions']:
+            if mockableFunction['returnType'] != 'void':
+                file.write(mockableFunction['returnType'] + ' ' + mockableFunction['name'] + '_' + 'return;\n')
+            file.write('unsigned int' + ' ' + mockableFunction['name'] + '_' + 'invocations = 0;\n')
 
-        for parameter in mockableFunction['parameters']:
-            file.write(parameter['type'] + ' ' + mockableFunction['name'] + '_param_' + parameter['name'] + ';\n')
+            for parameter in mockableFunction['parameters']:
+                file.write(parameter['type'] + ' ' + mockableFunction['name'] + '_param_' + parameter['name'] + ';\n')
 
-        # Write declaration of mocked function.
-        file.write(mockableFunction['returnType'] + ' ' + mockableFunction['name'] + '(')
-        for i in range(len(mockableFunction['parameters'])):
-            currentParam = mockableFunction['parameters'][i]
-            file.write(currentParam['type'] + ' ' + currentParam['name'])
-            if i != len(mockableFunction['parameters']) - 1:
-                file.write(", ")
+            # Write declaration of mocked function.
+            file.write(mockableFunction['returnType'] + ' ' + mockableFunction['name'] + '(')
+            for i in range(len(mockableFunction['parameters'])):
+                currentParam = mockableFunction['parameters'][i]
+                file.write(currentParam['type'] + ' ' + currentParam['name'])
+                if i != len(mockableFunction['parameters']) - 1:
+                    file.write(", ")
 
-        file.write(')\n{\n')
+            file.write(')\n{\n')
 
-        # Fill function body with mocked functionality.
-        for parameter in mockableFunction['parameters']:
-            file.write('\t' + mockableFunction['name'] + '_param_' + parameter['name'] + ' = ' + parameter['name'] + ';\n') # TODO: Break out into function.
-        file.write('\t' + mockableFunction['name'] + '_' + 'invocations++;\n')
-        if mockableFunction['returnType'] != 'void':
-            file.write('\treturn ' + mockableFunction['name'] + '_' + 'return;\n')
-        
-        file.write('}\n\n')
+            # Fill function body with mocked functionality.
+            for parameter in mockableFunction['parameters']:
+                file.write('\t' + mockableFunction['name'] + '_param_' + parameter['name'] + ' = ' + parameter['name'] + ';\n') # TODO: Break out into function.
+            file.write('\t' + mockableFunction['name'] + '_' + 'invocations++;\n')
+            if mockableFunction['returnType'] != 'void':
+                file.write('\treturn ' + mockableFunction['name'] + '_' + 'return;\n')
+            
+            file.write('}\n\n')
 
         
     # Write Reset global variables for mocked functions.
     file.write('\nvoid ResetMocks() \n{\n')
-
-    for mockableFunction in mockableFunctions:
-        for parameter in mockableFunction['parameters']:
-            lastTypeParts = parameter['type'].strip().split()[-1]
-            file.write('\t' + mockableFunction['name'] + '_param_' + parameter['name'] + ' = ' + lastTypeParts + '();\n') # TODO: Break out into function.
-        file.write('\t' + mockableFunction['name'] + '_' + 'invocations = 0;\n')
-        if mockableFunction['returnType'] != 'void':
-            lastReturnTypeParts = mockableFunction['returnType'].strip().split()[-1]
-            file.write('\t' + mockableFunction['name'] + '_' + 'return = ' + lastReturnTypeParts + '();\n')
+    for mockableFile in mockableFiles:
+        for mockableFunction in mockableFile['functions']:
+            for parameter in mockableFunction['parameters']:
+                lastTypeParts = parameter['type'].strip().split()[-1]
+                file.write('\t' + mockableFunction['name'] + '_param_' + parameter['name'] + ' = ' + lastTypeParts + '();\n') # TODO: Break out into function.
+            file.write('\t' + mockableFunction['name'] + '_' + 'invocations = 0;\n')
+            if mockableFunction['returnType'] != 'void':
+                lastReturnTypeParts = mockableFunction['returnType'].strip().split()[-1]
+                file.write('\t' + mockableFunction['name'] + '_' + 'return = ' + lastReturnTypeParts + '();\n')
 
     file.write('}\n\n')
 
@@ -140,20 +147,21 @@ else:
     testFunctions = FindAllTestFunctions(currentDir)
 
     fakesDir = sys.argv[1] + '/Fakes/'
-    (mockableFunctions, neccessaryIncludes) = FindAllMockableFunctions(fakesDir)
+    mockableFiles = FindAllMockableFiles(fakesDir)
+    # (mockableFunctions, neccessaryIncludes) = FindAllMockableFunctions(fakesDir)
 
-    PrintMockedFunctions(mockableFunctions)
+    PrintMockedFiles(mockableFiles)
 
     # Write tests to RunTest function.
     with open(currentDir + "testSuite.cpp", "w") as file:
         file.write('// THIS FILE WAS AUTOGENERATED BY FILE generateTestSuite.py\n')
         file.write('#include "testSuite.h" \n#include "test.h"\n\n')
 
-        WriteCodeForIncludingFakes(neccessaryIncludes, file)
+        WriteCodeForIncludingMockedLibraries(mockableFiles, file)
         WriteCodeForRunningTests(testFunctions, file)
-        WriteCodeForMockedLibraries(mockableFunctions, file)
+        WriteCodeForMockedLibraries(mockableFiles, file)
         
-    # SIMPLE TEST TO CHECK THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
+    # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
     with open(currentDir + "testSuite_WORKING.txt", "r") as file1:
         with open(currentDir + "testSuite.cpp", "r") as file2:
             if(file1.read() != file2.read()):
