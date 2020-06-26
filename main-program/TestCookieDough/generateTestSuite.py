@@ -23,9 +23,10 @@ else:
     allNeccessaryIncludes = []
     # allMockableFunctions = []
     allMockableFiles = []
+    # Mockable classes/structs    r"(class|struct)\s([^\{\(\)\}\s]+)\s?{([^\}]+)};"
     for fileName in os.listdir(fakesDir):
         if fileName.endswith(".h"):
-            currentFile = { 'name': '', functions: [], classes = [] }
+            currentFile = { 'name': '', 'functions': [], 'classes': [] }
 
             with open(fakesDir + fileName, "r") as file:
                 text = file.read()

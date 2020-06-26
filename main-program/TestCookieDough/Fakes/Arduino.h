@@ -2,6 +2,7 @@
 #define ARDUINO_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define INPUT_PULLUP 0x2
 
