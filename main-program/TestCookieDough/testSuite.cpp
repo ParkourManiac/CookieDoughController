@@ -4,7 +4,6 @@
 
 #include "Fakes/Arduino.h"
 
-void EditModeInitialized_NotEnabledByDefault();
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
@@ -94,7 +93,6 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
-	RUN_TEST(EditModeInitialized_NotEnabledByDefault);
 	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
 	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);
@@ -221,16 +219,6 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	digitalWrite_invocations++;
 }
 
-class Serial {     size_t print_return;
-unsigned int     size_t print_invocations = 0;
-const char     size_t print_param_*ifsh;
-class Serial {     size_t print(const char *ifsh)
-{
-	    size_t print_param_*ifsh = *ifsh;
-	    size_t print_invocations++;
-	return     size_t print_return;
-}
-
 
 void ResetMocks() 
 {
@@ -245,8 +233,5 @@ void ResetMocks()
 	digitalWrite_param_pin = uint8_t();
 	digitalWrite_param_val = uint8_t();
 	digitalWrite_invocations = 0;
-	    size_t print_param_*ifsh = char();
-	    size_t print_invocations = 0;
-	    size_t print_return = {();
 }
 

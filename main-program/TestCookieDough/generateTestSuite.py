@@ -21,12 +21,12 @@ else:
     # Reads/grabs all Fake functions and their parameters in folder "Fakes".
     fakesDir = sys.argv[1] + '/Fakes/'
     allNeccessaryIncludes = []
-    # allMockableFunctions = []
-    allMockableFiles = []
+    allMockableFunctions = []
+    #allMockableFiles = []
     # Mockable classes/structs    r"(class|struct)\s([^\{\(\)\}\s]+)\s?{([^\}]+)};"
     for fileName in os.listdir(fakesDir):
         if fileName.endswith(".h"):
-            currentFile = { 'name': '', 'functions': [], 'classes': [] }
+            #currentFile = { 'name': '', 'functions': [], 'classes': [] }
 
             with open(fakesDir + fileName, "r") as file:
                 text = file.read()
@@ -126,4 +126,7 @@ else:
         file.write('}\n\n')
         
 
-    
+    with open(currentDir + "testSuite_WORKING.cpp", "r") as file1:
+        with open(currentDir + "testSuite.cpp", "r") as file2:
+            if(file1.read() != file2.read()):
+                raise AssertionError("\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")
