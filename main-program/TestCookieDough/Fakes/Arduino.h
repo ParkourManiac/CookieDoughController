@@ -10,6 +10,11 @@ void pinMode(uint8_t pin, uint8_t mode);
 unsigned long millis();
 void digitalWrite(uint8_t pin, uint8_t val);
 
-
+#include <stddef.h>
+class Serial {
+    size_t print(const char *ifsh);
+    size_t print2(const char *ifsh);
+    size_t print3fea(const char *ifsh);
+};
 
 #endif
