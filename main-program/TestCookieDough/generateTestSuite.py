@@ -72,10 +72,11 @@ def ExtractClassesFromText(text, removeMatchedText=False):
     matches = re.findall(regex, text)
 
     for match in matches:
+        typeName = match[0]
         name = match[1]
         functions = ExtractFunctionsFromText(match[2])
 
-        newClass = {'name': name, 'functions': functions}
+        newClass = {'name': name, 'type': typeName, 'functions': functions}
         classes.append(newClass)
 
     newText = re.sub(regex, '', text) if removeMatchedText else text
@@ -133,60 +134,91 @@ def WriteCodeForRunningTests(testFunctions, file):
 
 def WriteCodeForMockedLibraries(mockableFiles, file):
     # Write global variables for mocked functions.
-    for mockableFile in mockableFiles: # <------------- CONTINUE HERE. USE mockableFile['classes'] TO MOCK THE CLASSES.
-        for mockableFunction in mockableFile['functions']:
-            if mockableFunction['returnType'] != 'void':
-                file.write(mockableFunction['returnType'] + ' ' +
-                           mockableFunction['name'] + '_' + 'return;\n')
-            file.write('unsigned int' + ' ' +
-                       mockableFunction['name'] + '_' + 'invocations = 0;\n')
-
-            for parameter in mockableFunction['parameters']:
-                file.write(parameter['type'] + ' ' + mockableFunction['name'] +
-                           '_param_' + parameter['name'] + ';\n')
-
-            # Write declaration of mocked function.
-            file.write(mockableFunction['returnType'] +
-                       ' ' + mockableFunction['name'] + '(')
-            for i in range(len(mockableFunction['parameters'])):
-                currentParam = mockableFunction['parameters'][i]
-                file.write(currentParam['type'] + ' ' + currentParam['name'])
-                if i != len(mockableFunction['parameters']) - 1:
-                    file.write(", ")
-
-            file.write(')\n{\n')
-
-            # Fill function body with mocked functionality.
-            for parameter in mockableFunction['parameters']:
-                # TODO: Break out into function.
-                file.write('\t' + mockableFunction['name'] + '_param_' +
-                           parameter['name'] + ' = ' + parameter['name'] + ';\n')
-            file.write(
-                '\t' + mockableFunction['name'] + '_' + 'invocations++;\n')
-            if mockableFunction['returnType'] != 'void':
-                file.write('\treturn ' +
-                           mockableFunction['name'] + '_' + 'return;\n')
-
-            file.write('}\n\n')
+    for mockableFile in mockableFiles:
+        definitions = GenerateCodeForFunctions(mockableFile['functions'])
+        definitions += GenerateCodeForClasses(mockableFile['classes'])
+        file.write(definitions)
 
     # Write Reset global variables for mocked functions.
     file.write('\nvoid ResetMocks() \n{\n')
     for mockableFile in mockableFiles:
-        for mockableFunction in mockableFile['functions']:
-            for parameter in mockableFunction['parameters']:
-                lastTypeParts = parameter['type'].strip().split()[-1]
-                # TODO: Break out into function.
-                file.write('\t' + mockableFunction['name'] + '_param_' +
-                           parameter['name'] + ' = ' + lastTypeParts + '();\n')
-            file.write(
-                '\t' + mockableFunction['name'] + '_' + 'invocations = 0;\n')
-            if mockableFunction['returnType'] != 'void':
-                lastReturnTypeParts = mockableFunction['returnType'].strip(
-                ).split()[-1]
-                file.write(
-                    '\t' + mockableFunction['name'] + '_' + 'return = ' + lastReturnTypeParts + '();\n')
+        resetCode = GenerateCodeForResettingMocks(
+            mockableFile['functions'], mockableFile['classes'])
+        file.write(resetCode)
 
     file.write('}\n\n')
+
+
+# TODO: WHEN PARAMETER IS USED DON'T INCLUDE * or & for referenses and pointers!
+def GenerateCodeForFunctions(functions):
+    code = ''
+    for function in functions:
+        if function['returnType'] != 'void':
+            code += function['returnType'] + ' '
+            code += function['name'] + '_' + 'return;\n'
+
+        code += 'unsigned int' + ' '
+        code += function['name'] + '_' + 'invocations = 0;\n'
+
+        for parameter in function['parameters']:
+            code += parameter['type'] + ' '
+            code += function['name'] + '_param_' + parameter['name'] + ';\n'
+
+        # Write declaration of mocked function.
+        code += function['returnType'] + ' '
+        code += function['name'] + '('
+        for i in range(len(function['parameters'])):
+            currentParam = function['parameters'][i]
+
+            code += currentParam['type'] + ' ' + currentParam['name']
+            if i != len(function['parameters']) - 1:
+                code += ", "
+
+        code += ')\n{\n'
+
+        # Fill function body with mocked functionality.
+        for parameter in function['parameters']:
+            # TODO: Break out into function.
+            code += '\t' + function['name'] + '_param_' + parameter['name']
+            code += ' = ' + parameter['name'] + ';\n'
+
+        code += '\t' + function['name'] + '_' + 'invocations++;\n'
+        if function['returnType'] != 'void':
+            code += '\treturn ' + function['name'] + '_' + 'return;\n'
+
+        code += '}\n\n'
+
+    return code
+
+
+# <------------- CONTINUE HERE. MOCK THE CLASSES.
+def GenerateCodeForClasses(classes):
+    code = ''
+    for currentClass in classes:
+        code += currentClass['type'] + ' ' + currentClass['name'] + '\n{\n'
+        code += GenerateCodeForFunctions(currentClass['functions'])
+        code += '}\n\n'
+
+    return code
+
+
+# TODO: WRITE CODE TO RESET CLASSES AND STRUCTS
+def GenerateCodeForResettingMocks(functions, classes):
+    code = ''
+    for function in functions:
+        for parameter in function['parameters']:
+            lastTypeParts = parameter['type'].strip().split()[-1]
+            code += '\t' + function['name'] + '_param_' + parameter['name']
+            code += ' = ' + lastTypeParts + '();\n'
+
+        code += '\t' + function['name'] + '_' + 'invocations = 0;\n'
+
+        if function['returnType'] != 'void':
+            lastReturnTypeParts = function['returnType'].strip().split()[-1]
+            code += '\t' + function['name'] + '_' + 'return'
+            code += ' = ' + lastReturnTypeParts + '();\n'
+
+    return code
 
 
 if len(sys.argv) <= 1:

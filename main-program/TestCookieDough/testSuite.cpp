@@ -219,6 +219,40 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	digitalWrite_invocations++;
 }
 
+class Serial
+{
+    size_t print_return;
+unsigned int print_invocations = 0;
+const char print_param_*ifsh;
+    size_t print(const char *ifsh)
+{
+	print_param_*ifsh = *ifsh;
+	print_invocations++;
+	return print_return;
+}
+
+    size_t print2_return;
+unsigned int print2_invocations = 0;
+const char print2_param_*ifsh;
+    size_t print2(const char *ifsh)
+{
+	print2_param_*ifsh = *ifsh;
+	print2_invocations++;
+	return print2_return;
+}
+
+    size_t print3fea_return;
+unsigned int print3fea_invocations = 0;
+const char print3fea_param_*ifsh;
+    size_t print3fea(const char *ifsh)
+{
+	print3fea_param_*ifsh = *ifsh;
+	print3fea_invocations++;
+	return print3fea_return;
+}
+
+}
+
 
 void ResetMocks() 
 {
