@@ -210,6 +210,7 @@ def GenerateCodeForFunctions(functions, className=''):
 
 
 # <------------- CONTINUE HERE. DOUBLE CHECK IF THE CLASSES WERE CORRECTLY GENERATED IN testSuite.cpp
+# See this link: https://www.tutorialspoint.com/cplusplus/cpp_static_members.htm
 def GenerateCodeForClasses(classes):
     code = ''
     for currentClass in classes:
@@ -228,7 +229,6 @@ def GenerateCodeForClasses(classes):
     return code
 
 
-# TODO: WRITE CODE TO RESET CLASSES AND STRUCTS
 def GenerateCodeForResettingMocks(functions, classes):
     code = ''
     code += GenerateCodeForResettingFunctions(functions)
@@ -291,7 +291,7 @@ else:
         WriteCodeForMockedLibraries(mockableFiles, file)
 
     # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
-    # with open(currentDir + "testSuite_WORKING.txt", "r") as file1:
+    # with open(currentDir + "testSuite_WORKING.txt", "r") as file1: # TODO: Uncomment and change into test for mock framework.
     #     with open(currentDir + "testSuite.cpp", "r") as file2:
     #         if(file1.read() != file2.read()):
     #             raise AssertionError(
