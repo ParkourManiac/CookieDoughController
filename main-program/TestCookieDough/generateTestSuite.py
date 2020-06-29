@@ -45,7 +45,7 @@ def ExtractFunctionsFromText(text):
     matches = re.findall(regex, text)
 
     for match in matches:
-        returnType = match[0]
+        returnType = match[0].lstrip()
         nameOfFunction = match[1]
 
         rawParameters = match[2].split(",")
@@ -54,7 +54,14 @@ def ExtractFunctionsFromText(text):
             if len(rawParameter) > 0:
                 parameterParts = rawParameter.strip().split()
                 parameterName = parameterParts.pop(len(parameterParts) - 1)
-                parameterType = " ".join(parameterParts)
+                parameterType = parameterParts
+
+                if parameterName[0] == '&' or parameterName[0] == '*':
+                    # The name contains the reference/pointer operator, move it to the type instead.
+                    parameterType.append(parameterName[0])
+                    parameterName = parameterName[1:]
+
+                parameterType = " ".join(parameterType)
 
                 newParameter = {'name': parameterName, 'type': parameterType}
                 parameters.append(newParameter)
@@ -80,6 +87,7 @@ def ExtractClassesFromText(text, removeMatchedText=False):
         classes.append(newClass)
 
     newText = re.sub(regex, '', text) if removeMatchedText else text
+    # classes = [] # DEBUG: REMOVE THIS LINE
     return (classes, newText)
 
 
@@ -149,23 +157,32 @@ def WriteCodeForMockedLibraries(mockableFiles, file):
     file.write('}\n\n')
 
 
-# TODO: WHEN PARAMETER IS USED DON'T INCLUDE * or & for referenses and pointers!
-def GenerateCodeForFunctions(functions):
+def GenerateCodeForFunctions(functions, className=''):
     code = ''
+    prefix = ''
+    indent = ''
+    isInsideClass = className != ''
+
+    if isInsideClass:
+        prefix = 'static '
+        indent = '\t'
+        code += 'public:\n'
+
     for function in functions:
         if function['returnType'] != 'void':
-            code += function['returnType'] + ' '
+            code += indent + prefix + function['returnType'] + ' '
             code += function['name'] + '_' + 'return;\n'
 
-        code += 'unsigned int' + ' '
-        code += function['name'] + '_' + 'invocations = 0;\n'
+        code += indent + prefix + 'unsigned int' + ' '
+        code += function['name'] + '_' + 'invocations'
+        code += ' = 0;\n' if not isInsideClass else ';\n'
 
         for parameter in function['parameters']:
-            code += parameter['type'] + ' '
+            code += indent + prefix + parameter['type'] + ' '
             code += function['name'] + '_param_' + parameter['name'] + ';\n'
 
         # Write declaration of mocked function.
-        code += function['returnType'] + ' '
+        code += indent + prefix + function['returnType'] + ' '
         code += function['name'] + '('
         for i in range(len(function['parameters'])):
             currentParam = function['parameters'][i]
@@ -174,30 +191,39 @@ def GenerateCodeForFunctions(functions):
             if i != len(function['parameters']) - 1:
                 code += ", "
 
-        code += ')\n{\n'
+        code += ')\n'
+        code += indent + '{\n'
 
         # Fill function body with mocked functionality.
         for parameter in function['parameters']:
-            # TODO: Break out into function.
-            code += '\t' + function['name'] + '_param_' + parameter['name']
+            code += indent + '\t'
+            code += function['name'] + '_param_' + parameter['name']
             code += ' = ' + parameter['name'] + ';\n'
 
-        code += '\t' + function['name'] + '_' + 'invocations++;\n'
+        code += indent + '\t' + function['name'] + '_' + 'invocations++;\n'
         if function['returnType'] != 'void':
-            code += '\treturn ' + function['name'] + '_' + 'return;\n'
+            code += indent + '\treturn ' + function['name'] + '_' + 'return;\n'
 
-        code += '}\n\n'
+        code += indent + '}\n\n'
 
     return code
 
 
-# <------------- CONTINUE HERE. MOCK THE CLASSES.
+# <------------- CONTINUE HERE. DOUBLE CHECK IF THE CLASSES WERE CORRECTLY GENERATED IN testSuite.cpp
 def GenerateCodeForClasses(classes):
     code = ''
     for currentClass in classes:
         code += currentClass['type'] + ' ' + currentClass['name'] + '\n{\n'
-        code += GenerateCodeForFunctions(currentClass['functions'])
-        code += '}\n\n'
+        code += GenerateCodeForFunctions(
+            currentClass['functions'], currentClass['name'])
+        code += '};\n\n'
+
+        # Set invocation count to zero outside class
+        for function in currentClass['functions']:
+            code += 'unsigned int '
+            code += currentClass['name'] + '::'
+            code += function['name'] + '_' + 'invocations'
+            code += ' = 0;\n'
 
     return code
 
@@ -205,20 +231,41 @@ def GenerateCodeForClasses(classes):
 # TODO: WRITE CODE TO RESET CLASSES AND STRUCTS
 def GenerateCodeForResettingMocks(functions, classes):
     code = ''
-    for function in functions:
-        for parameter in function['parameters']:
-            lastTypeParts = parameter['type'].strip().split()[-1]
-            code += '\t' + function['name'] + '_param_' + parameter['name']
-            code += ' = ' + lastTypeParts + '();\n'
+    code += GenerateCodeForResettingFunctions(functions)
 
-        code += '\t' + function['name'] + '_' + 'invocations = 0;\n'
-
-        if function['returnType'] != 'void':
-            lastReturnTypeParts = function['returnType'].strip().split()[-1]
-            code += '\t' + function['name'] + '_' + 'return'
-            code += ' = ' + lastReturnTypeParts + '();\n'
+    for currentClass in classes:
+        prefix = currentClass['name'] + '::'
+        code += GenerateCodeForResettingFunctions(
+            currentClass['functions'], prefix=prefix)
 
     return code
+
+
+def GenerateCodeForResettingFunctions(functions, prefix=''):
+    code = ''
+    for function in functions:
+        for parameter in function['parameters']:
+            lastPartOfType = GetLastPartOfType(parameter['type'])
+            code += '\t' + prefix + \
+                function['name'] + '_param_' + parameter['name']
+            code += ' = ' + lastPartOfType + '();\n'
+
+        code += '\t' + prefix + function['name'] + '_' + 'invocations = 0;\n'
+
+        if function['returnType'] != 'void':
+            lastPartOfReturnType = function['returnType'].strip().split()[-1]
+            code += '\t' + prefix + function['name'] + '_' + 'return'
+            code += ' = ' + lastPartOfReturnType + '();\n'
+
+    return code
+
+
+def GetLastPartOfType(fullType):
+    lastPartOfType = fullType.strip().split()[-1]
+    if lastPartOfType == '&' or lastPartOfType == '*':
+        lastPartOfType = fullType.strip().split()[-2]
+
+    return lastPartOfType
 
 
 if len(sys.argv) <= 1:
@@ -244,8 +291,8 @@ else:
         WriteCodeForMockedLibraries(mockableFiles, file)
 
     # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
-    with open(currentDir + "testSuite_WORKING.txt", "r") as file1:
-        with open(currentDir + "testSuite.cpp", "r") as file2:
-            if(file1.read() != file2.read()):
-                raise AssertionError(
-                    "\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")
+    # with open(currentDir + "testSuite_WORKING.txt", "r") as file1:
+    #     with open(currentDir + "testSuite.cpp", "r") as file2:
+    #         if(file1.read() != file2.read()):
+    #             raise AssertionError(
+    #                 "\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")

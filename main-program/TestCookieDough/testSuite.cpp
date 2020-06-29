@@ -221,38 +221,42 @@ void digitalWrite(uint8_t pin, uint8_t val)
 
 class Serial
 {
-    size_t print_return;
-unsigned int print_invocations = 0;
-const char print_param_*ifsh;
-    size_t print(const char *ifsh)
-{
-	print_param_*ifsh = *ifsh;
-	print_invocations++;
-	return print_return;
-}
+public:
+	static size_t print_return;
+	static unsigned int print_invocations;
+	static const char * print_param_ifsh;
+	static size_t print(const char * ifsh)
+	{
+		print_param_ifsh = ifsh;
+		print_invocations++;
+		return print_return;
+	}
 
-    size_t print2_return;
-unsigned int print2_invocations = 0;
-const char print2_param_*ifsh;
-    size_t print2(const char *ifsh)
-{
-	print2_param_*ifsh = *ifsh;
-	print2_invocations++;
-	return print2_return;
-}
+	static size_t print2_return;
+	static unsigned int print2_invocations;
+	static const char * print2_param_ifsh;
+	static size_t print2(const char * ifsh)
+	{
+		print2_param_ifsh = ifsh;
+		print2_invocations++;
+		return print2_return;
+	}
 
-    size_t print3fea_return;
-unsigned int print3fea_invocations = 0;
-const char print3fea_param_*ifsh;
-    size_t print3fea(const char *ifsh)
-{
-	print3fea_param_*ifsh = *ifsh;
-	print3fea_invocations++;
-	return print3fea_return;
-}
+	static size_t print3fea_return;
+	static unsigned int print3fea_invocations;
+	static const char * print3fea_param_ifsh;
+	static size_t print3fea(const char * ifsh)
+	{
+		print3fea_param_ifsh = ifsh;
+		print3fea_invocations++;
+		return print3fea_return;
+	}
 
-}
+};
 
+unsigned int Serial::print_invocations = 0;
+unsigned int Serial::print2_invocations = 0;
+unsigned int Serial::print3fea_invocations = 0;
 
 void ResetMocks() 
 {
@@ -267,5 +271,14 @@ void ResetMocks()
 	digitalWrite_param_pin = uint8_t();
 	digitalWrite_param_val = uint8_t();
 	digitalWrite_invocations = 0;
+	Serial::print_param_ifsh = char();
+	Serial::print_invocations = 0;
+	Serial::print_return = size_t();
+	Serial::print2_param_ifsh = char();
+	Serial::print2_invocations = 0;
+	Serial::print2_return = size_t();
+	Serial::print3fea_param_ifsh = char();
+	Serial::print3fea_invocations = 0;
+	Serial::print3fea_return = size_t();
 }
 
