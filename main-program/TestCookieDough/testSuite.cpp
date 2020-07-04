@@ -2,9 +2,7 @@
 #include "testSuite.h" 
 #include "test.h"
 
-//#include "Fakes/Arduino.h"
-#include <stdint.h>
-#include <stddef.h>
+#include "Fakes/Arduino.h"
 
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
