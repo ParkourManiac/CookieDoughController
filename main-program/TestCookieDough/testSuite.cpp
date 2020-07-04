@@ -2,7 +2,9 @@
 #include "testSuite.h" 
 #include "test.h"
 
-#include "Fakes/Arduino.h"
+//#include "Fakes/Arduino.h"
+#include <stdint.h>
+#include <stddef.h>
 
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
@@ -271,13 +273,13 @@ void ResetMocks()
 	digitalWrite_param_pin = uint8_t();
 	digitalWrite_param_val = uint8_t();
 	digitalWrite_invocations = 0;
-	Serial::print_param_ifsh = char();
+	Serial::print_param_ifsh = nullptr;
 	Serial::print_invocations = 0;
 	Serial::print_return = size_t();
-	Serial::print2_param_ifsh = char();
+	Serial::print2_param_ifsh = nullptr;
 	Serial::print2_invocations = 0;
 	Serial::print2_return = size_t();
-	Serial::print3fea_param_ifsh = char();
+	Serial::print3fea_param_ifsh = nullptr;
 	Serial::print3fea_invocations = 0;
 	Serial::print3fea_return = size_t();
 }

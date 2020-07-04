@@ -248,7 +248,12 @@ def GenerateCodeForResettingFunctions(functions, prefix=''):
             lastPartOfType = GetLastPartOfType(parameter['type'])
             code += '\t' + prefix + \
                 function['name'] + '_param_' + parameter['name']
-            code += ' = ' + lastPartOfType + '();\n'
+
+            lastCharOfType = parameter['type'].strip()[-1] 
+            if lastCharOfType != '*':
+                code += ' = ' + lastPartOfType + '();\n'
+            else:
+                code += ' = nullptr;\n'
 
         code += '\t' + prefix + function['name'] + '_' + 'invocations = 0;\n'
 
