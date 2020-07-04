@@ -11,10 +11,11 @@ unsigned long millis();
 void digitalWrite(uint8_t pin, uint8_t val);
 
 #include <stddef.h>
-class Serial {
+class Serial_ {
+public:
     size_t print(const char *ifsh);
-    size_t print2(const char *ifsh);
-    size_t print3fea(const char *ifsh);
 };
+
+//Serial_ Serial; < ------------------------- TODO CONTINUE HERE. This line causes problems...
 
 #endif

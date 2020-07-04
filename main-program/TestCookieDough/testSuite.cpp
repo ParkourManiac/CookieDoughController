@@ -4,6 +4,7 @@
 
 #include "Fakes/Arduino.h"
 
+void SerialIsMocked_Works();
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
@@ -93,6 +94,7 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
+	RUN_TEST(SerialIsMocked_Works);
 	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
 	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);
@@ -219,44 +221,16 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	digitalWrite_invocations++;
 }
 
-class Serial
+size_t Serial__print_return;
+unsigned int Serial__print_invocations = 0;
+const char * Serial__print_param_ifsh;
+size_t Serial_::print(const char * ifsh)
 {
-public:
-	static size_t print_return;
-	static unsigned int print_invocations;
-	static const char * print_param_ifsh;
-	static size_t print(const char * ifsh)
-	{
-		print_param_ifsh = ifsh;
-		print_invocations++;
-		return print_return;
-	}
+	Serial__print_param_ifsh = ifsh;
+	Serial__print_invocations++;
+	return Serial__print_return;
+}
 
-	static size_t print2_return;
-	static unsigned int print2_invocations;
-	static const char * print2_param_ifsh;
-	static size_t print2(const char * ifsh)
-	{
-		print2_param_ifsh = ifsh;
-		print2_invocations++;
-		return print2_return;
-	}
-
-	static size_t print3fea_return;
-	static unsigned int print3fea_invocations;
-	static const char * print3fea_param_ifsh;
-	static size_t print3fea(const char * ifsh)
-	{
-		print3fea_param_ifsh = ifsh;
-		print3fea_invocations++;
-		return print3fea_return;
-	}
-
-};
-
-unsigned int Serial::print_invocations = 0;
-unsigned int Serial::print2_invocations = 0;
-unsigned int Serial::print3fea_invocations = 0;
 
 void ResetMocks() 
 {
@@ -271,14 +245,8 @@ void ResetMocks()
 	digitalWrite_param_pin = uint8_t();
 	digitalWrite_param_val = uint8_t();
 	digitalWrite_invocations = 0;
-	Serial::print_param_ifsh = nullptr;
-	Serial::print_invocations = 0;
-	Serial::print_return = size_t();
-	Serial::print2_param_ifsh = nullptr;
-	Serial::print2_invocations = 0;
-	Serial::print2_return = size_t();
-	Serial::print3fea_param_ifsh = nullptr;
-	Serial::print3fea_invocations = 0;
-	Serial::print3fea_return = size_t();
+	Serial__print_param_ifsh = nullptr;
+	Serial__print_invocations = 0;
+	Serial__print_return = size_t();
 }
 

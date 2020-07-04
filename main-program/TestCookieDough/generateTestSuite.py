@@ -41,7 +41,7 @@ def FindAllMockableFiles(dir):
 
 def ExtractFunctionsFromText(text):
     functions = []
-    regex = r"([^\(\)\;\n]+)\s([^\(\)\;\n]+)\(([^\)\;]*)\)(?=\;)"
+    regex = r"([^\(\)\;\n\:]+)\s([^\(\)\;\n]+)\(([^\)\;]*)\)(?=\;)"
     matches = re.findall(regex, text)
 
     for match in matches:
@@ -157,32 +157,31 @@ def WriteCodeForMockedLibraries(mockableFiles, file):
     file.write('}\n\n')
 
 
-def GenerateCodeForFunctions(functions, className=''):
+def GenerateCodeForFunctions(functions, className = ''):
     code = ''
-    prefix = ''
-    indent = ''
+    namePrefix = ''
     isInsideClass = className != ''
 
     if isInsideClass:
-        prefix = 'static '
-        indent = '\t'
-        code += 'public:\n'
+        namePrefix = className + '_'
 
     for function in functions:
         if function['returnType'] != 'void':
-            code += indent + prefix + function['returnType'] + ' '
-            code += function['name'] + '_' + 'return;\n'
+            code += function['returnType'] + ' '
+            code += namePrefix + function['name'] + '_' + 'return;\n'
 
-        code += indent + prefix + 'unsigned int' + ' '
-        code += function['name'] + '_' + 'invocations'
-        code += ' = 0;\n' if not isInsideClass else ';\n'
+        code += 'unsigned int' + ' '
+        code += namePrefix + function['name'] + '_' + 'invocations'
+        code += ' = 0;\n'
 
         for parameter in function['parameters']:
-            code += indent + prefix + parameter['type'] + ' '
-            code += function['name'] + '_param_' + parameter['name'] + ';\n'
+            code += parameter['type'] + ' '
+            code += namePrefix + function['name'] + '_param_' + parameter['name'] + ';\n'
 
         # Write declaration of mocked function.
-        code += indent + prefix + function['returnType'] + ' '
+        code += function['returnType'] + ' '
+        if isInsideClass:
+            code += className + '::'
         code += function['name'] + '('
         for i in range(len(function['parameters'])):
             currentParam = function['parameters'][i]
@@ -192,39 +191,28 @@ def GenerateCodeForFunctions(functions, className=''):
                 code += ", "
 
         code += ')\n'
-        code += indent + '{\n'
+        code += '{\n'
 
         # Fill function body with mocked functionality.
         for parameter in function['parameters']:
-            code += indent + '\t'
-            code += function['name'] + '_param_' + parameter['name']
+            code += '\t'
+            code += namePrefix + function['name'] + '_param_' + parameter['name']
             code += ' = ' + parameter['name'] + ';\n'
 
-        code += indent + '\t' + function['name'] + '_' + 'invocations++;\n'
+        code += '\t' + namePrefix + function['name'] + '_' + 'invocations++;\n'
         if function['returnType'] != 'void':
-            code += indent + '\treturn ' + function['name'] + '_' + 'return;\n'
+            code += '\treturn ' + namePrefix + function['name'] + '_' + 'return;\n'
 
-        code += indent + '}\n\n'
+        code += '}\n\n'
 
     return code
 
 
-# <------------- CONTINUE HERE. DOUBLE CHECK IF THE CLASSES WERE CORRECTLY GENERATED IN testSuite.cpp
-# See this link: https://www.tutorialspoint.com/cplusplus/cpp_static_members.htm
 def GenerateCodeForClasses(classes):
     code = ''
     for currentClass in classes:
-        code += currentClass['type'] + ' ' + currentClass['name'] + '\n{\n'
         code += GenerateCodeForFunctions(
             currentClass['functions'], currentClass['name'])
-        code += '};\n\n'
-
-        # Set invocation count to zero outside class
-        for function in currentClass['functions']:
-            code += 'unsigned int '
-            code += currentClass['name'] + '::'
-            code += function['name'] + '_' + 'invocations'
-            code += ' = 0;\n'
 
     return code
 
@@ -234,19 +222,24 @@ def GenerateCodeForResettingMocks(functions, classes):
     code += GenerateCodeForResettingFunctions(functions)
 
     for currentClass in classes:
-        prefix = currentClass['name'] + '::'
         code += GenerateCodeForResettingFunctions(
-            currentClass['functions'], prefix=prefix)
+            currentClass['functions'], currentClass['name'])
 
     return code
 
 
-def GenerateCodeForResettingFunctions(functions, prefix=''):
+def GenerateCodeForResettingFunctions(functions, className=''):
     code = ''
+    namePrefix = ''
+    isInsideClass = className != ''
+
+    if isInsideClass:
+        namePrefix = className + '_'
+
     for function in functions:
         for parameter in function['parameters']:
             lastPartOfType = GetLastPartOfType(parameter['type'])
-            code += '\t' + prefix + \
+            code += '\t' + namePrefix + \
                 function['name'] + '_param_' + parameter['name']
 
             lastCharOfType = parameter['type'].strip()[-1] 
@@ -255,11 +248,11 @@ def GenerateCodeForResettingFunctions(functions, prefix=''):
             else:
                 code += ' = nullptr;\n'
 
-        code += '\t' + prefix + function['name'] + '_' + 'invocations = 0;\n'
+        code += '\t' + namePrefix + function['name'] + '_' + 'invocations = 0;\n'
 
         if function['returnType'] != 'void':
             lastPartOfReturnType = function['returnType'].strip().split()[-1]
-            code += '\t' + prefix + function['name'] + '_' + 'return'
+            code += '\t' + namePrefix + function['name'] + '_' + 'return'
             code += ' = ' + lastPartOfReturnType + '();\n'
 
     return code
