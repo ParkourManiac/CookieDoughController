@@ -1,6 +1,6 @@
 #include "test.h"
 #include "../lib/CookieDoughLibrary/EditMode.h"
-//#include "Fakes/Arduino.h"
+#include "Fakes/Arduino.h"
 
 const int normalKeyCount = 4;
 
@@ -15,7 +15,7 @@ extern unsigned int Serial__print_invocations;
 extern const char * Serial__print_param_ifsh;
 
 void SerialIsMocked_Works() {
-    //Serial.print("hej");
+    Serial.print("hej");
 
     ASSERT_TEST(Serial__print_invocations == 1);
 }

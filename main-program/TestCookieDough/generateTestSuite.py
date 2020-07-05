@@ -111,13 +111,26 @@ def PrintMockedFiles(mockedFiles):
 
 def FunctionsAsText(functions, endWithComma=False):
     text = ''
-    for function in functions:
-        text += function['name']
-        if(function != functions[-1] or endWithComma):
+
+    functionNames = list(map(lambda x : x['name'], functions))
+    uniqueFunctionNames = Unique(functionNames)
+
+    for function in uniqueFunctionNames:
+        text += function
+        if(function != uniqueFunctionNames[-1] or endWithComma):
             text += ", "
 
     return text
 
+def Unique(listOfItems):
+    uniqueList = []
+
+    for item in listOfItems:
+        if item not in uniqueList:
+            uniqueList.append(item)
+
+    return uniqueList
+        
 
 def WriteCodeForIncludingMockedLibraries(mockableFiles, file):
     # Write all includes needed for mocked functions.
@@ -157,7 +170,7 @@ def WriteCodeForMockedLibraries(mockableFiles, file):
     file.write('}\n\n')
 
 
-def GenerateCodeForFunctions(functions, className = ''):
+def GenerateCodeForFunctions(functions, className = ''): # TODO: CONTINUE HERE. Reuse variables that have already been defined to prevent redefinitions!
     code = ''
     namePrefix = ''
     isInsideClass = className != ''
