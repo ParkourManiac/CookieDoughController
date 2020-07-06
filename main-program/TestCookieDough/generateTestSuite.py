@@ -45,6 +45,9 @@ def ExtractFunctionsFromText(text):
     matches = re.findall(regex, text)
 
     for match in matches:
+        if match[0][:2] == '//':
+            continue
+
         returnType = match[0].lstrip()
         nameOfFunction = match[1]
 
@@ -172,24 +175,27 @@ def WriteCodeForMockedLibraries(mockableFiles, file):
 
 def GenerateCodeForFunctions(functions, className = ''): # TODO: CONTINUE HERE. Reuse variables that have already been defined to prevent redefinitions!
     code = ''
-    namePrefix = ''
+    prefix = ''
     isInsideClass = className != ''
+    definedVariables = []
 
     if isInsideClass:
-        namePrefix = className + '_'
+        prefix = className + '_'
 
     for function in functions:
         if function['returnType'] != 'void':
+            returnVar = prefix + ReturnVariableName(function)
             code += function['returnType'] + ' '
-            code += namePrefix + function['name'] + '_' + 'return;\n'
+            code += returnVar + ';\n'
 
-        code += 'unsigned int' + ' '
-        code += namePrefix + function['name'] + '_' + 'invocations'
-        code += ' = 0;\n'
+        invocationsVar = prefix + InvocationsVariableName(function)
+        code += 'unsigned int '
+        code += invocationsVar + ' = 0;\n'
 
         for parameter in function['parameters']:
+            parameterVar = prefix + ParameterVariableName(function, parameter)
             code += parameter['type'] + ' '
-            code += namePrefix + function['name'] + '_param_' + parameter['name'] + ';\n'
+            code += parameterVar + ';\n'
 
         # Write declaration of mocked function.
         code += function['returnType'] + ' '
@@ -209,16 +215,28 @@ def GenerateCodeForFunctions(functions, className = ''): # TODO: CONTINUE HERE. 
         # Fill function body with mocked functionality.
         for parameter in function['parameters']:
             code += '\t'
-            code += namePrefix + function['name'] + '_param_' + parameter['name']
+            code += prefix + ParameterVariableName(function, parameter)
             code += ' = ' + parameter['name'] + ';\n'
 
-        code += '\t' + namePrefix + function['name'] + '_' + 'invocations++;\n'
+        code += '\t' + prefix + InvocationsVariableName(function) + '++;\n'
         if function['returnType'] != 'void':
-            code += '\treturn ' + namePrefix + function['name'] + '_' + 'return;\n'
+            code += '\treturn ' + prefix + ReturnVariableName(function) +';\n'
 
         code += '}\n\n'
 
     return code
+
+
+def ReturnVariableName(function):
+    return function['name'] + '_' + 'return'
+
+
+def InvocationsVariableName(function):
+    return function['name'] + '_' + 'invocations'
+
+
+def ParameterVariableName(function, parameter):
+    return function['name'] + '_param_' + parameter['name']
 
 
 def GenerateCodeForClasses(classes):
@@ -241,18 +259,18 @@ def GenerateCodeForResettingMocks(functions, classes):
     return code
 
 
-def GenerateCodeForResettingFunctions(functions, className=''):
+def GenerateCodeForResettingFunctions(functions, className=''): # TODO: Refactor to use VariableName functions.
     code = ''
-    namePrefix = ''
+    prefix = ''
     isInsideClass = className != ''
 
     if isInsideClass:
-        namePrefix = className + '_'
+        prefix = className + '_'
 
     for function in functions:
         for parameter in function['parameters']:
             lastPartOfType = GetLastPartOfType(parameter['type'])
-            code += '\t' + namePrefix + \
+            code += '\t' + prefix + \
                 function['name'] + '_param_' + parameter['name']
 
             lastCharOfType = parameter['type'].strip()[-1] 
@@ -261,11 +279,11 @@ def GenerateCodeForResettingFunctions(functions, className=''):
             else:
                 code += ' = nullptr;\n'
 
-        code += '\t' + namePrefix + function['name'] + '_' + 'invocations = 0;\n'
+        code += '\t' + prefix + function['name'] + '_' + 'invocations = 0;\n'
 
         if function['returnType'] != 'void':
             lastPartOfReturnType = function['returnType'].strip().split()[-1]
-            code += '\t' + namePrefix + function['name'] + '_' + 'return'
+            code += '\t' + prefix + function['name'] + '_' + 'return'
             code += ' = ' + lastPartOfReturnType + '();\n'
 
     return code
@@ -302,8 +320,8 @@ else:
         WriteCodeForMockedLibraries(mockableFiles, file)
 
     # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
-    # with open(currentDir + "testSuite_WORKING.txt", "r") as file1: # TODO: Uncomment and change into test for mock framework.
-    #     with open(currentDir + "testSuite.cpp", "r") as file2:
-    #         if(file1.read() != file2.read()):
-    #             raise AssertionError(
-    #                 "\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")
+    with open(currentDir + "testSuite_WORKING.txt", "r") as file1: # TODO: Uncomment and change into test for mock framework.
+        with open(currentDir + "testSuite.cpp", "r") as file2:
+            if(file1.read() != file2.read()):
+                raise AssertionError(
+                    "\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")

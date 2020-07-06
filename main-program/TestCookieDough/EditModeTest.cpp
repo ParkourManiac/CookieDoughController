@@ -10,12 +10,12 @@ const int normalKeyCount = 4;
 //     ASSERT_TEST(editmode.enabled == false);
 // }
 
-extern size_t Serial__print_return;
-extern unsigned int Serial__print_invocations;
-extern const char * Serial__print_param_ifsh;
+// extern size_t Serial__print_return;
+// extern unsigned int Serial__print_invocations;
+// extern const char * Serial__print_param_ifsh;
 
-void SerialIsMocked_Works() {
-    Serial.print("hej");
+// void SerialIsMocked_Works() {
+//     Serial.print("hej");
 
-    ASSERT_TEST(Serial__print_invocations == 1);
-}
+//     ASSERT_TEST(Serial__print_invocations == 1);
+// }
