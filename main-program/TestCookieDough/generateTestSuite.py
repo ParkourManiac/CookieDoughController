@@ -160,6 +160,7 @@ def WriteCodeForMockedLibraries(mockableFiles, file):
     # Write global variables for mocked functions.
     for mockableFile in mockableFiles:
         definitions = GenerateCodeForFunctions(mockableFile['functions'])
+        BlueprintsForMockedFunctions(mockableFile['functions'] + mockableFile['functions'][1:] + mockableFile['functions'][2:4])
         definitions += GenerateCodeForClasses(mockableFile['classes'])
         file.write(definitions)
 
@@ -173,6 +174,68 @@ def WriteCodeForMockedLibraries(mockableFiles, file):
     file.write('}\n\n')
 
 
+def BlueprintsForMockedFunctions(functions, className = ''): # TODO: CONTINUE HERE. Populate blueprints.
+    allBlueprints = []
+
+    functionInfo = {}
+    for function in functions:
+        functionInfo[function['name']] = { 'count': 0, 'completed': 0 }
+    for function in functions:
+        functionInfo[function['name']]['count'] += 1
+
+    print(functionInfo)
+
+    for function in functions:
+        overloadCount = functionInfo[function['name']]['count']
+        currentOverloadNumber = functionInfo[function['name']]['completed'] + 1
+        blueprint = { 
+            'name': function['name'],
+            'class': className,
+            'returnType': function['returnType'],
+            'overloadSuffix': 'o' + str(currentOverloadNumber) if overloadCount > 1 else '',
+            'returnVariable': {'name': '', 'type': '' },
+            'invocationsVariable': {'name': '', 'type': '' },
+            'parameterVariables': [],
+        }
+
+        print(blueprint)
+
+        # 1. Generate mocked function blueprints. 
+        #   * Create empty blueprint object: name, class, return type, overload suffix, return variable, invocations variable, parameter variables
+        #   * Extract function name.
+        #   * Extract function returnType.
+        #   * Extract class name
+        #   - Prepare variable names and store them.
+        #       * Count overload number.
+        #       - If overload:
+        #           - Create overload suffix.
+        #       - Create name for return variable. Add o and number if overloaded. 
+        #          - Add name and type to mocked function blueprint.
+        #       - Create name for invocation variable. Add o and number if overloaded. 
+        #          - Add name and type to mocked function blueprint.
+        #       - Create name for all parameter variables. Add o and number if overloaded.
+        #          - Add name and type to mocked function blueprint. 
+        #          - Add info about parameter being mocked.
+
+        if function['returnType'] != 'void':
+            function['returnType']
+            returnVar = VariableNameReturn(function)
+
+        'unsigned int '
+        invocationsVar = VariableNameInvocations(function)
+
+        for parameter in function['parameters']:
+            parameterVar = VariableNameParameter(function, parameter)
+            parameter['type'] + ' '
+            parameterVar + ';\n'
+            parameter['type']
+            parameter['name']
+
+        functionInfo[function['name']]['completed'] += 1
+       
+    return allBlueprints
+
+
 def GenerateCodeForFunctions(functions, className = ''): # TODO: CONTINUE HERE. Reuse variables that have already been defined to prevent redefinitions!
     code = ''
     prefix = ''
@@ -183,17 +246,23 @@ def GenerateCodeForFunctions(functions, className = ''): # TODO: CONTINUE HERE. 
         prefix = className + '_'
 
     for function in functions:
+        # 1. Generate mocked function. 
+        #   - Generate return variable.
+        #   - Generate invocation variable.
+        #   - Generate variables for parameters.
+        #   - Return code to create variables in c++.
+        #
         if function['returnType'] != 'void':
-            returnVar = prefix + ReturnVariableName(function)
+            returnVar = prefix + VariableNameReturn(function)
             code += function['returnType'] + ' '
             code += returnVar + ';\n'
 
-        invocationsVar = prefix + InvocationsVariableName(function)
+        invocationsVar = prefix + VariableNameInvocations(function)
         code += 'unsigned int '
         code += invocationsVar + ' = 0;\n'
 
         for parameter in function['parameters']:
-            parameterVar = prefix + ParameterVariableName(function, parameter)
+            parameterVar = prefix + VariableNameParameter(function, parameter)
             code += parameter['type'] + ' '
             code += parameterVar + ';\n'
 
@@ -215,27 +284,27 @@ def GenerateCodeForFunctions(functions, className = ''): # TODO: CONTINUE HERE. 
         # Fill function body with mocked functionality.
         for parameter in function['parameters']:
             code += '\t'
-            code += prefix + ParameterVariableName(function, parameter)
+            code += prefix + VariableNameParameter(function, parameter)
             code += ' = ' + parameter['name'] + ';\n'
 
-        code += '\t' + prefix + InvocationsVariableName(function) + '++;\n'
+        code += '\t' + prefix + VariableNameInvocations(function) + '++;\n'
         if function['returnType'] != 'void':
-            code += '\treturn ' + prefix + ReturnVariableName(function) +';\n'
+            code += '\treturn ' + prefix + VariableNameReturn(function) +';\n'
 
         code += '}\n\n'
 
     return code
 
 
-def ReturnVariableName(function):
+def VariableNameReturn(function):
     return function['name'] + '_' + 'return'
 
 
-def InvocationsVariableName(function):
+def VariableNameInvocations(function):
     return function['name'] + '_' + 'invocations'
 
 
-def ParameterVariableName(function, parameter):
+def VariableNameParameter(function, parameter):
     return function['name'] + '_param_' + parameter['name']
 
 
