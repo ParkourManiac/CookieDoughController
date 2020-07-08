@@ -160,7 +160,7 @@ def WriteCodeForMockedLibraries(mockableFiles, file):
     # Write global variables for mocked functions.
     for mockableFile in mockableFiles:
         definitions = GenerateCodeForFunctions(mockableFile['functions'])
-        BlueprintsForMockedFunctions(mockableFile['functions'] + mockableFile['functions'][1:] + mockableFile['functions'][2:4])
+        print(BlueprintsForMockedFunctions(mockableFile['functions'] + mockableFile['functions'][1:] + mockableFile['functions'][2:4])) # TODO: CONTINUE HERE!
         definitions += GenerateCodeForClasses(mockableFile['classes'])
         file.write(definitions)
 
@@ -177,14 +177,14 @@ def WriteCodeForMockedLibraries(mockableFiles, file):
 def BlueprintsForMockedFunctions(functions, className = ''): # TODO: CONTINUE HERE. Populate blueprints.
     allBlueprints = []
 
+    # Count functions. Used to add overload suffix.
     functionInfo = {}
     for function in functions:
         functionInfo[function['name']] = { 'count': 0, 'completed': 0 }
     for function in functions:
         functionInfo[function['name']]['count'] += 1
 
-    print(functionInfo)
-
+    # Create and fill blueprint for each function.
     for function in functions:
         overloadCount = functionInfo[function['name']]['count']
         currentOverloadNumber = functionInfo[function['name']]['completed'] + 1
@@ -198,40 +198,41 @@ def BlueprintsForMockedFunctions(functions, className = ''): # TODO: CONTINUE HE
             'parameterVariables': [],
         }
 
-        print(blueprint)
-
         # 1. Generate mocked function blueprints. 
         #   * Create empty blueprint object: name, class, return type, overload suffix, return variable, invocations variable, parameter variables
         #   * Extract function name.
         #   * Extract function returnType.
         #   * Extract class name
-        #   - Prepare variable names and store them.
+        #   * Prepare variable names and store them.
         #       * Count overload number.
-        #       - If overload:
-        #           - Create overload suffix.
-        #       - Create name for return variable. Add o and number if overloaded. 
-        #          - Add name and type to mocked function blueprint.
-        #       - Create name for invocation variable. Add o and number if overloaded. 
-        #          - Add name and type to mocked function blueprint.
-        #       - Create name for all parameter variables. Add o and number if overloaded.
-        #          - Add name and type to mocked function blueprint. 
-        #          - Add info about parameter being mocked.
+        #       * If overload:
+        #           * Create overload suffix.
+        #       * Create name for return variable.  
+        #          * Add name and type to mocked function blueprint.
+        #       * Create name for invocation variable. 
+        #          * Add name and type to mocked function blueprint.
+        #       * Create name for all parameter variables. 
+        #          * Add name and type to mocked function blueprint. 
+        #          * Add info about parameter being mocked.
 
         if function['returnType'] != 'void':
-            function['returnType']
-            returnVar = VariableNameReturn(function)
+            blueprint['returnVariable']['type'] = function['returnType']
+            blueprint['returnVariable']['name'] = VariableNameReturn(function)
 
-        'unsigned int '
-        invocationsVar = VariableNameInvocations(function)
+
+        blueprint['invocationsVariable']['type'] = 'unsigned int '
+        blueprint['invocationsVariable']['name'] = VariableNameInvocations(function)
 
         for parameter in function['parameters']:
-            parameterVar = VariableNameParameter(function, parameter)
-            parameter['type'] + ' '
-            parameterVar + ';\n'
-            parameter['type']
-            parameter['name']
+            parameterVariable = { 
+                'name': VariableNameParameter(function, parameter),
+                'type': parameter['type'],
+                'parameter': parameter,
+            }
+            blueprint['parameterVariables'].append(parameterVariable)
 
         functionInfo[function['name']]['completed'] += 1
+        allBlueprints.append(blueprint)
        
     return allBlueprints
 
