@@ -161,6 +161,7 @@ def WriteCodeForMockedLibraries(mockableFiles, file):
     for mockableFile in mockableFiles:
         definitions = GenerateCodeForFunctions(mockableFile['functions'])
         print(BlueprintsForMockedFunctions(mockableFile['functions'] + mockableFile['functions'][1:] + mockableFile['functions'][2:4])) # TODO: CONTINUE HERE!
+        GenerateCodeFromBlueprints()
         definitions += GenerateCodeForClasses(mockableFile['classes'])
         file.write(definitions)
 
@@ -198,7 +199,7 @@ def BlueprintsForMockedFunctions(functions, className = ''): # TODO: CONTINUE HE
             'parameterVariables': [],
         }
 
-        # 1. Generate mocked function blueprints. 
+        # * 1. Generate mocked function blueprints. 
         #   * Create empty blueprint object: name, class, return type, overload suffix, return variable, invocations variable, parameter variables
         #   * Extract function name.
         #   * Extract function returnType.
@@ -236,23 +237,59 @@ def BlueprintsForMockedFunctions(functions, className = ''): # TODO: CONTINUE HE
        
     return allBlueprints
 
+def GenerateCodeFromBlueprints(functionBlueprints):
+    code = ''
+    blueprintABC = { 
+        'name',
+        'class',
+        'returnType',
+        'overloadSuffix',
+        'returnVariable',
+        'invocationsVariable',
+        'parameterVariables',
+    }
 
-def GenerateCodeForFunctions(functions, className = ''): # TODO: CONTINUE HERE. Reuse variables that have already been defined to prevent redefinitions!
+    for blueprint in functionBlueprints:
+        # Write declaration of mocked function.
+        code += blueprint['returnType'] + ' '
+        if blueprint['class'] != '':
+            code += blueprint['class'] + '::'
+        code += blueprint['name'] + '('
+
+        functionParameters = list(map(lambda x: x['parameter'], blueprint['parameterVariables']))
+        for i in range(len(functionParameters)):
+            currentParam = functionParameters[i]
+
+            code += currentParam['type'] + ' ' + currentParam['name']
+            if i != len(blueprint['parameters']) - 1:
+                code += ", "
+
+        code += ')\n'
+        code += '{\n'
+
+        # Fill blueprint body with mocked functionality.
+        prefix = '' if blueprint['class'] == '' else blueprint['class'] + '_'
+        for variable in blueprint['parameterVariables']: # TODO: Forgot to add all stuff. Migrate GenerateCodeForFunctions functionality here.
+            code += '\t'
+            code += prefix + variable['name']
+            code += ' = ' + variable['parameter']['name'] + ';\n'
+
+        code += '\t' + prefix + blueprint['invocationsVariable']['name'] + '++;\n'
+        if blueprint['returnType'] != 'void':
+            code += '\treturn ' + prefix + blueprint['returnVariable']['name'] +';\n'
+
+        code += '}\n\n'
+
+
+def GenerateCodeForFunctions(functions, className = ''): # TODO: Reuse variables that have already been defined to prevent redefinitions!
     code = ''
     prefix = ''
     isInsideClass = className != ''
-    definedVariables = []
 
     if isInsideClass:
         prefix = className + '_'
 
     for function in functions:
-        # 1. Generate mocked function. 
-        #   - Generate return variable.
-        #   - Generate invocation variable.
-        #   - Generate variables for parameters.
-        #   - Return code to create variables in c++.
-        #
         if function['returnType'] != 'void':
             returnVar = prefix + VariableNameReturn(function)
             code += function['returnType'] + ' '
