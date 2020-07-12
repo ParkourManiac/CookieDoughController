@@ -159,10 +159,15 @@ def WriteCodeForRunningTests(testFunctions, file):
 def WriteCodeForMockedLibraries(mockableFiles, file):
     # Write global variables for mocked functions.
     for mockableFile in mockableFiles:
-        definitions = GenerateCodeForFunctions(mockableFile['functions'])
-        print(BlueprintsForMockedFunctions(mockableFile['functions'] + mockableFile['functions'][1:] + mockableFile['functions'][2:4])) # TODO: CONTINUE HERE!
-        GenerateCodeFromBlueprints()
-        definitions += GenerateCodeForClasses(mockableFile['classes'])
+        # Mock functions
+        functionBlueprint = BlueprintsForMockedFunctions(mockableFile['functions'])
+
+        # Mock class functions
+        for currentClass in mockableFile['classes']:
+            functionBlueprint += BlueprintsForMockedFunctions(currentClass['functions'], currentClass['name'])
+            
+        # Generate code for mocked functions
+        definitions = GenerateCodeFromBlueprints(functionBlueprint)
         file.write(definitions)
 
     # Write Reset global variables for mocked functions.
@@ -175,7 +180,7 @@ def WriteCodeForMockedLibraries(mockableFiles, file):
     file.write('}\n\n')
 
 
-def BlueprintsForMockedFunctions(functions, className = ''): # TODO: CONTINUE HERE. Populate blueprints.
+def BlueprintsForMockedFunctions(functions, className = ''):
     allBlueprints = []
 
     # Count functions. Used to add overload suffix.
@@ -221,7 +226,7 @@ def BlueprintsForMockedFunctions(functions, className = ''): # TODO: CONTINUE HE
             blueprint['returnVariable']['name'] = VariableNameReturn(function)
 
 
-        blueprint['invocationsVariable']['type'] = 'unsigned int '
+        blueprint['invocationsVariable']['type'] = 'unsigned int'
         blueprint['invocationsVariable']['name'] = VariableNameInvocations(function)
 
         for parameter in function['parameters']:
@@ -239,17 +244,35 @@ def BlueprintsForMockedFunctions(functions, className = ''): # TODO: CONTINUE HE
 
 def GenerateCodeFromBlueprints(functionBlueprints):
     code = ''
-    blueprintABC = { 
-        'name',
-        'class',
-        'returnType',
-        'overloadSuffix',
-        'returnVariable',
-        'invocationsVariable',
-        'parameterVariables',
-    }
+    # blueprintABC = { 
+    #     'name',
+    #     'class',
+    #     'returnType',
+    #     'overloadSuffix',
+    #     'returnVariable',
+    #     'invocationsVariable',
+    #     'parameterVariables',
+    # }
 
     for blueprint in functionBlueprints:
+        prefix = '' if blueprint['class'] == '' else blueprint['class'] + '_'
+
+        # Declare variables.
+        if blueprint['returnType'] != 'void':
+            code += blueprint['returnVariable']['type'] + ' '
+            code += prefix + blueprint['returnVariable']['name']
+            code += ';\n'
+
+        code += blueprint['invocationsVariable']['type'] + ' '
+        code += prefix + blueprint['invocationsVariable']['name']
+        code += ' = 0;\n'
+
+        for variable in blueprint['parameterVariables']:
+            code += variable['type'] + ' '
+            code += prefix + variable['name'] 
+            code += ';\n'
+
+
         # Write declaration of mocked function.
         code += blueprint['returnType'] + ' '
         if blueprint['class'] != '':
@@ -261,15 +284,14 @@ def GenerateCodeFromBlueprints(functionBlueprints):
             currentParam = functionParameters[i]
 
             code += currentParam['type'] + ' ' + currentParam['name']
-            if i != len(blueprint['parameters']) - 1:
+            if i != len(functionParameters) - 1:
                 code += ", "
 
         code += ')\n'
         code += '{\n'
 
         # Fill blueprint body with mocked functionality.
-        prefix = '' if blueprint['class'] == '' else blueprint['class'] + '_'
-        for variable in blueprint['parameterVariables']: # TODO: Forgot to add all stuff. Migrate GenerateCodeForFunctions functionality here.
+        for variable in blueprint['parameterVariables']:
             code += '\t'
             code += prefix + variable['name']
             code += ' = ' + variable['parameter']['name'] + ';\n'
@@ -277,57 +299,6 @@ def GenerateCodeFromBlueprints(functionBlueprints):
         code += '\t' + prefix + blueprint['invocationsVariable']['name'] + '++;\n'
         if blueprint['returnType'] != 'void':
             code += '\treturn ' + prefix + blueprint['returnVariable']['name'] +';\n'
-
-        code += '}\n\n'
-
-
-def GenerateCodeForFunctions(functions, className = ''): # TODO: Reuse variables that have already been defined to prevent redefinitions!
-    code = ''
-    prefix = ''
-    isInsideClass = className != ''
-
-    if isInsideClass:
-        prefix = className + '_'
-
-    for function in functions:
-        if function['returnType'] != 'void':
-            returnVar = prefix + VariableNameReturn(function)
-            code += function['returnType'] + ' '
-            code += returnVar + ';\n'
-
-        invocationsVar = prefix + VariableNameInvocations(function)
-        code += 'unsigned int '
-        code += invocationsVar + ' = 0;\n'
-
-        for parameter in function['parameters']:
-            parameterVar = prefix + VariableNameParameter(function, parameter)
-            code += parameter['type'] + ' '
-            code += parameterVar + ';\n'
-
-        # Write declaration of mocked function.
-        code += function['returnType'] + ' '
-        if isInsideClass:
-            code += className + '::'
-        code += function['name'] + '('
-        for i in range(len(function['parameters'])):
-            currentParam = function['parameters'][i]
-
-            code += currentParam['type'] + ' ' + currentParam['name']
-            if i != len(function['parameters']) - 1:
-                code += ", "
-
-        code += ')\n'
-        code += '{\n'
-
-        # Fill function body with mocked functionality.
-        for parameter in function['parameters']:
-            code += '\t'
-            code += prefix + VariableNameParameter(function, parameter)
-            code += ' = ' + parameter['name'] + ';\n'
-
-        code += '\t' + prefix + VariableNameInvocations(function) + '++;\n'
-        if function['returnType'] != 'void':
-            code += '\treturn ' + prefix + VariableNameReturn(function) +';\n'
 
         code += '}\n\n'
 
@@ -344,15 +315,6 @@ def VariableNameInvocations(function):
 
 def VariableNameParameter(function, parameter):
     return function['name'] + '_param_' + parameter['name']
-
-
-def GenerateCodeForClasses(classes):
-    code = ''
-    for currentClass in classes:
-        code += GenerateCodeForFunctions(
-            currentClass['functions'], currentClass['name'])
-
-    return code
 
 
 def GenerateCodeForResettingMocks(functions, classes):
@@ -425,6 +387,8 @@ else:
         WriteCodeForIncludingMockedLibraries(mockableFiles, file)
         WriteCodeForRunningTests(testFunctions, file)
         WriteCodeForMockedLibraries(mockableFiles, file)
+
+
 
     # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
     with open(currentDir + "testSuite_WORKING.txt", "r") as file1: # TODO: Uncomment and change into test for mock framework.
