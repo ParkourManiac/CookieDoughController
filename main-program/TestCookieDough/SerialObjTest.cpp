@@ -1,2 +1,2 @@
-// #include "Fakes/Arduino.h"
-// Serial_ Serial;
+#include "Fakes/Arduino.h"
+Serial_ Serial;

@@ -4,6 +4,8 @@
 
 #include "Fakes/Arduino.h"
 
+void EditModeInitialized_NotEnabledByDefault();
+void SerialIsMocked_Works();
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
@@ -93,6 +95,8 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
+	RUN_TEST(EditModeInitialized_NotEnabledByDefault);
+	RUN_TEST(SerialIsMocked_Works);
 	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
 	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);
@@ -219,6 +223,218 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	digitalWrite_invocations++;
 }
 
+unsigned int delay_invocations = 0;
+unsigned long delay_param_ms;
+void delay(unsigned long ms)
+{
+	delay_param_ms = ms;
+	delay_invocations++;
+}
+
+double pow_return;
+unsigned int pow_invocations = 0;
+double pow_param___x;
+double pow_param___y;
+double pow(double __x, double __y)
+{
+	pow_param___x = __x;
+	pow_param___y = __y;
+	pow_invocations++;
+	return pow_return;
+}
+
+size_t Serial__print_return_o1;
+unsigned int Serial__print_invocations_o1 = 0;
+const char * Serial__print_param_a_o1;
+size_t Serial_::print(const char * a)
+{
+	Serial__print_param_a_o1 = a;
+	Serial__print_invocations_o1++;
+	return Serial__print_return_o1;
+}
+
+size_t Serial__print_return_o2;
+unsigned int Serial__print_invocations_o2 = 0;
+char Serial__print_param_a_o2;
+size_t Serial_::print(char a)
+{
+	Serial__print_param_a_o2 = a;
+	Serial__print_invocations_o2++;
+	return Serial__print_return_o2;
+}
+
+size_t Serial__print_return_o3;
+unsigned int Serial__print_invocations_o3 = 0;
+unsigned char Serial__print_param_a_o3;
+int Serial__print_param_b_o3;
+size_t Serial_::print(unsigned char a, int b)
+{
+	Serial__print_param_a_o3 = a;
+	Serial__print_param_b_o3 = b;
+	Serial__print_invocations_o3++;
+	return Serial__print_return_o3;
+}
+
+size_t Serial__print_return_o4;
+unsigned int Serial__print_invocations_o4 = 0;
+int Serial__print_param_a_o4;
+int Serial__print_param_b_o4;
+size_t Serial_::print(int a, int b)
+{
+	Serial__print_param_a_o4 = a;
+	Serial__print_param_b_o4 = b;
+	Serial__print_invocations_o4++;
+	return Serial__print_return_o4;
+}
+
+size_t Serial__print_return_o5;
+unsigned int Serial__print_invocations_o5 = 0;
+unsigned int Serial__print_param_a_o5;
+int Serial__print_param_b_o5;
+size_t Serial_::print(unsigned int a, int b)
+{
+	Serial__print_param_a_o5 = a;
+	Serial__print_param_b_o5 = b;
+	Serial__print_invocations_o5++;
+	return Serial__print_return_o5;
+}
+
+size_t Serial__print_return_o6;
+unsigned int Serial__print_invocations_o6 = 0;
+long Serial__print_param_a_o6;
+int Serial__print_param_b_o6;
+size_t Serial_::print(long a, int b)
+{
+	Serial__print_param_a_o6 = a;
+	Serial__print_param_b_o6 = b;
+	Serial__print_invocations_o6++;
+	return Serial__print_return_o6;
+}
+
+size_t Serial__print_return_o7;
+unsigned int Serial__print_invocations_o7 = 0;
+unsigned long Serial__print_param_a_o7;
+int Serial__print_param_b_o7;
+size_t Serial_::print(unsigned long a, int b)
+{
+	Serial__print_param_a_o7 = a;
+	Serial__print_param_b_o7 = b;
+	Serial__print_invocations_o7++;
+	return Serial__print_return_o7;
+}
+
+size_t Serial__print_return_o8;
+unsigned int Serial__print_invocations_o8 = 0;
+double Serial__print_param_a_o8;
+int Serial__print_param_b_o8;
+size_t Serial_::print(double a, int b)
+{
+	Serial__print_param_a_o8 = a;
+	Serial__print_param_b_o8 = b;
+	Serial__print_invocations_o8++;
+	return Serial__print_return_o8;
+}
+
+size_t Serial__println_return_o1;
+unsigned int Serial__println_invocations_o1 = 0;
+const char * Serial__println_param_a_o1;
+size_t Serial_::println(const char * a)
+{
+	Serial__println_param_a_o1 = a;
+	Serial__println_invocations_o1++;
+	return Serial__println_return_o1;
+}
+
+size_t Serial__println_return_o2;
+unsigned int Serial__println_invocations_o2 = 0;
+char Serial__println_param_b_o2;
+size_t Serial_::println(char b)
+{
+	Serial__println_param_b_o2 = b;
+	Serial__println_invocations_o2++;
+	return Serial__println_return_o2;
+}
+
+size_t Serial__println_return_o3;
+unsigned int Serial__println_invocations_o3 = 0;
+unsigned char Serial__println_param_a_o3;
+int Serial__println_param_b_o3;
+size_t Serial_::println(unsigned char a, int b)
+{
+	Serial__println_param_a_o3 = a;
+	Serial__println_param_b_o3 = b;
+	Serial__println_invocations_o3++;
+	return Serial__println_return_o3;
+}
+
+size_t Serial__println_return_o4;
+unsigned int Serial__println_invocations_o4 = 0;
+int Serial__println_param_a_o4;
+int Serial__println_param_b_o4;
+size_t Serial_::println(int a, int b)
+{
+	Serial__println_param_a_o4 = a;
+	Serial__println_param_b_o4 = b;
+	Serial__println_invocations_o4++;
+	return Serial__println_return_o4;
+}
+
+size_t Serial__println_return_o5;
+unsigned int Serial__println_invocations_o5 = 0;
+unsigned int Serial__println_param_a_o5;
+int Serial__println_param_b_o5;
+size_t Serial_::println(unsigned int a, int b)
+{
+	Serial__println_param_a_o5 = a;
+	Serial__println_param_b_o5 = b;
+	Serial__println_invocations_o5++;
+	return Serial__println_return_o5;
+}
+
+size_t Serial__println_return_o6;
+unsigned int Serial__println_invocations_o6 = 0;
+long Serial__println_param_a_o6;
+int Serial__println_param_b_o6;
+size_t Serial_::println(long a, int b)
+{
+	Serial__println_param_a_o6 = a;
+	Serial__println_param_b_o6 = b;
+	Serial__println_invocations_o6++;
+	return Serial__println_return_o6;
+}
+
+size_t Serial__println_return_o7;
+unsigned int Serial__println_invocations_o7 = 0;
+unsigned long Serial__println_param_a_o7;
+int Serial__println_param_b_o7;
+size_t Serial_::println(unsigned long a, int b)
+{
+	Serial__println_param_a_o7 = a;
+	Serial__println_param_b_o7 = b;
+	Serial__println_invocations_o7++;
+	return Serial__println_return_o7;
+}
+
+size_t Serial__println_return_o8;
+unsigned int Serial__println_invocations_o8 = 0;
+double Serial__println_param_a_o8;
+int Serial__println_param_b_o8;
+size_t Serial_::println(double a, int b)
+{
+	Serial__println_param_a_o8 = a;
+	Serial__println_param_b_o8 = b;
+	Serial__println_invocations_o8++;
+	return Serial__println_return_o8;
+}
+
+size_t Serial__println_return_o9;
+unsigned int Serial__println_invocations_o9 = 0;
+size_t Serial_::println()
+{
+	Serial__println_invocations_o9++;
+	return Serial__println_return_o9;
+}
+
 
 void ResetMocks() 
 {
@@ -233,5 +449,73 @@ void ResetMocks()
 	digitalWrite_param_pin = uint8_t();
 	digitalWrite_param_val = uint8_t();
 	digitalWrite_invocations = 0;
+	delay_param_ms = long();
+	delay_invocations = 0;
+	pow_param___x = double();
+	pow_param___y = double();
+	pow_invocations = 0;
+	pow_return = double();
+	Serial__print_param_a_o1 = nullptr;
+	Serial__print_invocations_o1 = 0;
+	Serial__print_return_o1 = size_t();
+	Serial__print_param_a_o2 = char();
+	Serial__print_invocations_o2 = 0;
+	Serial__print_return_o2 = size_t();
+	Serial__print_param_a_o3 = char();
+	Serial__print_param_b_o3 = int();
+	Serial__print_invocations_o3 = 0;
+	Serial__print_return_o3 = size_t();
+	Serial__print_param_a_o4 = int();
+	Serial__print_param_b_o4 = int();
+	Serial__print_invocations_o4 = 0;
+	Serial__print_return_o4 = size_t();
+	Serial__print_param_a_o5 = int();
+	Serial__print_param_b_o5 = int();
+	Serial__print_invocations_o5 = 0;
+	Serial__print_return_o5 = size_t();
+	Serial__print_param_a_o6 = long();
+	Serial__print_param_b_o6 = int();
+	Serial__print_invocations_o6 = 0;
+	Serial__print_return_o6 = size_t();
+	Serial__print_param_a_o7 = long();
+	Serial__print_param_b_o7 = int();
+	Serial__print_invocations_o7 = 0;
+	Serial__print_return_o7 = size_t();
+	Serial__print_param_a_o8 = double();
+	Serial__print_param_b_o8 = int();
+	Serial__print_invocations_o8 = 0;
+	Serial__print_return_o8 = size_t();
+	Serial__println_param_a_o1 = nullptr;
+	Serial__println_invocations_o1 = 0;
+	Serial__println_return_o1 = size_t();
+	Serial__println_param_b_o2 = char();
+	Serial__println_invocations_o2 = 0;
+	Serial__println_return_o2 = size_t();
+	Serial__println_param_a_o3 = char();
+	Serial__println_param_b_o3 = int();
+	Serial__println_invocations_o3 = 0;
+	Serial__println_return_o3 = size_t();
+	Serial__println_param_a_o4 = int();
+	Serial__println_param_b_o4 = int();
+	Serial__println_invocations_o4 = 0;
+	Serial__println_return_o4 = size_t();
+	Serial__println_param_a_o5 = int();
+	Serial__println_param_b_o5 = int();
+	Serial__println_invocations_o5 = 0;
+	Serial__println_return_o5 = size_t();
+	Serial__println_param_a_o6 = long();
+	Serial__println_param_b_o6 = int();
+	Serial__println_invocations_o6 = 0;
+	Serial__println_return_o6 = size_t();
+	Serial__println_param_a_o7 = long();
+	Serial__println_param_b_o7 = int();
+	Serial__println_invocations_o7 = 0;
+	Serial__println_return_o7 = size_t();
+	Serial__println_param_a_o8 = double();
+	Serial__println_param_b_o8 = int();
+	Serial__println_invocations_o8 = 0;
+	Serial__println_return_o8 = size_t();
+	Serial__println_invocations_o9 = 0;
+	Serial__println_return_o9 = size_t();
 }
 

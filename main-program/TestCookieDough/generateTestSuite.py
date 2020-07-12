@@ -157,25 +157,25 @@ def WriteCodeForRunningTests(testFunctions, file):
 
 
 def WriteCodeForMockedLibraries(mockableFiles, file):
-    # Write global variables for mocked functions.
+    # Define global variables for mocked function information.
+    functionBlueprints = []
     for mockableFile in mockableFiles:
         # Mock functions
-        functionBlueprint = BlueprintsForMockedFunctions(mockableFile['functions'])
+        functionBlueprints += BlueprintsForMockedFunctions(mockableFile['functions'])
 
         # Mock class functions
         for currentClass in mockableFile['classes']:
-            functionBlueprint += BlueprintsForMockedFunctions(currentClass['functions'], currentClass['name'])
+            functionBlueprints += BlueprintsForMockedFunctions(currentClass['functions'], currentClass['name'])
             
-        # Generate code for mocked functions
-        definitions = GenerateCodeFromBlueprints(functionBlueprint)
-        file.write(definitions)
+    # Generate code for mocked functions
+    definitions = GenerateCodeFromBlueprints(functionBlueprints)
+    file.write(definitions)
 
     # Write Reset global variables for mocked functions.
     file.write('\nvoid ResetMocks() \n{\n')
-    for mockableFile in mockableFiles:
-        resetCode = GenerateCodeForResettingMocks(
-            mockableFile['functions'], mockableFile['classes'])
-        file.write(resetCode)
+    
+    resetCode = GenerateResetCodeFromBlueprints(functionBlueprints)
+    file.write(resetCode)
 
     file.write('}\n\n')
 
@@ -244,32 +244,24 @@ def BlueprintsForMockedFunctions(functions, className = ''):
 
 def GenerateCodeFromBlueprints(functionBlueprints):
     code = ''
-    # blueprintABC = { 
-    #     'name',
-    #     'class',
-    #     'returnType',
-    #     'overloadSuffix',
-    #     'returnVariable',
-    #     'invocationsVariable',
-    #     'parameterVariables',
-    # }
 
     for blueprint in functionBlueprints:
         prefix = '' if blueprint['class'] == '' else blueprint['class'] + '_'
+        suffix = '' if blueprint['overloadSuffix'] == '' else '_' + blueprint['overloadSuffix']
 
         # Declare variables.
         if blueprint['returnType'] != 'void':
             code += blueprint['returnVariable']['type'] + ' '
-            code += prefix + blueprint['returnVariable']['name']
+            code += prefix + blueprint['returnVariable']['name'] + suffix
             code += ';\n'
 
         code += blueprint['invocationsVariable']['type'] + ' '
-        code += prefix + blueprint['invocationsVariable']['name']
+        code += prefix + blueprint['invocationsVariable']['name'] + suffix
         code += ' = 0;\n'
 
         for variable in blueprint['parameterVariables']:
             code += variable['type'] + ' '
-            code += prefix + variable['name'] 
+            code += prefix + variable['name'] + suffix
             code += ';\n'
 
 
@@ -293,12 +285,16 @@ def GenerateCodeFromBlueprints(functionBlueprints):
         # Fill blueprint body with mocked functionality.
         for variable in blueprint['parameterVariables']:
             code += '\t'
-            code += prefix + variable['name']
+            code += prefix + variable['name'] + suffix
             code += ' = ' + variable['parameter']['name'] + ';\n'
 
-        code += '\t' + prefix + blueprint['invocationsVariable']['name'] + '++;\n'
+        code += '\t'
+        code += prefix + blueprint['invocationsVariable']['name'] + suffix
+        code += '++;\n'
         if blueprint['returnType'] != 'void':
-            code += '\treturn ' + prefix + blueprint['returnVariable']['name'] +';\n'
+            code += '\treturn '
+            code += prefix + blueprint['returnVariable']['name'] + suffix
+            code += ';\n'
 
         code += '}\n\n'
 
@@ -317,42 +313,32 @@ def VariableNameParameter(function, parameter):
     return function['name'] + '_param_' + parameter['name']
 
 
-def GenerateCodeForResettingMocks(functions, classes):
+def GenerateResetCodeFromBlueprints(functionBlueprints):
     code = ''
-    code += GenerateCodeForResettingFunctions(functions)
 
-    for currentClass in classes:
-        code += GenerateCodeForResettingFunctions(
-            currentClass['functions'], currentClass['name'])
-
-    return code
-
-
-def GenerateCodeForResettingFunctions(functions, className=''): # TODO: Refactor to use VariableName functions.
-    code = ''
-    prefix = ''
-    isInsideClass = className != ''
-
-    if isInsideClass:
-        prefix = className + '_'
-
-    for function in functions:
-        for parameter in function['parameters']:
+    for blueprint in functionBlueprints:
+        prefix = '' if blueprint['class'] == '' else blueprint['class'] + '_'
+        suffix = '' if blueprint['overloadSuffix'] == '' else '_' + blueprint['overloadSuffix']
+        
+        for parameter in blueprint['parameterVariables']:
             lastPartOfType = GetLastPartOfType(parameter['type'])
-            code += '\t' + prefix + \
-                function['name'] + '_param_' + parameter['name']
+            code += '\t'
+            code += prefix + parameter['name'] + suffix
 
-            lastCharOfType = parameter['type'].strip()[-1] 
+            lastCharOfType = parameter['type'].strip()[-1]
             if lastCharOfType != '*':
                 code += ' = ' + lastPartOfType + '();\n'
             else:
                 code += ' = nullptr;\n'
 
-        code += '\t' + prefix + function['name'] + '_' + 'invocations = 0;\n'
+        code += '\t'
+        code += prefix + blueprint['invocationsVariable']['name'] + suffix
+        code += ' = 0;\n'
 
-        if function['returnType'] != 'void':
-            lastPartOfReturnType = function['returnType'].strip().split()[-1]
-            code += '\t' + prefix + function['name'] + '_' + 'return'
+        if blueprint['returnType'] != 'void':
+            lastPartOfReturnType = blueprint['returnVariable']['type'].strip().split()[-1]
+            code += '\t'
+            code += prefix + blueprint['returnVariable']['name'] + suffix
             code += ' = ' + lastPartOfReturnType + '();\n'
 
     return code
@@ -390,9 +376,9 @@ else:
 
 
 
-    # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
-    with open(currentDir + "testSuite_WORKING.txt", "r") as file1: # TODO: Uncomment and change into test for mock framework.
-        with open(currentDir + "testSuite.cpp", "r") as file2:
-            if(file1.read() != file2.read()):
-                raise AssertionError(
-                    "\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")
+    # # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
+    # with open(currentDir + "testSuite_WORKING.txt", "r") as file1: # TODO: Uncomment and change into test for mock framework.
+    #     with open(currentDir + "testSuite.cpp", "r") as file2:
+    #         if(file1.read() != file2.read()):
+    #             raise AssertionError(
+    #                 "\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")
