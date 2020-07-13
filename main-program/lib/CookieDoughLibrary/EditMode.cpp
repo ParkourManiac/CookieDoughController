@@ -5,7 +5,7 @@ EditMode::EditMode(bool _useEditModeLedSignal)
 {
     useEditModeLedSignal = useEditModeLedSignal;
 }
-// TESTED THIS FAR: DEBUG
+
 void EditMode::Toggle()
 {
     enabled = !enabled;
@@ -20,7 +20,7 @@ void EditMode::CopyKeyMapToTemporary(Key *keyMap)
     }
 }
 
-void EditMode::RestoreKeyMapToTemporaryCopy(Key *keyMapToRestore)
+void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
 {
     // DEBUG
     Serial.println();
@@ -61,6 +61,7 @@ void EditMode::RestoreKeyMapToTemporaryCopy(Key *keyMapToRestore)
     // DEBUG
 }
 
+// DEBUG NOTE: Tested this far.
 void EditMode::EditModeLoop(Key *keyMapBeingEdited) // TODO: Check if working... Changed to OnKeyPress and refactored. Might not work? Create tests for this.
 {
     for (int i = 0; i < normalKeyCount; i++)

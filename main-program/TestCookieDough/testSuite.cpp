@@ -4,8 +4,18 @@
 
 #include "Fakes/Arduino.h"
 
-void EditModeInitialized_NotEnabledByDefault();
-void SerialIsMocked_Works();
+void EditMode_Initialized_NotEnabledByDefault();
+void Toggle_WhenDisabled_BecomesEnabled();
+void Toggle_WhenEnabled_BecomesDisabled();
+void Reset_SelectedKeyNotReset_BecomesNullptr();
+void Reset_KeysPressedNotReset_BecomesZero();
+void Reset_InputKeyCodeNotReset_BecomesZero();
+void Reset_ShouldAddValueNotReset_BecomesFalse();
+void Reset_BlinkValuesNotReset_BecomesResetToInitialValues();
+void Reset_BuiltinLedIsOn_IsTurnedOff();
+void CopyKeyMapToTemporary_TempCopyIsOverwrittenWithTheValuesOfTheProvidedKeyMap();
+void RestoreKeyMapFromTemporaryCopy_ProvidedKeyMapIsRestoredToStateWhenCopyKeyMapToTemporaryWasCalled();
+void RestoreKeyMapFromTemporaryCopy_ResetEditMode();
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
@@ -95,8 +105,18 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
-	RUN_TEST(EditModeInitialized_NotEnabledByDefault);
-	RUN_TEST(SerialIsMocked_Works);
+	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
+	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
+	RUN_TEST(Toggle_WhenEnabled_BecomesDisabled);
+	RUN_TEST(Reset_SelectedKeyNotReset_BecomesNullptr);
+	RUN_TEST(Reset_KeysPressedNotReset_BecomesZero);
+	RUN_TEST(Reset_InputKeyCodeNotReset_BecomesZero);
+	RUN_TEST(Reset_ShouldAddValueNotReset_BecomesFalse);
+	RUN_TEST(Reset_BlinkValuesNotReset_BecomesResetToInitialValues);
+	RUN_TEST(Reset_BuiltinLedIsOn_IsTurnedOff);
+	RUN_TEST(CopyKeyMapToTemporary_TempCopyIsOverwrittenWithTheValuesOfTheProvidedKeyMap);
+	RUN_TEST(RestoreKeyMapFromTemporaryCopy_ProvidedKeyMapIsRestoredToStateWhenCopyKeyMapToTemporaryWasCalled);
+	RUN_TEST(RestoreKeyMapFromTemporaryCopy_ResetEditMode);
 	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
 	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);

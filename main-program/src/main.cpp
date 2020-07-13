@@ -445,7 +445,7 @@ void ExecuteSpecialCommands()
                     {
                         if (currentKeyMap != defaultKeyMap)
                         {
-                            editmode.RestoreKeyMapToTemporaryCopy(currentKeyMap);
+                            editmode.RestoreKeyMapFromTemporaryCopy(currentKeyMap);
                         } else 
                         {
                             SignalErrorToUser();
