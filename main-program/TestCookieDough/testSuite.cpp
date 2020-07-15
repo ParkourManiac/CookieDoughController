@@ -4,6 +4,8 @@
 
 #include "Fakes/Arduino.h"
 
+void DataPacket_StxIsTwo();
+void DataPacket_EtxIsThree();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
 void Toggle_WhenEnabled_BecomesDisabled();
@@ -127,6 +129,8 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
+	RUN_TEST(DataPacket_StxIsTwo);
+	RUN_TEST(DataPacket_EtxIsThree);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
 	RUN_TEST(Toggle_WhenEnabled_BecomesDisabled);
