@@ -4,6 +4,40 @@
 
 #include "Fakes/Arduino.h"
 
+void EditMode_Initialized_NotEnabledByDefault();
+void Toggle_WhenDisabled_BecomesEnabled();
+void Toggle_WhenEnabled_BecomesDisabled();
+void Reset_SelectedKeyNotReset_BecomesNullptr();
+void Reset_KeysPressedNotReset_BecomesZero();
+void Reset_InputKeyCodeNotReset_BecomesZero();
+void Reset_ShouldAddValueNotReset_BecomesFalse();
+void Reset_BlinkValuesNotReset_BecomesResetToInitialValues();
+void Reset_BuiltinLedIsOn_IsTurnedOff();
+void CopyKeyMapToTemporary_TempCopyIsOverwrittenWithTheValuesOfTheProvidedKeyMap();
+void RestoreKeyMapFromTemporaryCopy_ProvidedKeyMapIsRestoredToStateWhenCopyKeyMapToTemporaryWasCalled();
+void RestoreKeyMapFromTemporaryCopy_ResetEditMode();
+void RegisterKeyPress_AddsOneToKeysPressed();
+void RegisterKeyPress_IfNoKeyIsSelected_SelectProvidedKey();
+void RegisterKeyPress_IfKeyHasAlreadyBeenSelected_DoNotUpdateSelectedKey();
+void RegisterKeyPress_TheFirstKeyIsBeingPressed_ShouldNotPrepareToAddValueToKey();
+void RegisterKeyPress_FirstKeyHasAlreadyBeenRegistered_PrepareToAddValueToTheKey();
+void RegisterKeyRelease_KeysPressedIsDecreasedByOne();
+void RegisterKeyRelease_SelectedKeyIsNullptrAndOneKeyIsPressed_PreventsAccessingSelectedKeyWhenNullptr();
+void RegisterKeyRelease_ShouldAddValueIsTrue_InputKeyCodeIsChanged();
+void RegisterKeyRelease_ShouldAddValueIsTrue_CorrectValueIsAddedToInputKeyCode();
+void RegisterKeyRelease_TwoKeysWerePressedBeforeReleasing_ProvidesExponentZeroAndBaseTenToPow();
+void RegisterKeyRelease_ThreeKeysWerePressedBeforeReleasing_ProvidesExponentOneAndBaseTenToPow();
+void RegisterKeyRelease_FourKeysWerePressedBeforeReleasing_ProvidesExponentTwoAndBaseTenToPow();
+void RegisterKeyRelease_AfterAddingValue_PreventNextKeyReleaseFromAddingValueToInputKeyCode();
+void RegisterKeyRelease_LastKeyIsReleased_AppliesInputKeyCodeToKeyBeingEdited();
+void RegisterKeyRelease_LastKeyIsReleased_ResetsUsedVariables();
+void RegisterKeyRelease_ShouldNotAddValue_InputKeyCodeRemainsTheSame();
+void EditModeLoop_KeyHasNotBeenChanged_DoesNotDoAnything();
+void EditModeLoop_KeyBecamePressed_RegistersKeyPress();
+void EditModeLoop_TwoKeysBecamePressed_RegistersTwoKeyPresses();
+void EditModeLoop_KeyBecameReleased_RegistersKeyRelease();
+void EditModeLoop_TwoKeysBecameReleased_RegistersTwoKeyReleases();
+void EditModeLoop_WhenIdle_SignalEditMode();
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
@@ -93,6 +127,40 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
+	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
+	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
+	RUN_TEST(Toggle_WhenEnabled_BecomesDisabled);
+	RUN_TEST(Reset_SelectedKeyNotReset_BecomesNullptr);
+	RUN_TEST(Reset_KeysPressedNotReset_BecomesZero);
+	RUN_TEST(Reset_InputKeyCodeNotReset_BecomesZero);
+	RUN_TEST(Reset_ShouldAddValueNotReset_BecomesFalse);
+	RUN_TEST(Reset_BlinkValuesNotReset_BecomesResetToInitialValues);
+	RUN_TEST(Reset_BuiltinLedIsOn_IsTurnedOff);
+	RUN_TEST(CopyKeyMapToTemporary_TempCopyIsOverwrittenWithTheValuesOfTheProvidedKeyMap);
+	RUN_TEST(RestoreKeyMapFromTemporaryCopy_ProvidedKeyMapIsRestoredToStateWhenCopyKeyMapToTemporaryWasCalled);
+	RUN_TEST(RestoreKeyMapFromTemporaryCopy_ResetEditMode);
+	RUN_TEST(RegisterKeyPress_AddsOneToKeysPressed);
+	RUN_TEST(RegisterKeyPress_IfNoKeyIsSelected_SelectProvidedKey);
+	RUN_TEST(RegisterKeyPress_IfKeyHasAlreadyBeenSelected_DoNotUpdateSelectedKey);
+	RUN_TEST(RegisterKeyPress_TheFirstKeyIsBeingPressed_ShouldNotPrepareToAddValueToKey);
+	RUN_TEST(RegisterKeyPress_FirstKeyHasAlreadyBeenRegistered_PrepareToAddValueToTheKey);
+	RUN_TEST(RegisterKeyRelease_KeysPressedIsDecreasedByOne);
+	RUN_TEST(RegisterKeyRelease_SelectedKeyIsNullptrAndOneKeyIsPressed_PreventsAccessingSelectedKeyWhenNullptr);
+	RUN_TEST(RegisterKeyRelease_ShouldAddValueIsTrue_InputKeyCodeIsChanged);
+	RUN_TEST(RegisterKeyRelease_ShouldAddValueIsTrue_CorrectValueIsAddedToInputKeyCode);
+	RUN_TEST(RegisterKeyRelease_TwoKeysWerePressedBeforeReleasing_ProvidesExponentZeroAndBaseTenToPow);
+	RUN_TEST(RegisterKeyRelease_ThreeKeysWerePressedBeforeReleasing_ProvidesExponentOneAndBaseTenToPow);
+	RUN_TEST(RegisterKeyRelease_FourKeysWerePressedBeforeReleasing_ProvidesExponentTwoAndBaseTenToPow);
+	RUN_TEST(RegisterKeyRelease_AfterAddingValue_PreventNextKeyReleaseFromAddingValueToInputKeyCode);
+	RUN_TEST(RegisterKeyRelease_LastKeyIsReleased_AppliesInputKeyCodeToKeyBeingEdited);
+	RUN_TEST(RegisterKeyRelease_LastKeyIsReleased_ResetsUsedVariables);
+	RUN_TEST(RegisterKeyRelease_ShouldNotAddValue_InputKeyCodeRemainsTheSame);
+	RUN_TEST(EditModeLoop_KeyHasNotBeenChanged_DoesNotDoAnything);
+	RUN_TEST(EditModeLoop_KeyBecamePressed_RegistersKeyPress);
+	RUN_TEST(EditModeLoop_TwoKeysBecamePressed_RegistersTwoKeyPresses);
+	RUN_TEST(EditModeLoop_KeyBecameReleased_RegistersKeyRelease);
+	RUN_TEST(EditModeLoop_TwoKeysBecameReleased_RegistersTwoKeyReleases);
+	RUN_TEST(EditModeLoop_WhenIdle_SignalEditMode);
 	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
 	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);
@@ -219,6 +287,218 @@ void digitalWrite(uint8_t pin, uint8_t val)
 	digitalWrite_invocations++;
 }
 
+unsigned int delay_invocations = 0;
+unsigned long delay_param_ms;
+void delay(unsigned long ms)
+{
+	delay_param_ms = ms;
+	delay_invocations++;
+}
+
+double pow_return;
+unsigned int pow_invocations = 0;
+double pow_param_base;
+double pow_param_exponent;
+double pow(double base, double exponent)
+{
+	pow_param_base = base;
+	pow_param_exponent = exponent;
+	pow_invocations++;
+	return pow_return;
+}
+
+size_t Serial__print_return_o1;
+unsigned int Serial__print_invocations_o1 = 0;
+const char * Serial__print_param_a_o1;
+size_t Serial_::print(const char * a)
+{
+	Serial__print_param_a_o1 = a;
+	Serial__print_invocations_o1++;
+	return Serial__print_return_o1;
+}
+
+size_t Serial__print_return_o2;
+unsigned int Serial__print_invocations_o2 = 0;
+char Serial__print_param_a_o2;
+size_t Serial_::print(char a)
+{
+	Serial__print_param_a_o2 = a;
+	Serial__print_invocations_o2++;
+	return Serial__print_return_o2;
+}
+
+size_t Serial__print_return_o3;
+unsigned int Serial__print_invocations_o3 = 0;
+unsigned char Serial__print_param_a_o3;
+int Serial__print_param_b_o3;
+size_t Serial_::print(unsigned char a, int b)
+{
+	Serial__print_param_a_o3 = a;
+	Serial__print_param_b_o3 = b;
+	Serial__print_invocations_o3++;
+	return Serial__print_return_o3;
+}
+
+size_t Serial__print_return_o4;
+unsigned int Serial__print_invocations_o4 = 0;
+int Serial__print_param_a_o4;
+int Serial__print_param_b_o4;
+size_t Serial_::print(int a, int b)
+{
+	Serial__print_param_a_o4 = a;
+	Serial__print_param_b_o4 = b;
+	Serial__print_invocations_o4++;
+	return Serial__print_return_o4;
+}
+
+size_t Serial__print_return_o5;
+unsigned int Serial__print_invocations_o5 = 0;
+unsigned int Serial__print_param_a_o5;
+int Serial__print_param_b_o5;
+size_t Serial_::print(unsigned int a, int b)
+{
+	Serial__print_param_a_o5 = a;
+	Serial__print_param_b_o5 = b;
+	Serial__print_invocations_o5++;
+	return Serial__print_return_o5;
+}
+
+size_t Serial__print_return_o6;
+unsigned int Serial__print_invocations_o6 = 0;
+long Serial__print_param_a_o6;
+int Serial__print_param_b_o6;
+size_t Serial_::print(long a, int b)
+{
+	Serial__print_param_a_o6 = a;
+	Serial__print_param_b_o6 = b;
+	Serial__print_invocations_o6++;
+	return Serial__print_return_o6;
+}
+
+size_t Serial__print_return_o7;
+unsigned int Serial__print_invocations_o7 = 0;
+unsigned long Serial__print_param_a_o7;
+int Serial__print_param_b_o7;
+size_t Serial_::print(unsigned long a, int b)
+{
+	Serial__print_param_a_o7 = a;
+	Serial__print_param_b_o7 = b;
+	Serial__print_invocations_o7++;
+	return Serial__print_return_o7;
+}
+
+size_t Serial__print_return_o8;
+unsigned int Serial__print_invocations_o8 = 0;
+double Serial__print_param_a_o8;
+int Serial__print_param_b_o8;
+size_t Serial_::print(double a, int b)
+{
+	Serial__print_param_a_o8 = a;
+	Serial__print_param_b_o8 = b;
+	Serial__print_invocations_o8++;
+	return Serial__print_return_o8;
+}
+
+size_t Serial__println_return_o1;
+unsigned int Serial__println_invocations_o1 = 0;
+const char * Serial__println_param_a_o1;
+size_t Serial_::println(const char * a)
+{
+	Serial__println_param_a_o1 = a;
+	Serial__println_invocations_o1++;
+	return Serial__println_return_o1;
+}
+
+size_t Serial__println_return_o2;
+unsigned int Serial__println_invocations_o2 = 0;
+char Serial__println_param_b_o2;
+size_t Serial_::println(char b)
+{
+	Serial__println_param_b_o2 = b;
+	Serial__println_invocations_o2++;
+	return Serial__println_return_o2;
+}
+
+size_t Serial__println_return_o3;
+unsigned int Serial__println_invocations_o3 = 0;
+unsigned char Serial__println_param_a_o3;
+int Serial__println_param_b_o3;
+size_t Serial_::println(unsigned char a, int b)
+{
+	Serial__println_param_a_o3 = a;
+	Serial__println_param_b_o3 = b;
+	Serial__println_invocations_o3++;
+	return Serial__println_return_o3;
+}
+
+size_t Serial__println_return_o4;
+unsigned int Serial__println_invocations_o4 = 0;
+int Serial__println_param_a_o4;
+int Serial__println_param_b_o4;
+size_t Serial_::println(int a, int b)
+{
+	Serial__println_param_a_o4 = a;
+	Serial__println_param_b_o4 = b;
+	Serial__println_invocations_o4++;
+	return Serial__println_return_o4;
+}
+
+size_t Serial__println_return_o5;
+unsigned int Serial__println_invocations_o5 = 0;
+unsigned int Serial__println_param_a_o5;
+int Serial__println_param_b_o5;
+size_t Serial_::println(unsigned int a, int b)
+{
+	Serial__println_param_a_o5 = a;
+	Serial__println_param_b_o5 = b;
+	Serial__println_invocations_o5++;
+	return Serial__println_return_o5;
+}
+
+size_t Serial__println_return_o6;
+unsigned int Serial__println_invocations_o6 = 0;
+long Serial__println_param_a_o6;
+int Serial__println_param_b_o6;
+size_t Serial_::println(long a, int b)
+{
+	Serial__println_param_a_o6 = a;
+	Serial__println_param_b_o6 = b;
+	Serial__println_invocations_o6++;
+	return Serial__println_return_o6;
+}
+
+size_t Serial__println_return_o7;
+unsigned int Serial__println_invocations_o7 = 0;
+unsigned long Serial__println_param_a_o7;
+int Serial__println_param_b_o7;
+size_t Serial_::println(unsigned long a, int b)
+{
+	Serial__println_param_a_o7 = a;
+	Serial__println_param_b_o7 = b;
+	Serial__println_invocations_o7++;
+	return Serial__println_return_o7;
+}
+
+size_t Serial__println_return_o8;
+unsigned int Serial__println_invocations_o8 = 0;
+double Serial__println_param_a_o8;
+int Serial__println_param_b_o8;
+size_t Serial_::println(double a, int b)
+{
+	Serial__println_param_a_o8 = a;
+	Serial__println_param_b_o8 = b;
+	Serial__println_invocations_o8++;
+	return Serial__println_return_o8;
+}
+
+size_t Serial__println_return_o9;
+unsigned int Serial__println_invocations_o9 = 0;
+size_t Serial_::println()
+{
+	Serial__println_invocations_o9++;
+	return Serial__println_return_o9;
+}
+
 
 void ResetMocks() 
 {
@@ -233,5 +513,73 @@ void ResetMocks()
 	digitalWrite_param_pin = uint8_t();
 	digitalWrite_param_val = uint8_t();
 	digitalWrite_invocations = 0;
+	delay_param_ms = long();
+	delay_invocations = 0;
+	pow_param_base = double();
+	pow_param_exponent = double();
+	pow_invocations = 0;
+	pow_return = double();
+	Serial__print_param_a_o1 = nullptr;
+	Serial__print_invocations_o1 = 0;
+	Serial__print_return_o1 = size_t();
+	Serial__print_param_a_o2 = char();
+	Serial__print_invocations_o2 = 0;
+	Serial__print_return_o2 = size_t();
+	Serial__print_param_a_o3 = char();
+	Serial__print_param_b_o3 = int();
+	Serial__print_invocations_o3 = 0;
+	Serial__print_return_o3 = size_t();
+	Serial__print_param_a_o4 = int();
+	Serial__print_param_b_o4 = int();
+	Serial__print_invocations_o4 = 0;
+	Serial__print_return_o4 = size_t();
+	Serial__print_param_a_o5 = int();
+	Serial__print_param_b_o5 = int();
+	Serial__print_invocations_o5 = 0;
+	Serial__print_return_o5 = size_t();
+	Serial__print_param_a_o6 = long();
+	Serial__print_param_b_o6 = int();
+	Serial__print_invocations_o6 = 0;
+	Serial__print_return_o6 = size_t();
+	Serial__print_param_a_o7 = long();
+	Serial__print_param_b_o7 = int();
+	Serial__print_invocations_o7 = 0;
+	Serial__print_return_o7 = size_t();
+	Serial__print_param_a_o8 = double();
+	Serial__print_param_b_o8 = int();
+	Serial__print_invocations_o8 = 0;
+	Serial__print_return_o8 = size_t();
+	Serial__println_param_a_o1 = nullptr;
+	Serial__println_invocations_o1 = 0;
+	Serial__println_return_o1 = size_t();
+	Serial__println_param_b_o2 = char();
+	Serial__println_invocations_o2 = 0;
+	Serial__println_return_o2 = size_t();
+	Serial__println_param_a_o3 = char();
+	Serial__println_param_b_o3 = int();
+	Serial__println_invocations_o3 = 0;
+	Serial__println_return_o3 = size_t();
+	Serial__println_param_a_o4 = int();
+	Serial__println_param_b_o4 = int();
+	Serial__println_invocations_o4 = 0;
+	Serial__println_return_o4 = size_t();
+	Serial__println_param_a_o5 = int();
+	Serial__println_param_b_o5 = int();
+	Serial__println_invocations_o5 = 0;
+	Serial__println_return_o5 = size_t();
+	Serial__println_param_a_o6 = long();
+	Serial__println_param_b_o6 = int();
+	Serial__println_invocations_o6 = 0;
+	Serial__println_return_o6 = size_t();
+	Serial__println_param_a_o7 = long();
+	Serial__println_param_b_o7 = int();
+	Serial__println_invocations_o7 = 0;
+	Serial__println_return_o7 = size_t();
+	Serial__println_param_a_o8 = double();
+	Serial__println_param_b_o8 = int();
+	Serial__println_invocations_o8 = 0;
+	Serial__println_return_o8 = size_t();
+	Serial__println_invocations_o9 = 0;
+	Serial__println_return_o9 = size_t();
 }
 
