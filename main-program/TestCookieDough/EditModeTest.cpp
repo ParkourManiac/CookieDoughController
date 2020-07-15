@@ -4,6 +4,7 @@
 
 const int normalKeyCount = 2;
 
+extern unsigned int digitalWrite_invocations;
 extern uint8_t digitalWrite_param_pin;
 extern uint8_t digitalWrite_param_val;
 
@@ -11,6 +12,9 @@ extern double pow_return;
 extern unsigned int pow_invocations;
 extern double pow_param_base;
 extern double pow_param_exponent;
+
+extern unsigned long millis_return;
+extern unsigned int millis_invocations;
 
 void EditMode_Initialized_NotEnabledByDefault() // TODO: Write a few test for EditMode using class mock to test that it's working. Then create a new testSuite_WORKING.txt Test.
 {
@@ -341,4 +345,91 @@ void RegisterKeyRelease_ShouldNotAddValue_InputKeyCodeRemainsTheSame()
     ASSERT_TEST(em.inputKeyCode == 5);
 }
 
-// TODO: Continue testing "EditModeLoop".
+void EditModeLoop_KeyHasNotBeenChanged_DoesNotDoAnything()
+{
+    EditMode em = EditMode(true);
+    Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
+    keymap[0].value = keymap[0].oldValue = false;
+    keymap[1].value = keymap[1].oldValue = false;
+    em.keysPressed = 0;
+
+    em.EditModeLoop(keymap);
+
+    ASSERT_TEST(em.keysPressed == 0);
+}
+
+void EditModeLoop_KeyBecamePressed_RegistersKeyPress()
+{
+    EditMode em = EditMode(true);
+    Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
+    keymap[0].value = keymap[0].oldValue = false;
+    keymap[1].value = keymap[1].oldValue = false;
+    keymap[0].value = true;
+    em.keysPressed = 0;
+
+    em.EditModeLoop(keymap);
+
+    ASSERT_TEST(em.keysPressed == 1);
+}
+
+void EditModeLoop_TwoKeysBecamePressed_RegistersTwoKeyPresses()
+{
+    EditMode em = EditMode(true);
+    Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
+    keymap[0].value = keymap[0].oldValue = false;
+    keymap[1].value = keymap[1].oldValue = false;
+    keymap[0].value = true;
+    keymap[1].value = true;
+    em.keysPressed = 0;
+
+    em.EditModeLoop(keymap);
+
+    ASSERT_TEST(em.keysPressed == 2);
+}
+
+void EditModeLoop_KeyBecameReleased_RegistersKeyRelease()
+{
+    EditMode em = EditMode(true);
+    Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
+    keymap[0].value = keymap[0].oldValue = false;
+    keymap[1].value = keymap[1].oldValue = false;
+    keymap[0].oldValue = true;
+    em.keysPressed = 1;
+
+    em.EditModeLoop(keymap);
+
+    ASSERT_TEST(em.keysPressed == 0);
+}
+
+void EditModeLoop_TwoKeysBecameReleased_RegistersTwoKeyReleases()
+{
+    EditMode em = EditMode(true);
+    Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
+    keymap[0].value = keymap[0].oldValue = false;
+    keymap[1].value = keymap[1].oldValue = false;
+    keymap[0].oldValue = true;
+    keymap[1].oldValue = true;
+    em.keysPressed = 2;
+
+    em.EditModeLoop(keymap);
+
+    ASSERT_TEST(em.keysPressed == 0);
+}
+
+void EditModeLoop_WhenIdle_SignalEditMode()
+{
+    EditMode em = EditMode(true);
+    Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
+    keymap[0].value = keymap[0].oldValue = false;
+    keymap[1].value = keymap[1].oldValue = false;
+    em.keysPressed = 0;
+    em.useEditModeLedSignal = true;
+    
+    em.nextBlinkCycleOff = 0;
+    em.ledIsOn = true;
+    millis_return = em.nextBlinkCycleOff + 100;
+    
+    em.EditModeLoop(keymap);
+
+    ASSERT_TEST(digitalWrite_invocations != 0 && digitalWrite_param_pin == LED_BUILTIN);
+}

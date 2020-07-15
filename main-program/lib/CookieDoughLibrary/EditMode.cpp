@@ -61,8 +61,8 @@ void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
     // DEBUG
 }
 
-// DEBUG NOTE: Tested this far.
-void EditMode::EditModeLoop(Key *keyMapBeingEdited) // TODO: Check if working... Changed to OnKeyPress and refactored. Might not work? Create tests for this.
+// TODO: Check if working... Changed to OnKeyPress and refactored. Might not work? Tests go through. If working in play testing then remove this TODO.
+void EditMode::EditModeLoop(Key *keyMapBeingEdited) 
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -160,7 +160,7 @@ void EditMode::RegisterKeyRelease()
     Serial.println(keysPressed);              // DEBUG
 }
 
-void EditMode::SignalLedEditMode()
+void EditMode::SignalLedEditMode() // Not tested. 
 {
     unsigned long currentTime = millis();
 

@@ -32,6 +32,12 @@ void RegisterKeyRelease_AfterAddingValue_PreventNextKeyReleaseFromAddingValueToI
 void RegisterKeyRelease_LastKeyIsReleased_AppliesInputKeyCodeToKeyBeingEdited();
 void RegisterKeyRelease_LastKeyIsReleased_ResetsUsedVariables();
 void RegisterKeyRelease_ShouldNotAddValue_InputKeyCodeRemainsTheSame();
+void EditModeLoop_KeyHasNotBeenChanged_DoesNotDoAnything();
+void EditModeLoop_KeyBecamePressed_RegistersKeyPress();
+void EditModeLoop_TwoKeysBecamePressed_RegistersTwoKeyPresses();
+void EditModeLoop_KeyBecameReleased_RegistersKeyRelease();
+void EditModeLoop_TwoKeysBecameReleased_RegistersTwoKeyReleases();
+void EditModeLoop_WhenIdle_SignalEditMode();
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
@@ -149,6 +155,12 @@ void RunTests()
 	RUN_TEST(RegisterKeyRelease_LastKeyIsReleased_AppliesInputKeyCodeToKeyBeingEdited);
 	RUN_TEST(RegisterKeyRelease_LastKeyIsReleased_ResetsUsedVariables);
 	RUN_TEST(RegisterKeyRelease_ShouldNotAddValue_InputKeyCodeRemainsTheSame);
+	RUN_TEST(EditModeLoop_KeyHasNotBeenChanged_DoesNotDoAnything);
+	RUN_TEST(EditModeLoop_KeyBecamePressed_RegistersKeyPress);
+	RUN_TEST(EditModeLoop_TwoKeysBecamePressed_RegistersTwoKeyPresses);
+	RUN_TEST(EditModeLoop_KeyBecameReleased_RegistersKeyRelease);
+	RUN_TEST(EditModeLoop_TwoKeysBecameReleased_RegistersTwoKeyReleases);
+	RUN_TEST(EditModeLoop_WhenIdle_SignalEditMode);
 	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
 	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);
