@@ -20,7 +20,7 @@ public:
 
 private:
     Key *selectedKey = nullptr;
-    Key *tempCopy = new Key[normalKeyCount];
+    Key *tempCopy = new Key[normalKeyCount]; // TODO: Cleanup on destruction.
     int keysPressed = 0;
     int inputKeyCode = 0;
     bool shouldAddValue = false;
@@ -51,7 +51,7 @@ public:
      * 
      * @param keyMapToRestore The keyMap to be overwritten with the values of the temporary placeholder.
      */
-    void RestoreKeyMapToTemporaryCopy(Key *keyMapToRestore);
+    void RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore);
 
     /**
      * @brief Handles the key press and key release events of the

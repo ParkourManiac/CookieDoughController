@@ -58,6 +58,22 @@ void PrintResults()
 
 void Test(bool eval, const char *code, const char *file, unsigned long line)
 {
+    if (currentTestIndex >= AMOUNT_OF_TESTS)
+    {
+        printf("\033[01;31m"
+               "\n\nThe amount of written tests have exceeded the limit of maximum allowed tests! Please increase the size of AMOUNT_OF_TESTS in test.h to fit more tests! \n");
+        printf("Skipping test: (");
+        printf(code);
+        printf(") at line (");
+        printf("%d", line);
+        printf(")");
+        printf(") in file (");
+        printf(file);
+        printf(")\n\n");
+        printf("\033[0m");
+        return;
+    }
+
     test_result newResult;
 
     newResult.passed = eval;
@@ -69,25 +85,27 @@ void Test(bool eval, const char *code, const char *file, unsigned long line)
     currentTestIndex++;
 }
 
-void ResetMockData() {
+void ResetMockData()
+{
     ResetMocks();
 }
 
-void SetupColors() {
-    #if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
-        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        DWORD dwMode = 0;
-        GetConsoleMode(hOut, &dwMode);
-        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        SetConsoleMode(hOut, dwMode);
+void SetupColors()
+{
+#if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD dwMode = 0;
+    GetConsoleMode(hOut, &dwMode);
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(hOut, dwMode);
 
-        // References:
-        //SetConsoleMode() and ENABLE_VIRTUAL_TERMINAL_PROCESSING?
-        //https://stackoverflow.com/questions/38772468/setconsolemode-and-enable-virtual-terminal-processing
+    // References:
+    //SetConsoleMode() and ENABLE_VIRTUAL_TERMINAL_PROCESSING?
+    //https://stackoverflow.com/questions/38772468/setconsolemode-and-enable-virtual-terminal-processing
 
-        // Windows console with ANSI colors handling
-        // https://superuser.com/questions/413073/windows-console-with-ansi-colors-handling
-    #endif
+    // Windows console with ANSI colors handling
+    // https://superuser.com/questions/413073/windows-console-with-ansi-colors-handling
+#endif
 }
 
 /**

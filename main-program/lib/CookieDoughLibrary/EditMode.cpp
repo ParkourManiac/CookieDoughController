@@ -5,7 +5,7 @@ EditMode::EditMode(bool _useEditModeLedSignal)
 {
     useEditModeLedSignal = useEditModeLedSignal;
 }
-// TESTED THIS FAR: DEBUG
+
 void EditMode::Toggle()
 {
     enabled = !enabled;
@@ -20,7 +20,7 @@ void EditMode::CopyKeyMapToTemporary(Key *keyMap)
     }
 }
 
-void EditMode::RestoreKeyMapToTemporaryCopy(Key *keyMapToRestore)
+void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
 {
     // DEBUG
     Serial.println();
@@ -61,7 +61,8 @@ void EditMode::RestoreKeyMapToTemporaryCopy(Key *keyMapToRestore)
     // DEBUG
 }
 
-void EditMode::EditModeLoop(Key *keyMapBeingEdited) // TODO: Check if working... Changed to OnKeyPress and refactored. Might not work? Create tests for this.
+// TODO: Check if working... Changed to OnKeyPress and refactored. Might not work? Tests go through. If working in play testing then remove this TODO.
+void EditMode::EditModeLoop(Key *keyMapBeingEdited) 
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -104,7 +105,7 @@ void EditMode::RegisterKeyPress(Key &pressedKey)
         Serial.println(selectedKey->pin); // DEBUG
     }
 
-    if (!shouldAddValue && keysPressed > 1)
+    if (keysPressed > 1)
     {
         // If two or more keys are held down we should add a value...
         shouldAddValue = true;
@@ -113,18 +114,20 @@ void EditMode::RegisterKeyPress(Key &pressedKey)
 
 void EditMode::RegisterKeyRelease()
 {
-    if (selectedKey != nullptr)
+    keysPressed -= 1;
+
+    if (shouldAddValue)
     {
-        if (shouldAddValue)
+        // Raise value of keycode.
+        int exponent = keysPressed - 1;
+        int numberToAdd = pow(10, exponent);
+        inputKeyCode += numberToAdd;
+
+        shouldAddValue = false;
+
+        // DEBUG
+        if (selectedKey != nullptr)
         {
-            // Raise value of keycode.
-            int exponent = keysPressed - 2;
-            int numberToAdd = pow(10, exponent);
-            inputKeyCode += numberToAdd;
-
-            shouldAddValue = false;
-
-            // DEBUG
             Serial.print("Inputed keycode: ");
             Serial.print(inputKeyCode);
             Serial.print(", (for pin: ");
@@ -132,16 +135,14 @@ void EditMode::RegisterKeyRelease()
             Serial.print(", keycode: ");
             Serial.print(selectedKey->keyCode);
             Serial.println(")");
-            // DEBUG
         }
+        else
+            Serial.println("Selected is nullptr!");
+        // DEBUG
     }
-    else
-        Serial.println("Selected is nullptr!"); // DEBUG
-
-    keysPressed -= 1;
 
     // If we are releasing the last pressed key...
-    if (keysPressed <= 0)
+    if (keysPressed == 0 && selectedKey != nullptr)
     {
         selectedKey->keyCode = inputKeyCode;
 
@@ -159,7 +160,7 @@ void EditMode::RegisterKeyRelease()
     Serial.println(keysPressed);              // DEBUG
 }
 
-void EditMode::SignalLedEditMode()
+void EditMode::SignalLedEditMode() // Not tested. 
 {
     unsigned long currentTime = millis();
 
