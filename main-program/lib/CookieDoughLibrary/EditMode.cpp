@@ -105,7 +105,7 @@ void EditMode::RegisterKeyPress(Key &pressedKey)
         Serial.println(selectedKey->pin); // DEBUG
     }
 
-    if (!shouldAddValue && keysPressed > 1)
+    if (keysPressed > 1)
     {
         // If two or more keys are held down we should add a value...
         shouldAddValue = true;
@@ -114,18 +114,20 @@ void EditMode::RegisterKeyPress(Key &pressedKey)
 
 void EditMode::RegisterKeyRelease()
 {
-    if (selectedKey != nullptr)
+    keysPressed -= 1;
+
+    if (shouldAddValue)
     {
-        if (shouldAddValue)
+        // Raise value of keycode.
+        int exponent = keysPressed - 1;
+        int numberToAdd = pow(10, exponent);
+        inputKeyCode += numberToAdd;
+
+        shouldAddValue = false;
+
+        // DEBUG
+        if (selectedKey != nullptr)
         {
-            // Raise value of keycode.
-            int exponent = keysPressed - 2;
-            int numberToAdd = pow(10, exponent);
-            inputKeyCode += numberToAdd;
-
-            shouldAddValue = false;
-
-            // DEBUG
             Serial.print("Inputed keycode: ");
             Serial.print(inputKeyCode);
             Serial.print(", (for pin: ");
@@ -133,16 +135,14 @@ void EditMode::RegisterKeyRelease()
             Serial.print(", keycode: ");
             Serial.print(selectedKey->keyCode);
             Serial.println(")");
-            // DEBUG
         }
+        else
+            Serial.println("Selected is nullptr!");
+        // DEBUG
     }
-    else
-        Serial.println("Selected is nullptr!"); // DEBUG
-
-    keysPressed -= 1;
 
     // If we are releasing the last pressed key...
-    if (keysPressed <= 0)
+    if (keysPressed == 0 && selectedKey != nullptr)
     {
         selectedKey->keyCode = inputKeyCode;
 

@@ -16,6 +16,22 @@ void Reset_BuiltinLedIsOn_IsTurnedOff();
 void CopyKeyMapToTemporary_TempCopyIsOverwrittenWithTheValuesOfTheProvidedKeyMap();
 void RestoreKeyMapFromTemporaryCopy_ProvidedKeyMapIsRestoredToStateWhenCopyKeyMapToTemporaryWasCalled();
 void RestoreKeyMapFromTemporaryCopy_ResetEditMode();
+void RegisterKeyPress_AddsOneToKeysPressed();
+void RegisterKeyPress_IfNoKeyIsSelected_SelectProvidedKey();
+void RegisterKeyPress_IfKeyHasAlreadyBeenSelected_DoNotUpdateSelectedKey();
+void RegisterKeyPress_TheFirstKeyIsBeingPressed_ShouldNotPrepareToAddValueToKey();
+void RegisterKeyPress_FirstKeyHasAlreadyBeenRegistered_PrepareToAddValueToTheKey();
+void RegisterKeyRelease_KeysPressedIsDecreasedByOne();
+void RegisterKeyRelease_SelectedKeyIsNullptrAndOneKeyIsPressed_PreventsAccessingSelectedKeyWhenNullptr();
+void RegisterKeyRelease_ShouldAddValueIsTrue_InputKeyCodeIsChanged();
+void RegisterKeyRelease_ShouldAddValueIsTrue_CorrectValueIsAddedToInputKeyCode();
+void RegisterKeyRelease_TwoKeysWerePressedBeforeReleasing_ProvidesExponentZeroAndBaseTenToPow();
+void RegisterKeyRelease_ThreeKeysWerePressedBeforeReleasing_ProvidesExponentOneAndBaseTenToPow();
+void RegisterKeyRelease_FourKeysWerePressedBeforeReleasing_ProvidesExponentTwoAndBaseTenToPow();
+void RegisterKeyRelease_AfterAddingValue_PreventNextKeyReleaseFromAddingValueToInputKeyCode();
+void RegisterKeyRelease_LastKeyIsReleased_AppliesInputKeyCodeToKeyBeingEdited();
+void RegisterKeyRelease_LastKeyIsReleased_ResetsUsedVariables();
+void RegisterKeyRelease_ShouldNotAddValue_InputKeyCodeRemainsTheSame();
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
@@ -117,6 +133,22 @@ void RunTests()
 	RUN_TEST(CopyKeyMapToTemporary_TempCopyIsOverwrittenWithTheValuesOfTheProvidedKeyMap);
 	RUN_TEST(RestoreKeyMapFromTemporaryCopy_ProvidedKeyMapIsRestoredToStateWhenCopyKeyMapToTemporaryWasCalled);
 	RUN_TEST(RestoreKeyMapFromTemporaryCopy_ResetEditMode);
+	RUN_TEST(RegisterKeyPress_AddsOneToKeysPressed);
+	RUN_TEST(RegisterKeyPress_IfNoKeyIsSelected_SelectProvidedKey);
+	RUN_TEST(RegisterKeyPress_IfKeyHasAlreadyBeenSelected_DoNotUpdateSelectedKey);
+	RUN_TEST(RegisterKeyPress_TheFirstKeyIsBeingPressed_ShouldNotPrepareToAddValueToKey);
+	RUN_TEST(RegisterKeyPress_FirstKeyHasAlreadyBeenRegistered_PrepareToAddValueToTheKey);
+	RUN_TEST(RegisterKeyRelease_KeysPressedIsDecreasedByOne);
+	RUN_TEST(RegisterKeyRelease_SelectedKeyIsNullptrAndOneKeyIsPressed_PreventsAccessingSelectedKeyWhenNullptr);
+	RUN_TEST(RegisterKeyRelease_ShouldAddValueIsTrue_InputKeyCodeIsChanged);
+	RUN_TEST(RegisterKeyRelease_ShouldAddValueIsTrue_CorrectValueIsAddedToInputKeyCode);
+	RUN_TEST(RegisterKeyRelease_TwoKeysWerePressedBeforeReleasing_ProvidesExponentZeroAndBaseTenToPow);
+	RUN_TEST(RegisterKeyRelease_ThreeKeysWerePressedBeforeReleasing_ProvidesExponentOneAndBaseTenToPow);
+	RUN_TEST(RegisterKeyRelease_FourKeysWerePressedBeforeReleasing_ProvidesExponentTwoAndBaseTenToPow);
+	RUN_TEST(RegisterKeyRelease_AfterAddingValue_PreventNextKeyReleaseFromAddingValueToInputKeyCode);
+	RUN_TEST(RegisterKeyRelease_LastKeyIsReleased_AppliesInputKeyCodeToKeyBeingEdited);
+	RUN_TEST(RegisterKeyRelease_LastKeyIsReleased_ResetsUsedVariables);
+	RUN_TEST(RegisterKeyRelease_ShouldNotAddValue_InputKeyCodeRemainsTheSame);
 	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
 	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);
@@ -253,12 +285,12 @@ void delay(unsigned long ms)
 
 double pow_return;
 unsigned int pow_invocations = 0;
-double pow_param___x;
-double pow_param___y;
-double pow(double __x, double __y)
+double pow_param_base;
+double pow_param_exponent;
+double pow(double base, double exponent)
 {
-	pow_param___x = __x;
-	pow_param___y = __y;
+	pow_param_base = base;
+	pow_param_exponent = exponent;
 	pow_invocations++;
 	return pow_return;
 }
@@ -471,8 +503,8 @@ void ResetMocks()
 	digitalWrite_invocations = 0;
 	delay_param_ms = long();
 	delay_invocations = 0;
-	pow_param___x = double();
-	pow_param___y = double();
+	pow_param_base = double();
+	pow_param_exponent = double();
 	pow_invocations = 0;
 	pow_return = double();
 	Serial__print_param_a_o1 = nullptr;

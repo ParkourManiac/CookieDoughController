@@ -13,7 +13,7 @@ void pinMode(uint8_t pin, uint8_t mode);
 unsigned long millis();
 void digitalWrite(uint8_t pin, uint8_t val);
 void delay(unsigned long ms);
-double pow(double __x, double __y);
+double pow(double base, double exponent);
 
 #include <stddef.h>
 class Serial_ {

@@ -7,6 +7,11 @@ const int normalKeyCount = 2;
 extern uint8_t digitalWrite_param_pin;
 extern uint8_t digitalWrite_param_val;
 
+extern double pow_return;
+extern unsigned int pow_invocations;
+extern double pow_param_base;
+extern double pow_param_exponent;
+
 void EditMode_Initialized_NotEnabledByDefault() // TODO: Write a few test for EditMode using class mock to test that it's working. Then create a new testSuite_WORKING.txt Test.
 {
     EditMode editmode = EditMode(true);
@@ -144,6 +149,196 @@ void RestoreKeyMapFromTemporaryCopy_ResetEditMode()
     em.RestoreKeyMapFromTemporaryCopy(keymap);
 
     ASSERT_TEST(em.selectedKey == nullptr);
+}
+
+void RegisterKeyPress_AddsOneToKeysPressed()
+{
+    EditMode em = EditMode(true);
+    Key key = Key(1, 2);
+    em.keysPressed = 0;
+    int expectedKeysPressed = 1;
+
+    em.RegisterKeyPress(key);
+
+    ASSERT_TEST(em.keysPressed == expectedKeysPressed);
+}
+
+void RegisterKeyPress_IfNoKeyIsSelected_SelectProvidedKey()
+{
+    EditMode em = EditMode(true);
+    Key expectedSelectedKey = Key(1, 2);
+
+    em.RegisterKeyPress(expectedSelectedKey);
+
+    ASSERT_TEST(em.selectedKey == &expectedSelectedKey);
+}
+
+void RegisterKeyPress_IfKeyHasAlreadyBeenSelected_DoNotUpdateSelectedKey()
+{
+    EditMode em = EditMode(true);
+    Key expectedSelectedKey = Key(1, 2);
+    Key anotherKey = Key(23, 32);
+    em.selectedKey = &expectedSelectedKey;
+
+    em.RegisterKeyPress(anotherKey);
+
+    ASSERT_TEST(em.selectedKey == &expectedSelectedKey);
+}
+
+void RegisterKeyPress_TheFirstKeyIsBeingPressed_ShouldNotPrepareToAddValueToKey()
+{
+    EditMode em = EditMode(true);
+    Key key = Key(1, 2);
+    em.shouldAddValue = false;
+    em.keysPressed = 0;
+
+    em.RegisterKeyPress(key);
+
+    ASSERT_TEST(em.shouldAddValue == false);
+}
+
+void RegisterKeyPress_FirstKeyHasAlreadyBeenRegistered_PrepareToAddValueToTheKey()
+{
+    EditMode em = EditMode(true);
+    Key key = Key(1, 2);
+    em.shouldAddValue = false;
+    em.keysPressed = 1;
+
+    em.RegisterKeyPress(key);
+
+    ASSERT_TEST(em.shouldAddValue == true);
+}
+
+void RegisterKeyRelease_KeysPressedIsDecreasedByOne()
+{
+    EditMode em = EditMode(true);
+    em.keysPressed = 1;
+
+    em.RegisterKeyRelease();
+
+    ASSERT_TEST(em.keysPressed == 0);
+}
+
+void RegisterKeyRelease_SelectedKeyIsNullptrAndOneKeyIsPressed_PreventsAccessingSelectedKeyWhenNullptr()
+{
+    EditMode em = EditMode(true);
+    bool didNotCrash = false;
+    em.selectedKey = nullptr;
+    em.keysPressed = 1;
+
+    em.RegisterKeyRelease();
+    didNotCrash = true;
+
+    ASSERT_TEST(didNotCrash == true);
+}
+
+void RegisterKeyRelease_ShouldAddValueIsTrue_InputKeyCodeIsChanged()
+{
+    EditMode em = EditMode(true);
+    em.shouldAddValue = true;
+    em.inputKeyCode = 0;
+    pow_return = 1337;
+
+    em.RegisterKeyRelease();
+
+    ASSERT_TEST(em.inputKeyCode != 0);
+}
+
+void RegisterKeyRelease_ShouldAddValueIsTrue_CorrectValueIsAddedToInputKeyCode()
+{
+    EditMode em = EditMode(true);
+    em.keysPressed = 3;
+    em.shouldAddValue = true;
+    em.inputKeyCode = 5;
+    pow_return = 10;
+    int expectedKeyCode = 15;
+
+    em.RegisterKeyRelease();
+
+    ASSERT_TEST(em.inputKeyCode == expectedKeyCode);
+}
+
+void RegisterKeyRelease_TwoKeysWerePressedBeforeReleasing_ProvidesExponentZeroAndBaseTenToPow()
+{
+    EditMode em = EditMode(true);
+    em.shouldAddValue = true;
+    em.keysPressed = 2;
+
+    em.RegisterKeyRelease();
+
+    ASSERT_TEST(pow_param_exponent == 0 && pow_param_base == 10);
+}
+
+void RegisterKeyRelease_ThreeKeysWerePressedBeforeReleasing_ProvidesExponentOneAndBaseTenToPow()
+{
+    EditMode em = EditMode(true);
+    em.shouldAddValue = true;
+    em.keysPressed = 3;
+
+    em.RegisterKeyRelease();
+
+    ASSERT_TEST(pow_param_exponent == 1 && pow_param_base == 10);
+}
+
+void RegisterKeyRelease_FourKeysWerePressedBeforeReleasing_ProvidesExponentTwoAndBaseTenToPow()
+{
+    EditMode em = EditMode(true);
+    em.shouldAddValue = true;
+    em.keysPressed = 4;
+
+    em.RegisterKeyRelease();
+
+    ASSERT_TEST(pow_param_exponent == 2 && pow_param_base == 10);
+}
+
+void RegisterKeyRelease_AfterAddingValue_PreventNextKeyReleaseFromAddingValueToInputKeyCode()
+{
+    EditMode em = EditMode(true);
+    em.shouldAddValue = true;
+
+    em.RegisterKeyRelease();
+
+    ASSERT_TEST(em.shouldAddValue == false);
+}
+
+void RegisterKeyRelease_LastKeyIsReleased_AppliesInputKeyCodeToKeyBeingEdited()
+{
+    EditMode em = EditMode(true);
+    Key keyBeingEdited = Key(1, 0);
+    em.selectedKey = &keyBeingEdited;
+    em.keysPressed = 1;
+    em.shouldAddValue = false;
+    em.inputKeyCode = 1337;
+    int expectedKeyCode = 1337;
+
+    em.RegisterKeyRelease();
+
+    ASSERT_TEST(keyBeingEdited.keyCode == 1337);
+}
+
+void RegisterKeyRelease_LastKeyIsReleased_ResetsUsedVariables()
+{
+    EditMode em = EditMode(true);
+    Key key = Key(1, 0);
+    em.selectedKey = &key;
+    em.keysPressed = 1;
+    em.shouldAddValue = false;
+
+    em.RegisterKeyRelease();
+
+    ASSERT_TEST(em.inputKeyCode == 0 && em.selectedKey == nullptr && em.keysPressed == 0 && em.shouldAddValue == false);
+}
+
+void RegisterKeyRelease_ShouldNotAddValue_InputKeyCodeRemainsTheSame()
+{
+    EditMode em = EditMode(true);
+    pow_return = 13;
+    em.shouldAddValue = false;
+    em.inputKeyCode = 5;
+
+    em.RegisterKeyRelease();
+
+    ASSERT_TEST(em.inputKeyCode == 5);
 }
 
 // TODO: Continue testing "EditModeLoop".

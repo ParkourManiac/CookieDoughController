@@ -50,7 +50,7 @@ void SetupColors();
  * @brief The max amount of test we can write.
  * Note: Just increase this value if more tests are needed.
  */
-#define AMOUNT_OF_TESTS 100
+#define AMOUNT_OF_TESTS 500
 
 /**
  * @brief Tests if a condition is successful.
