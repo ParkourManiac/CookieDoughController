@@ -40,7 +40,7 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
 bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSize, unsigned int &packetSize);
 
 /**
- * @brief Calculates a CRC checksum for the given array of bytes.
+ * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
  * 
  * @param data The data we want to calculate a CRC checksum for.
  * @param length The size of the data in bytes.

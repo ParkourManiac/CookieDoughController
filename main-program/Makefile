@@ -11,7 +11,8 @@ compileTests: TestCookieDough
 		-o $^/Testrun/latestTestRun $^/*.cpp \
 		./lib/CookieDoughLibrary/LinkedList.cpp \
 		./lib/CookieDoughLibrary/Key.cpp \
-		./lib/CookieDoughLibrary/EditMode.cpp
+		./lib/CookieDoughLibrary/EditMode.cpp \
+		./lib/CookieDoughLibrary/DataPacket.cpp
 
 test: compileTests # "Dependent" on compileTests. ("compileTests" will run before this command).
 	./TestCookieDough/Testrun/latestTestRun

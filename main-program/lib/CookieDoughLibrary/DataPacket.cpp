@@ -119,7 +119,6 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
 
 unsigned long CalculateCRC(uint8_t *data, unsigned int length)
 {
-
     const unsigned long crc_table[16] = {
         0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
         0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,

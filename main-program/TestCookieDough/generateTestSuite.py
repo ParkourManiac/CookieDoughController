@@ -41,17 +41,17 @@ def FindAllMockableFiles(dir):
 
 def ExtractFunctionsFromText(text):
     functions = []
-    regex = r"([^\(\)\;\n\:]+)\s([^\(\)\;\n]+)\(([^\)\;]*)\)(?=\;)"
+    regex = r"([^\(\)\;\n\:]+\s[*&]?)([^\(\)\;\n]+)\(([^\)\;]*)\)(?=\;)"
     matches = re.findall(regex, text)
 
     for match in matches:
         if match[0][:2] == '//':
             continue
 
-        returnType = match[0].lstrip()
-        nameOfFunction = match[1]
+        returnType = match[0].strip()
+        nameOfFunction = match[1].strip()
 
-        rawParameters = match[2].split(",")
+        rawParameters = match[2].strip().split(",")
         parameters = []
         for rawParameter in rawParameters:
             if len(rawParameter) > 0:
@@ -204,27 +204,9 @@ def BlueprintsForMockedFunctions(functions, className = ''):
             'parameterVariables': [],
         }
 
-        # * 1. Generate mocked function blueprints. 
-        #   * Create empty blueprint object: name, class, return type, overload suffix, return variable, invocations variable, parameter variables
-        #   * Extract function name.
-        #   * Extract function returnType.
-        #   * Extract class name
-        #   * Prepare variable names and store them.
-        #       * Count overload number.
-        #       * If overload:
-        #           * Create overload suffix.
-        #       * Create name for return variable.  
-        #          * Add name and type to mocked function blueprint.
-        #       * Create name for invocation variable. 
-        #          * Add name and type to mocked function blueprint.
-        #       * Create name for all parameter variables. 
-        #          * Add name and type to mocked function blueprint. 
-        #          * Add info about parameter being mocked.
-
         if function['returnType'] != 'void':
             blueprint['returnVariable']['type'] = function['returnType']
             blueprint['returnVariable']['name'] = VariableNameReturn(function)
-
 
         blueprint['invocationsVariable']['type'] = 'unsigned int'
         blueprint['invocationsVariable']['name'] = VariableNameInvocations(function)
@@ -251,16 +233,16 @@ def GenerateCodeFromBlueprints(functionBlueprints):
 
         # Declare variables.
         if blueprint['returnType'] != 'void':
-            code += blueprint['returnVariable']['type'] + ' '
+            code += CleanupType(blueprint['returnVariable']['type']) + ' '
             code += prefix + blueprint['returnVariable']['name'] + suffix
             code += ';\n'
 
-        code += blueprint['invocationsVariable']['type'] + ' '
+        code += CleanupType(blueprint['invocationsVariable']['type']) + ' '
         code += prefix + blueprint['invocationsVariable']['name'] + suffix
         code += ' = 0;\n'
 
         for variable in blueprint['parameterVariables']:
-            code += variable['type'] + ' '
+            code += CleanupType(variable['type']) + ' '
             code += prefix + variable['name'] + suffix
             code += ';\n'
 
@@ -286,7 +268,10 @@ def GenerateCodeFromBlueprints(functionBlueprints):
         for variable in blueprint['parameterVariables']:
             code += '\t'
             code += prefix + variable['name'] + suffix
-            code += ' = ' + variable['parameter']['name'] + ';\n'
+            code += ' = '
+            code += '(' + IgnoreConst(variable['type']) + ')' 
+            code += variable['parameter']['name']
+            code += ';\n'
 
         code += '\t'
         code += prefix + blueprint['invocationsVariable']['name'] + suffix
@@ -300,6 +285,17 @@ def GenerateCodeFromBlueprints(functionBlueprints):
 
     return code
 
+def CleanupType(typeName):
+    result = typeName
+    result = IgnoreAmpersand(result)
+    result = IgnoreConst(result)
+    return result
+
+def IgnoreAmpersand(typeName):
+    return typeName[:-1] if typeName[-1] == '&' else typeName 
+    
+def IgnoreConst(typeName):
+    return ' '.join(typeName.split()[1:]) if typeName.split()[0] == 'const' else typeName 
 
 def VariableNameReturn(function):
     return function['name'] + '_' + 'return'
@@ -336,7 +332,7 @@ def GenerateResetCodeFromBlueprints(functionBlueprints):
         code += ' = 0;\n'
 
         if blueprint['returnType'] != 'void':
-            lastPartOfReturnType = blueprint['returnVariable']['type'].strip().split()[-1]
+            lastPartOfReturnType = GetLastPartOfType(blueprint['returnVariable']['type'])
             code += '\t'
             code += prefix + blueprint['returnVariable']['name'] + suffix
             code += ' = ' + lastPartOfReturnType + '();\n'
