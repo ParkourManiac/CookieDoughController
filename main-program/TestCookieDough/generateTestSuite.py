@@ -205,6 +205,7 @@ def BlueprintsForMockedFunctions(functions, className = ''):
             'returnVariable': {'name': '', 'type': '' },
             'invocationsVariable': {'name': '', 'type': '' },
             'parameterVariables': [],
+            'options': function['options'],
         }
 
         if function['returnType'] != 'void':
@@ -236,7 +237,10 @@ def GenerateCodeFromBlueprints(functionBlueprints):
 
         # Declare variables.
         if blueprint['returnType'] != 'void':
-            code += CleanupType(blueprint['returnVariable']['type']) + ' '
+            returnVariableType = CleanupType(blueprint['returnVariable']['type'])
+            if 'useVector' in blueprint['options']:
+                returnVariableType = 'std::vector<' + returnVariableType + '>'
+            code += returnVariableType + ' '
             code += prefix + blueprint['returnVariable']['name'] + suffix
             code += ';\n'
 
@@ -245,7 +249,10 @@ def GenerateCodeFromBlueprints(functionBlueprints):
         code += ' = 0;\n'
 
         for variable in blueprint['parameterVariables']:
-            code += CleanupType(variable['type']) + ' '
+            parameterVariableType = CleanupType(variable['type']) 
+            if 'useVector' in blueprint['options']:
+                parameterVariableType = 'std::vector<' + parameterVariableType + '>'
+            code += parameterVariableType + ' '
             code += prefix + variable['name'] + suffix
             code += ';\n'
 
@@ -269,20 +276,55 @@ def GenerateCodeFromBlueprints(functionBlueprints):
 
         # Fill blueprint body with mocked functionality.
         for variable in blueprint['parameterVariables']:
-            code += '\t'
-            code += prefix + variable['name'] + suffix
-            code += ' = '
-            code += '(' + IgnoreConst(variable['type']) + ')' 
-            code += variable['parameter']['name']
-            code += ';\n'
+            if 'useVector' in blueprint['options']:
+                code += '\t'
+                code += prefix + variable['name'] + suffix
+                code += '.push_back('
+                code += '(' + IgnoreConst(variable['type']) + ')' 
+                code += variable['parameter']['name']
+                code += ');\n'
+            else:
+                code += '\t'
+                code += prefix + variable['name'] + suffix
+                code += ' = '
+                code += '(' + IgnoreConst(variable['type']) + ')' 
+                code += variable['parameter']['name']
+                code += ';\n'
 
+        invocationsVariableName = prefix + blueprint['invocationsVariable']['name'] + suffix
         code += '\t'
-        code += prefix + blueprint['invocationsVariable']['name'] + suffix
+        code += invocationsVariableName
         code += '++;\n'
         if blueprint['returnType'] != 'void':
-            code += '\treturn '
-            code += prefix + blueprint['returnVariable']['name'] + suffix
-            code += ';\n'
+            returnVariableName = prefix + blueprint['returnVariable']['name'] + suffix
+            if 'useVector' in blueprint['options']:
+                # Prepare error message
+                code += '\tif('
+                code += returnVariableName + '.size() < ' + invocationsVariableName
+                code += ') printf("\033[01;31m""Please populate the vector \\\"'
+                code += returnVariableName
+                code += '\\\" with one value for each invocation of the function '
+                code += '\\\"'
+                code += prefix + blueprint['name']
+                code += '\\\". '
+                code += 'Do this inside your test before invoking the mocked function. '
+                code += 'Example: \\\"'
+                code += returnVariableName
+                code += '.push_back(myValueToBeReturned);\\\". '
+                code += '\\n\\nNOTE: The values in the vector will be iterated and returned (first element to last) for each invocation of the mocked function inside your test. '
+                code += 'The first element of the vector will be returned at the first invocation, '
+                code += 'for the next invocation it will move on to the next element in the list and continue to do so for each invocation of the mocked function. '
+                code += 'This error arises when the vector runs out of items to return.'
+                code += '\\n""\033[0m");'
+                
+                # Handle returning correct value
+                code += '\treturn '
+                code += returnVariableName
+                code += '.at(' + invocationsVariableName + '-1);\n'
+            else:
+                code += '\treturn '
+                code += returnVariableName
+                code += ';\n'
 
         code += '}\n\n'
 
@@ -320,25 +362,38 @@ def GenerateResetCodeFromBlueprints(functionBlueprints):
         suffix = '' if blueprint['overloadSuffix'] == '' else '_' + blueprint['overloadSuffix']
         
         for parameter in blueprint['parameterVariables']:
-            lastPartOfType = GetLastPartOfType(parameter['type'])
-            code += '\t'
-            code += prefix + parameter['name'] + suffix
+            parameterVariableName = prefix + parameter['name'] + suffix
 
-            lastCharOfType = parameter['type'].strip()[-1]
-            if lastCharOfType != '*':
-                code += ' = ' + lastPartOfType + '();\n'
+            if 'useVector' in blueprint['options']:
+                code += '\t'
+                code += parameterVariableName
+                code += '.clear();\n'
             else:
-                code += ' = nullptr;\n'
+                lastPartOfType = GetLastPartOfType(parameter['type'])
+                code += '\t'
+                code += parameterVariableName
+
+                lastCharOfType = parameter['type'].strip()[-1]
+                if lastCharOfType != '*':
+                    code += ' = ' + lastPartOfType + '();\n'
+                else:
+                    code += ' = nullptr;\n'
 
         code += '\t'
         code += prefix + blueprint['invocationsVariable']['name'] + suffix
         code += ' = 0;\n'
 
         if blueprint['returnType'] != 'void':
-            lastPartOfReturnType = GetLastPartOfType(blueprint['returnVariable']['type'])
-            code += '\t'
-            code += prefix + blueprint['returnVariable']['name'] + suffix
-            code += ' = ' + lastPartOfReturnType + '();\n'
+            returnTypeName = prefix + blueprint['returnVariable']['name'] + suffix
+            if 'useVector' in blueprint['options']:
+                code += '\t'
+                code += returnTypeName
+                code += '.clear();\n'
+            else:
+                lastPartOfReturnType = GetLastPartOfType(blueprint['returnVariable']['type'])
+                code += '\t'
+                code += returnTypeName
+                code += ' = ' + lastPartOfReturnType + '();\n'
 
     return code
 
@@ -375,9 +430,9 @@ else:
 
 
 
-    # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
-    with open(currentDir + "testSuite_WORKING.txt", "r") as file1: # TODO: Uncomment and change into test for mock framework.
-        with open(currentDir + "testSuite.cpp", "r") as file2:
-            if(file1.read() != file2.read()):
-                raise AssertionError(
-                    "\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")
+    # # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
+    # with open(currentDir + "testSuite_WORKING.txt", "r") as file1: # TODO: Uncomment and change into test for mock framework.
+    #     with open(currentDir + "testSuite.cpp", "r") as file2:
+    #         if(file1.read() != file2.read()):
+    #             raise AssertionError(
+    #                 "\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")

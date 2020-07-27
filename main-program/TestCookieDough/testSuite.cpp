@@ -8,6 +8,8 @@
 void DataPacket_StxIsTwo();
 void DataPacket_EtxIsThree();
 void CalculateCRC_UsesAlgorithCRC32();
+void TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime();
+void TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
 void Toggle_WhenEnabled_BecomesDisabled();
@@ -134,6 +136,8 @@ void RunTests()
 	RUN_TEST(DataPacket_StxIsTwo);
 	RUN_TEST(DataPacket_EtxIsThree);
 	RUN_TEST(CalculateCRC_UsesAlgorithCRC32);
+	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime);
+	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
 	RUN_TEST(Toggle_WhenEnabled_BecomesDisabled);
@@ -506,14 +510,14 @@ size_t Serial_::println()
 	return Serial__println_return_o9;
 }
 
-uint8_t EEPROMClass_read_return;
+std::vector<uint8_t> EEPROMClass_read_return;
 unsigned int EEPROMClass_read_invocations = 0;
-int EEPROMClass_read_param_idx;
+std::vector<int> EEPROMClass_read_param_idx;
 uint8_t EEPROMClass::read(int idx)
 {
-	EEPROMClass_read_param_idx = (int)idx;
+	EEPROMClass_read_param_idx.push_back((int)idx);
 	EEPROMClass_read_invocations++;
-	return EEPROMClass_read_return;
+	if(EEPROMClass_read_return.size() < EEPROMClass_read_invocations) printf("[01;31m""Please populate the vector \"EEPROMClass_read_return\" with one value for each invocation of the function \"EEPROMClass_read\". Do this inside your test before invoking the mocked function. Example: \"EEPROMClass_read_return.push_back(myValueToBeReturned);\". \n\nNOTE: The values in the vector will be iterated and returned (first element to last) for each invocation of the mocked function inside your test. The first element of the vector will be returned at the first invocation, for the next invocation it will move on to the next element in the list and continue to do so for each invocation of the mocked function. This error arises when the vector runs out of items to return.\n""[0m");	return EEPROMClass_read_return.at(EEPROMClass_read_invocations-1);
 }
 
 unsigned int EEPROMClass_write_invocations = 0;
@@ -544,16 +548,16 @@ uint16_t EEPROMClass::length()
 	return EEPROMClass_length_return;
 }
 
-uint16_t  EEPROMClass_get_return_o1;
+std::vector<uint16_t > EEPROMClass_get_return_o1;
 unsigned int EEPROMClass_get_invocations_o1 = 0;
-int EEPROMClass_get_param_idx_o1;
-uint16_t  EEPROMClass_get_param_t_o1;
+std::vector<int> EEPROMClass_get_param_idx_o1;
+std::vector<uint16_t > EEPROMClass_get_param_t_o1;
 uint16_t & EEPROMClass::get(int idx, uint16_t & t)
 {
-	EEPROMClass_get_param_idx_o1 = (int)idx;
-	EEPROMClass_get_param_t_o1 = (uint16_t &)t;
+	EEPROMClass_get_param_idx_o1.push_back((int)idx);
+	EEPROMClass_get_param_t_o1.push_back((uint16_t &)t);
 	EEPROMClass_get_invocations_o1++;
-	return EEPROMClass_get_return_o1;
+	if(EEPROMClass_get_return_o1.size() < EEPROMClass_get_invocations_o1) printf("[01;31m""Please populate the vector \"EEPROMClass_get_return_o1\" with one value for each invocation of the function \"EEPROMClass_get\". Do this inside your test before invoking the mocked function. Example: \"EEPROMClass_get_return_o1.push_back(myValueToBeReturned);\". \n\nNOTE: The values in the vector will be iterated and returned (first element to last) for each invocation of the mocked function inside your test. The first element of the vector will be returned at the first invocation, for the next invocation it will move on to the next element in the list and continue to do so for each invocation of the mocked function. This error arises when the vector runs out of items to return.\n""[0m");	return EEPROMClass_get_return_o1.at(EEPROMClass_get_invocations_o1-1);
 }
 
 uint32_t  EEPROMClass_get_return_o2;
@@ -686,9 +690,9 @@ void ResetMocks()
 	Serial__println_return_o8 = size_t();
 	Serial__println_invocations_o9 = 0;
 	Serial__println_return_o9 = size_t();
-	EEPROMClass_read_param_idx = int();
+	EEPROMClass_read_param_idx.clear();
 	EEPROMClass_read_invocations = 0;
-	EEPROMClass_read_return = uint8_t();
+	EEPROMClass_read_return.clear();
 	EEPROMClass_write_param_idx = int();
 	EEPROMClass_write_param_val = uint8_t();
 	EEPROMClass_write_invocations = 0;
@@ -697,10 +701,10 @@ void ResetMocks()
 	EEPROMClass_update_invocations = 0;
 	EEPROMClass_length_invocations = 0;
 	EEPROMClass_length_return = uint16_t();
-	EEPROMClass_get_param_idx_o1 = int();
-	EEPROMClass_get_param_t_o1 = uint16_t();
+	EEPROMClass_get_param_idx_o1.clear();
+	EEPROMClass_get_param_t_o1.clear();
 	EEPROMClass_get_invocations_o1 = 0;
-	EEPROMClass_get_return_o1 = uint16_t();
+	EEPROMClass_get_return_o1.clear();
 	EEPROMClass_get_param_idx_o2 = int();
 	EEPROMClass_get_param_t_o2 = uint32_t();
 	EEPROMClass_get_invocations_o2 = 0;
