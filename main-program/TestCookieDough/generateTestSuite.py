@@ -372,9 +372,9 @@ else:
 
 
 
-    # # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
-    # with open(currentDir + "testSuite_WORKING.txt", "r") as file1: # TODO: Uncomment and change into test for mock framework.
-    #     with open(currentDir + "testSuite.cpp", "r") as file2:
-    #         if(file1.read() != file2.read()):
-    #             raise AssertionError(
-    #                 "\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")
+    # SIMPLE TEST TO CHECK THAT THE REFACTORING WORKED. DELETE THIS AFTER REFACTORING CODE.
+    with open(currentDir + "testSuite_WORKING.txt", "r") as file1: # TODO: Uncomment and change into test for mock framework.
+        with open(currentDir + "testSuite.cpp", "r") as file2:
+            if(file1.read() != file2.read()):
+                raise AssertionError(
+                    "\n\nFAILED TEST. FILES NOT MATCHING!!!!!!!!!!!!! <-------------")
