@@ -41,7 +41,7 @@ def FindAllMockableFiles(dir):
 
 def ExtractFunctionsFromText(text):
     functions = []
-    regex = r"([^\(\)\;\n\:]+\s[*&]?)([^\(\)\;\n]+)\(([^\)\;]*)\)(?=\;)"
+    regex = r"([^\(\)\;\n\:*&]+[^\S\n*&][*&]?)([^\(\)\;\n]+)\(([^\)\;]*)\)([^\S\n]+)?;([^\S\n]+)?(\/\/[^\S\n]*cookieOption:([^\n]+))?"
     matches = re.findall(regex, text)
 
     for match in matches:
@@ -69,8 +69,11 @@ def ExtractFunctionsFromText(text):
                 newParameter = {'name': parameterName, 'type': parameterType}
                 parameters.append(newParameter)
 
+        specialOptions = match[6].split(",")
+        specialOptions = list(map(lambda x: x.strip(), specialOptions))
+
         newFunction = {'returnType': returnType,
-                       'name': nameOfFunction, 'parameters': parameters}
+                       'name': nameOfFunction, 'parameters': parameters, 'options': specialOptions}
         functions.append(newFunction)
 
     return functions
