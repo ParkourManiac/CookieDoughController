@@ -12,10 +12,10 @@ public:
 
     uint16_t length();
 
-    uint16_t &get(int idx, uint16_t &t);//cookieOption:useVector, map, hej, hå, hellow wowld
+    uint16_t &get(int idx, uint16_t &t);
     uint32_t &get(int idx, uint32_t &t);
 
-    const uint8_t &put(int idx, const uint8_t &t);
+    const uint8_t &put(int idx, const uint8_t &t); // cookieOption: useVector
     const uint16_t &put(int idx, const uint16_t &t);
     const uint32_t &put(int idx, const uint32_t &t);
 };
