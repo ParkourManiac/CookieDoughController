@@ -109,7 +109,7 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     if (!success || packet.crc != packetFromEeprom.crc)
     {
         delete(dataPtr);
-        return false; // Something went wrong when writing.
+        return false; // Throw: Something went wrong when writing.
     }
 
     packetSize = currentAdress - adress;
