@@ -202,18 +202,14 @@ def BlueprintsForMockedFunctions(functions, className = ''):
             'class': className,
             'returnType': function['returnType'],
             'overloadSuffix': 'o' + str(currentOverloadNumber) if overloadCount > 1 else '',
-            'returnVariable': {'name': '', 'type': '' },
-            'invocationsVariable': {'name': '', 'type': '' },
+            'returnVariable': {'name': '', 'type': function['returnType'] },
+            'invocationsVariable': {'name': VariableNameInvocations(function), 'type': 'unsigned int' },
             'parameterVariables': [],
             'options': function['options'],
         }
 
         if function['returnType'] != 'void':
-            blueprint['returnVariable']['type'] = function['returnType']
             blueprint['returnVariable']['name'] = VariableNameReturn(function)
-
-        blueprint['invocationsVariable']['type'] = 'unsigned int'
-        blueprint['invocationsVariable']['name'] = VariableNameInvocations(function)
 
         for parameter in function['parameters']:
             parameterVariable = { 
@@ -236,34 +232,14 @@ def GenerateCodeFromBlueprints(functionBlueprints):
         suffix = '' if blueprint['overloadSuffix'] == '' else '_' + blueprint['overloadSuffix']
 
         # Declare variables.
-        if blueprint['returnType'] != 'void':
-            returnVariableType = CleanupType(blueprint['returnVariable']['type'])
-            code += returnVariableType + ' '
-            code += prefix + blueprint['returnVariable']['name'] + suffix
-            code += ';\n'
+        code += DefineReturnVariable(blueprint['returnVariable'], prefix, suffix, blueprint['options'])
 
-            if 'useVector' in blueprint['options']:
-                returnVectorType = 'std::vector<' + returnVariableType + '>'
-                code += returnVectorType + ' '
-                code += prefix + blueprint['returnVariable']['name'] + suffix + '_v'
-                code += ';\n'
-
-        code += CleanupType(blueprint['invocationsVariable']['type']) + ' '
-        code += prefix + blueprint['invocationsVariable']['name'] + suffix
-        code += ' = 0;\n'
+        code += DefineInvocationsVariable(blueprint['invocationsVariable'], prefix, suffix)
 
         for variable in blueprint['parameterVariables']:
-            parameterVariableType = CleanupType(variable['type']) 
-            parameterVariableName = prefix + variable['name'] + suffix
-            code += parameterVariableType + ' '
-            code += parameterVariableName
-            code += ';\n'
-            if 'useVector' in blueprint['options']:
-                parameterVectorType = 'std::vector<' + parameterVariableType + '>'
-                code += parameterVectorType + ' '
-                code += parameterVariableName + '_v'
-                code += ';\n'
+            code += DefineParameterVariable(variable, prefix, suffix, blueprint['options'])
 
+        # TODO: CONTINUE REFACTORING AND BREAKING OUT CODE, FROM HERE AND DOWNWARDS.
 
         # Write declaration of mocked function.
         code += blueprint['returnType'] + ' '
@@ -371,6 +347,47 @@ def VariableNameInvocations(function):
 
 def VariableNameParameter(function, parameter):
     return function['name'] + '_param_' + parameter['name']
+
+def DefineReturnVariable(variable, prefix, suffix, options):
+    code = ''
+    if variable['type'] != 'void':
+        returnVariableType = CleanupType(variable['type'])
+        code += returnVariableType + ' '
+        code += prefix + variable['name'] + suffix
+        code += ';\n'
+
+        if 'useVector' in options:
+            returnVectorType = 'std::vector<' + returnVariableType + '>'
+            code += returnVectorType + ' '
+            code += prefix + variable['name'] + suffix + '_v'
+            code += ';\n'
+
+    return code
+
+def DefineInvocationsVariable(variable, prefix, suffix):
+    code = ''
+
+    code += CleanupType(variable['type']) + ' '
+    code += prefix + variable['name'] + suffix
+    code += ' = 0;\n'
+
+    return code
+
+def DefineParameterVariable(variable, prefix, suffix, options):
+    code = ''
+
+    parameterVariableType = CleanupType(variable['type']) 
+    parameterVariableName = prefix + variable['name'] + suffix
+    code += parameterVariableType + ' '
+    code += parameterVariableName
+    code += ';\n'
+    if 'useVector' in options:
+        parameterVectorType = 'std::vector<' + parameterVariableType + '>'
+        code += parameterVectorType + ' '
+        code += parameterVariableName + '_v'
+        code += ';\n'
+
+    return code
 
 
 def GenerateResetCodeFromBlueprints(functionBlueprints):
