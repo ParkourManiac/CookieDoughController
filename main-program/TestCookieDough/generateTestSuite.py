@@ -535,7 +535,7 @@ def DefineParameterVariableResetBehaviour(variable, prefix, suffix, options):
 def DefineReferenceVariableResetBehaviour(variable, prefix, suffix, options):
     code = ''
 
-    # TODO: Write stuff here. Look at DefineParameterVariableResetBehaviour
+    # TODO: Write stuff here. Look at DefineParameterVariableResetBehaviour.
 
     return code 
 
