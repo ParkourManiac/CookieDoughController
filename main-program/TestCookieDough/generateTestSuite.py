@@ -233,95 +233,16 @@ def GenerateCodeFromBlueprints(functionBlueprints):
 
         # Declare variables.
         code += DefineReturnVariable(blueprint['returnVariable'], prefix, suffix, blueprint['options'])
-
         code += DefineInvocationsVariable(blueprint['invocationsVariable'], prefix, suffix)
 
         for variable in blueprint['parameterVariables']:
             code += DefineParameterVariable(variable, prefix, suffix, blueprint['options'])
-
-        # TODO: CONTINUE REFACTORING AND BREAKING OUT CODE, FROM HERE AND DOWNWARDS.
+            # if variable['type'][-1] == '&':
+            #     code += DefineReferenceVariable(variable, prefix, suffix, blueprint['options'])
 
         # Write declaration of mocked function.
-        code += blueprint['returnType'] + ' '
-        if blueprint['class'] != '':
-            code += blueprint['class'] + '::'
-        code += blueprint['name'] + '('
-
-        functionParameters = list(map(lambda x: x['parameter'], blueprint['parameterVariables']))
-        for i in range(len(functionParameters)):
-            currentParam = functionParameters[i]
-
-            code += currentParam['type'] + ' ' + currentParam['name']
-            if i != len(functionParameters) - 1:
-                code += ", "
-
-        code += ')\n'
-        code += '{\n'
-
-        # Fill blueprint body with mocked functionality.
-        for variable in blueprint['parameterVariables']:
-            parameterVariableName = prefix + variable['name'] + suffix
-            code += '\t'
-            code += parameterVariableName
-            code += ' = '
-            code += '(' + IgnoreConst(variable['type']) + ')' 
-            code += variable['parameter']['name']
-            code += ';\n'
-            if 'useVector' in blueprint['options']:
-                parameterVectorName = parameterVariableName + '_v'
-                code += '\t'
-                code += parameterVectorName
-                code += '.push_back('
-                code += '(' + IgnoreConst(variable['type']) + ')' 
-                code += variable['parameter']['name']
-                code += ');\n'
-
-        invocationsVariableName = prefix + blueprint['invocationsVariable']['name'] + suffix
-        code += '\t'
-        code += invocationsVariableName
-        code += '++;\n'
-        if blueprint['returnType'] != 'void':
-            returnVariableName = prefix + blueprint['returnVariable']['name'] + suffix
-            if 'useVector' in blueprint['options']:
-                returnVectorName = returnVariableName + '_v'
-                # Prepare error message
-                code += '\tif('
-                code += returnVectorName + '.size() < ' + invocationsVariableName
-                code += ')\n\t{\n'
-                # code += '\t\tprintf("\033[01;31m""Please populate the vector \\\"'
-                # code += returnVectorName
-                # code += '\\\" with one value for each invocation of the function '
-                # code += '\\\"'
-                # code += prefix + blueprint['name']
-                # code += '\\\". '
-                # code += 'Do this inside your test before invoking the mocked function. '
-                # code += 'Example: \\\"'
-                # code += returnVectorName
-                # code += '.push_back(myValueToBeReturned);\\\". '
-                # code += '\\n\\nNOTE: The values in the vector will be iterated and returned (first element to last) for each invocation of the mocked function inside your test. '
-                # code += 'The first element of the vector will be returned at the first invocation, '
-                # code += 'for the next invocation it will move on to the next element in the list and continue to do so for each invocation of the mocked function. '
-                # code += 'This error arises when the vector runs out of items to return.'
-                # code += '\\n""\033[0m");\n'
-                
-                # Handle returning correct value
-                code += '\t\treturn '
-                code += returnVariableName
-                code += ';\n'
-                code += '\t}\n'
-
-                code += '\telse\n\t{\n'
-                code += '\t\treturn '
-                code += returnVectorName
-                code += '.at(' + invocationsVariableName + '-1);\n'
-                code += '\t}\n'
-            else: 
-                returnVariableName = prefix + blueprint['returnVariable']['name'] + suffix
-                code += '\treturn '
-                code += returnVariableName
-                code += ';\n'
-
-        code += '}\n\n'
+        code += DeclareFunction(blueprint)
+        code += DefineFunctionBody(blueprint, prefix, suffix)
 
     return code
 
@@ -337,16 +258,16 @@ def IgnoreAmpersand(typeName):
 def IgnoreConst(typeName):
     return ' '.join(typeName.split()[1:]) if typeName.split()[0] == 'const' else typeName 
 
+
 def VariableNameReturn(function):
     return function['name'] + '_' + 'return'
-
 
 def VariableNameInvocations(function):
     return function['name'] + '_' + 'invocations'
 
-
 def VariableNameParameter(function, parameter):
     return function['name'] + '_param_' + parameter['name']
+
 
 def DefineReturnVariable(variable, prefix, suffix, options):
     code = ''
@@ -389,6 +310,128 @@ def DefineParameterVariable(variable, prefix, suffix, options):
 
     return code
 
+def DefineReferenceVariable(variable, prefix, suffix, options):
+    code = ''
+
+    parameterVariableType = CleanupType(variable['type']) 
+    parameterVariableName = prefix + variable['name'] + suffix
+    code += parameterVariableType + ' '
+    code += parameterVariableName + '_r'
+    code += ';\n'
+    if 'useVector' in options:
+        parameterVectorType = 'std::vector<' + parameterVariableType + '>'
+        code += parameterVectorType + ' '
+        code += parameterVariableName + '_v' + 'r'
+        code += ';\n'
+
+    return code
+
+def DeclareFunction(blueprint):
+    code = ''
+    code += blueprint['returnType'] + ' '
+    if blueprint['class'] != '':
+        code += blueprint['class'] + '::'
+    code += blueprint['name'] + '('
+
+    functionParameters = list(map(lambda x: x['parameter'], blueprint['parameterVariables']))
+    for i in range(len(functionParameters)):
+        currentParam = functionParameters[i]
+
+        code += currentParam['type'] + ' ' + currentParam['name']
+        if i != len(functionParameters) - 1:
+            code += ", "
+
+    code += ')\n'
+
+    return code
+
+def DefineFunctionBody(blueprint, prefix, suffix):
+    code = '{\n'
+
+    # Fill blueprint body with mocked functionality.
+    for variable in blueprint['parameterVariables']:
+        code += DefineParameterVariableBehaviour(variable, prefix, suffix, blueprint['options'])
+
+    invocationsVariableName = prefix + blueprint['invocationsVariable']['name'] + suffix
+    code += DefineInvocationsVariableBehaviour(invocationsVariableName)
+    code += DefineReturnVariableBehaviour(blueprint, invocationsVariableName, prefix, suffix)
+
+    code += '}\n\n'
+
+    return code
+
+def DefineParameterVariableBehaviour(variable, prefix, suffix, options):
+    code = ''
+
+    parameterVariableName = prefix + variable['name'] + suffix
+    code += '\t'
+    code += parameterVariableName
+    code += ' = '
+    code += '(' + IgnoreConst(variable['type']) + ')' 
+    code += variable['parameter']['name']
+    code += ';\n'
+    if 'useVector' in options:
+        parameterVectorName = parameterVariableName + '_v'
+        code += '\t'
+        code += parameterVectorName
+        code += '.push_back('
+        code += '(' + IgnoreConst(variable['type']) + ')' 
+        code += variable['parameter']['name']
+        code += ');\n'
+
+    return code
+
+def DefineInvocationsVariableBehaviour(variableName):
+    code = '\t'
+    code += variableName
+    code += '++;\n'
+
+    return code
+
+def DefineReturnVariableBehaviour(blueprint, invocationsVariableName, prefix, suffix):
+    code = ''
+    if blueprint['returnType'] != 'void':
+        returnVariableName = prefix + blueprint['returnVariable']['name'] + suffix
+        if 'useVector' in blueprint['options']:
+            returnVectorName = returnVariableName + '_v'
+            # Prepare error message
+            code += '\tif('
+            code += returnVectorName + '.size() < ' + invocationsVariableName
+            code += ')\n\t{\n'
+            # code += '\t\tprintf("\033[01;31m""Please populate the vector \\\"'
+            # code += returnVectorName
+            # code += '\\\" with one value for each invocation of the function '
+            # code += '\\\"'
+            # code += prefix + blueprint['name']
+            # code += '\\\". '
+            # code += 'Do this inside your test before invoking the mocked function. '
+            # code += 'Example: \\\"'
+            # code += returnVectorName
+            # code += '.push_back(myValueToBeReturned);\\\". '
+            # code += '\\n\\nNOTE: The values in the vector will be iterated and returned (first element to last) for each invocation of the mocked function inside your test. '
+            # code += 'The first element of the vector will be returned at the first invocation, '
+            # code += 'for the next invocation it will move on to the next element in the list and continue to do so for each invocation of the mocked function. '
+            # code += 'This error arises when the vector runs out of items to return.'
+            # code += '\\n""\033[0m");\n'
+            
+            # Handle returning correct value
+            code += '\t\treturn '
+            code += returnVariableName
+            code += ';\n'
+            code += '\t}\n'
+
+            code += '\telse\n\t{\n'
+            code += '\t\treturn '
+            code += returnVectorName
+            code += '.at(' + invocationsVariableName + '-1);\n'
+            code += '\t}\n'
+        else: 
+            returnVariableName = prefix + blueprint['returnVariable']['name'] + suffix
+            code += '\treturn '
+            code += returnVariableName
+            code += ';\n'
+
+    return code
 
 def GenerateResetCodeFromBlueprints(functionBlueprints):
     code = ''
@@ -397,40 +440,11 @@ def GenerateResetCodeFromBlueprints(functionBlueprints):
         prefix = '' if blueprint['class'] == '' else blueprint['class'] + '_'
         suffix = '' if blueprint['overloadSuffix'] == '' else '_' + blueprint['overloadSuffix']
         
-        for parameter in blueprint['parameterVariables']:
-            parameterVariableName = prefix + parameter['name'] + suffix
+        for variable in blueprint['parameterVariables']:
+            code += DefineParameterVariableResetBehaviour(variable, prefix, suffix, blueprint['options'])
 
-            lastPartOfType = GetLastPartOfType(parameter['type'])
-            code += '\t'
-            code += parameterVariableName
-
-            lastCharOfType = parameter['type'].strip()[-1]
-            if lastCharOfType != '*':
-                code += ' = ' + lastPartOfType + '();\n'
-            else:
-                code += ' = nullptr;\n'
-
-            if 'useVector' in blueprint['options']:
-                parameterVectorName = parameterVariableName + '_v'
-                code += '\t'
-                code += parameterVectorName
-                code += '.clear();\n'
-
-        code += '\t'
-        code += prefix + blueprint['invocationsVariable']['name'] + suffix
-        code += ' = 0;\n'
-
-        if blueprint['returnType'] != 'void':
-            returnVariableName = prefix + blueprint['returnVariable']['name'] + suffix
-            lastPartOfReturnType = GetLastPartOfType(blueprint['returnVariable']['type'])
-            code += '\t'
-            code += returnVariableName
-            code += ' = ' + lastPartOfReturnType + '();\n'
-            if 'useVector' in blueprint['options']:
-                returnVectorName = returnVariableName + '_v'
-                code += '\t'
-                code += returnVectorName
-                code += '.clear();\n'
+        code += DefineInvocationsVariableResetBehaviour(blueprint, prefix, suffix)
+        code += DefineReturnVariableResetBehaviour(blueprint, prefix, suffix)
 
     return code
 
@@ -442,6 +456,51 @@ def GetLastPartOfType(fullType):
 
     return lastPartOfType
 
+def DefineParameterVariableResetBehaviour(variable, prefix, suffix, options):
+    code = ''
+    
+    parameterVariableName = prefix + variable['name'] + suffix
+    lastPartOfType = GetLastPartOfType(variable['type'])
+    code += '\t'
+    code += parameterVariableName
+
+    lastCharOfType = variable['type'].strip()[-1]
+    if lastCharOfType != '*':
+        code += ' = ' + lastPartOfType + '();\n'
+    else:
+        code += ' = nullptr;\n'
+
+    if 'useVector' in options:
+        parameterVectorName = parameterVariableName + '_v'
+        code += '\t'
+        code += parameterVectorName
+        code += '.clear();\n'
+
+    return code 
+
+def DefineInvocationsVariableResetBehaviour(blueprint, prefix, suffix):
+    code = '\t'
+    code += prefix + blueprint['invocationsVariable']['name'] + suffix
+    code += ' = 0;\n'
+
+    return code
+
+def DefineReturnVariableResetBehaviour(blueprint, prefix, suffix):
+    code = ''
+
+    if blueprint['returnType'] != 'void':
+        returnVariableName = prefix + blueprint['returnVariable']['name'] + suffix
+        lastPartOfReturnType = GetLastPartOfType(blueprint['returnVariable']['type'])
+        code += '\t'
+        code += returnVariableName
+        code += ' = ' + lastPartOfReturnType + '();\n'
+        if 'useVector' in blueprint['options']:
+            returnVectorName = returnVariableName + '_v'
+            code += '\t'
+            code += returnVectorName
+            code += '.clear();\n'
+
+    return code
 
 if len(sys.argv) <= 1:
     raise NameError(
