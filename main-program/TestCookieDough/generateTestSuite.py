@@ -237,8 +237,9 @@ def GenerateCodeFromBlueprints(functionBlueprints):
 
         for variable in blueprint['parameterVariables']:
             code += DefineParameterVariable(variable, prefix, suffix, blueprint['options'])
-            # if variable['type'][-1] == '&':
-            #     code += DefineReferenceVariable(variable, prefix, suffix, blueprint['options'])
+
+        for variable in blueprint['parameterVariables']:
+            code += DefineReferenceVariable(variable, prefix, suffix, blueprint['options'])
 
         # Write declaration of mocked function.
         code += DeclareFunction(blueprint)
@@ -313,16 +314,18 @@ def DefineParameterVariable(variable, prefix, suffix, options):
 def DefineReferenceVariable(variable, prefix, suffix, options):
     code = ''
 
-    parameterVariableType = CleanupType(variable['type']) 
-    parameterVariableName = prefix + variable['name'] + suffix
-    code += parameterVariableType + ' '
-    code += parameterVariableName + '_r'
-    code += ';\n'
-    if 'useVector' in options:
-        parameterVectorType = 'std::vector<' + parameterVariableType + '>'
-        code += parameterVectorType + ' '
-        code += parameterVariableName + '_v' + 'r'
-        code += ';\n'
+    if 'overwriteReference' in options:
+        if variable['type'][-1] == '&':
+            referenceVariableType = CleanupType(variable['type']) 
+            parameterVariableName = prefix + variable['name'] + suffix
+            code += referenceVariableType + ' '
+            code += parameterVariableName + '_r'
+            code += ';\n'
+            if 'useVector' in options:
+                referenceVectorType = 'std::vector<' + referenceVariableType + '>'
+                code += referenceVectorType + ' '
+                code += parameterVariableName + '_v' + 'r'
+                code += ';\n'
 
     return code
 
@@ -348,12 +351,17 @@ def DeclareFunction(blueprint):
 def DefineFunctionBody(blueprint, prefix, suffix):
     code = '{\n'
 
+    invocationsVariableName = prefix + blueprint['invocationsVariable']['name'] + suffix
+    code += DefineInvocationsVariableBehaviour(invocationsVariableName)
+
     # Fill blueprint body with mocked functionality.
     for variable in blueprint['parameterVariables']:
         code += DefineParameterVariableBehaviour(variable, prefix, suffix, blueprint['options'])
 
-    invocationsVariableName = prefix + blueprint['invocationsVariable']['name'] + suffix
-    code += DefineInvocationsVariableBehaviour(invocationsVariableName)
+    code += '\n'
+    for variable in blueprint['parameterVariables']:
+        code += DefineReferenceVariableBehaviour(variable, invocationsVariableName, prefix, suffix, blueprint['options'])
+
     code += DefineReturnVariableBehaviour(blueprint, invocationsVariableName, prefix, suffix)
 
     code += '}\n\n'
@@ -378,6 +386,49 @@ def DefineParameterVariableBehaviour(variable, prefix, suffix, options):
         code += '(' + IgnoreConst(variable['type']) + ')' 
         code += variable['parameter']['name']
         code += ');\n'
+
+    return code
+
+def DefineReferenceVariableBehaviour(variable, invocationsVariableName, prefix, suffix, options):   # TODO: Double check that this makes sense and works!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    code = ''
+
+    if 'overwriteReference' in options:
+        if variable['type'][-1] == '&':
+            parameterVariable = prefix + variable['name'] + suffix
+            referenceVectorName = parameterVariable + '_vr'
+            referenceVariableName = parameterVariable + '_r'
+
+            if 'useVector' in options: 
+                # Check if vector has an element at the current position
+                code += '\tif('
+                code += referenceVectorName + '.size() < ' + invocationsVariableName
+                code += ') '
+                # code += '\n'
+                
+                # Handle overwriting reference with correct value
+                # code += '\t\t'
+                code += variable['parameter']['name']
+                code += ' = '
+                code += '(' + IgnoreConst(variable['type']) + ')'
+                code += referenceVariableName
+                code += ';\n'
+
+                code += '\telse '
+                # code += '\n'
+                # code += '\t\t'
+                code += variable['parameter']['name']
+                code += ' = '
+                code += '(' + IgnoreConst(variable['type']) + ')'
+                code += referenceVectorName
+                code += '.at(' + invocationsVariableName + '-1);\n\n'
+            else:
+                code += '\t'
+                code += variable['parameter']['name']
+                code += ' = '
+                code += '(' + IgnoreConst(variable['type']) + ')'
+                code += referenceVariableName
+                code += ';\n'
+
 
     return code
 
@@ -443,6 +494,9 @@ def GenerateResetCodeFromBlueprints(functionBlueprints):
         for variable in blueprint['parameterVariables']:
             code += DefineParameterVariableResetBehaviour(variable, prefix, suffix, blueprint['options'])
 
+        for variable in blueprint['parameterVariables']:
+            code += DefineReferenceVariableResetBehaviour(variable, prefix, suffix, blueprint['options'])
+
         code += DefineInvocationsVariableResetBehaviour(blueprint, prefix, suffix)
         code += DefineReturnVariableResetBehaviour(blueprint, prefix, suffix)
 
@@ -475,6 +529,13 @@ def DefineParameterVariableResetBehaviour(variable, prefix, suffix, options):
         code += '\t'
         code += parameterVectorName
         code += '.clear();\n'
+
+    return code 
+
+def DefineReferenceVariableResetBehaviour(variable, prefix, suffix, options):
+    code = ''
+
+    # TODO: Write stuff here. Look at DefineParameterVariableResetBehaviour
 
     return code 
 
