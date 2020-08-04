@@ -604,8 +604,6 @@ int EEPROMClass_get_param_idx_o1;
 std::vector<int> EEPROMClass_get_param_idx_o1_v;
 uint16_t  EEPROMClass_get_param_t_o1;
 std::vector<uint16_t > EEPROMClass_get_param_t_o1_v;
-uint16_t  EEPROMClass_get_param_t_o1_r;
-std::vector<uint16_t > EEPROMClass_get_param_t_o1_vr;
 uint16_t & EEPROMClass::get(int idx, uint16_t & t)
 {
 	EEPROMClass_get_invocations_o1++;
@@ -613,9 +611,6 @@ uint16_t & EEPROMClass::get(int idx, uint16_t & t)
 	EEPROMClass_get_param_idx_o1_v.push_back((int)idx);
 	EEPROMClass_get_param_t_o1 = (uint16_t &)t;
 	EEPROMClass_get_param_t_o1_v.push_back((uint16_t &)t);
-
-	if(EEPROMClass_get_param_t_o1_vr.size() < EEPROMClass_get_invocations_o1) t = (uint16_t &)EEPROMClass_get_param_t_o1_r;
-	else t = (uint16_t &)EEPROMClass_get_param_t_o1_vr.at(EEPROMClass_get_invocations_o1-1);
 
 	if(EEPROMClass_get_return_o1_v.size() < EEPROMClass_get_invocations_o1)
 	{
@@ -634,8 +629,6 @@ int EEPROMClass_get_param_idx_o2;
 std::vector<int> EEPROMClass_get_param_idx_o2_v;
 uint32_t  EEPROMClass_get_param_t_o2;
 std::vector<uint32_t > EEPROMClass_get_param_t_o2_v;
-uint32_t  EEPROMClass_get_param_t_o2_r;
-std::vector<uint32_t > EEPROMClass_get_param_t_o2_vr;
 uint32_t & EEPROMClass::get(int idx, uint32_t & t)
 {
 	EEPROMClass_get_invocations_o2++;
@@ -643,9 +636,6 @@ uint32_t & EEPROMClass::get(int idx, uint32_t & t)
 	EEPROMClass_get_param_idx_o2_v.push_back((int)idx);
 	EEPROMClass_get_param_t_o2 = (uint32_t &)t;
 	EEPROMClass_get_param_t_o2_v.push_back((uint32_t &)t);
-
-	if(EEPROMClass_get_param_t_o2_vr.size() < EEPROMClass_get_invocations_o2) t = (uint32_t &)EEPROMClass_get_param_t_o2_r;
-	else t = (uint32_t &)EEPROMClass_get_param_t_o2_vr.at(EEPROMClass_get_invocations_o2-1);
 
 	if(EEPROMClass_get_return_o2_v.size() < EEPROMClass_get_invocations_o2)
 	{
@@ -664,8 +654,6 @@ int EEPROMClass_put_param_idx_o1;
 std::vector<int> EEPROMClass_put_param_idx_o1_v;
 uint8_t EEPROMClass_put_param_t_o1;
 std::vector<uint8_t> EEPROMClass_put_param_t_o1_v;
-uint8_t EEPROMClass_put_param_t_o1_r;
-std::vector<uint8_t> EEPROMClass_put_param_t_o1_vr;
 const uint8_t & EEPROMClass::put(int idx, const uint8_t & t)
 {
 	EEPROMClass_put_invocations_o1++;
@@ -673,9 +661,6 @@ const uint8_t & EEPROMClass::put(int idx, const uint8_t & t)
 	EEPROMClass_put_param_idx_o1_v.push_back((int)idx);
 	EEPROMClass_put_param_t_o1 = (uint8_t &)t;
 	EEPROMClass_put_param_t_o1_v.push_back((uint8_t &)t);
-
-	if(EEPROMClass_put_param_t_o1_vr.size() < EEPROMClass_put_invocations_o1) t = (uint8_t &)EEPROMClass_put_param_t_o1_r;
-	else t = (uint8_t &)EEPROMClass_put_param_t_o1_vr.at(EEPROMClass_put_invocations_o1-1);
 
 	if(EEPROMClass_put_return_o1_v.size() < EEPROMClass_put_invocations_o1)
 	{
@@ -694,8 +679,6 @@ int EEPROMClass_put_param_idx_o2;
 std::vector<int> EEPROMClass_put_param_idx_o2_v;
 uint16_t EEPROMClass_put_param_t_o2;
 std::vector<uint16_t> EEPROMClass_put_param_t_o2_v;
-uint16_t EEPROMClass_put_param_t_o2_r;
-std::vector<uint16_t> EEPROMClass_put_param_t_o2_vr;
 const uint16_t & EEPROMClass::put(int idx, const uint16_t & t)
 {
 	EEPROMClass_put_invocations_o2++;
@@ -703,9 +686,6 @@ const uint16_t & EEPROMClass::put(int idx, const uint16_t & t)
 	EEPROMClass_put_param_idx_o2_v.push_back((int)idx);
 	EEPROMClass_put_param_t_o2 = (uint16_t &)t;
 	EEPROMClass_put_param_t_o2_v.push_back((uint16_t &)t);
-
-	if(EEPROMClass_put_param_t_o2_vr.size() < EEPROMClass_put_invocations_o2) t = (uint16_t &)EEPROMClass_put_param_t_o2_r;
-	else t = (uint16_t &)EEPROMClass_put_param_t_o2_vr.at(EEPROMClass_put_invocations_o2-1);
 
 	if(EEPROMClass_put_return_o2_v.size() < EEPROMClass_put_invocations_o2)
 	{
@@ -724,8 +704,6 @@ int EEPROMClass_put_param_idx_o3;
 std::vector<int> EEPROMClass_put_param_idx_o3_v;
 uint32_t EEPROMClass_put_param_t_o3;
 std::vector<uint32_t> EEPROMClass_put_param_t_o3_v;
-uint32_t EEPROMClass_put_param_t_o3_r;
-std::vector<uint32_t> EEPROMClass_put_param_t_o3_vr;
 const uint32_t & EEPROMClass::put(int idx, const uint32_t & t)
 {
 	EEPROMClass_put_invocations_o3++;
@@ -733,9 +711,6 @@ const uint32_t & EEPROMClass::put(int idx, const uint32_t & t)
 	EEPROMClass_put_param_idx_o3_v.push_back((int)idx);
 	EEPROMClass_put_param_t_o3 = (uint32_t &)t;
 	EEPROMClass_put_param_t_o3_v.push_back((uint32_t &)t);
-
-	if(EEPROMClass_put_param_t_o3_vr.size() < EEPROMClass_put_invocations_o3) t = (uint32_t &)EEPROMClass_put_param_t_o3_r;
-	else t = (uint32_t &)EEPROMClass_put_param_t_o3_vr.at(EEPROMClass_put_invocations_o3-1);
 
 	if(EEPROMClass_put_return_o3_v.size() < EEPROMClass_put_invocations_o3)
 	{
