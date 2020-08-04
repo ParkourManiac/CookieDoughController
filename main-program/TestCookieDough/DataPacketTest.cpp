@@ -39,21 +39,25 @@ extern std::vector<int> EEPROMClass_update_param_idx_v;
 extern uint8_t EEPROMClass_update_param_val;
 extern std::vector<uint8_t> EEPROMClass_update_param_val_v;
 
-extern uint16_t  EEPROMClass_get_return_o1;
-extern std::vector<uint16_t > EEPROMClass_get_return_o1_v;
+extern uint16_t EEPROMClass_get_return_o1;
+extern std::vector<uint16_t> EEPROMClass_get_return_o1_v;
 extern unsigned int EEPROMClass_get_invocations_o1;
 extern int EEPROMClass_get_param_idx_o1;
 extern std::vector<int> EEPROMClass_get_param_idx_o1_v;
-extern uint16_t  EEPROMClass_get_param_t_o1;
-extern std::vector<uint16_t > EEPROMClass_get_param_t_o1_v;
+extern uint16_t EEPROMClass_get_param_t_o1;
+extern std::vector<uint16_t> EEPROMClass_get_param_t_o1_v;
+extern uint16_t EEPROMClass_get_param_t_o1_r;
+extern std::vector<uint16_t> EEPROMClass_get_param_t_o1_vr;
 
-extern uint32_t  EEPROMClass_get_return_o2;
-extern std::vector<uint32_t > EEPROMClass_get_return_o2_v;
+extern uint32_t EEPROMClass_get_return_o2;
+extern std::vector<uint32_t> EEPROMClass_get_return_o2_v;
 extern unsigned int EEPROMClass_get_invocations_o2;
 extern int EEPROMClass_get_param_idx_o2;
 extern std::vector<int> EEPROMClass_get_param_idx_o2_v;
-extern uint32_t  EEPROMClass_get_param_t_o2;
-extern std::vector<uint32_t > EEPROMClass_get_param_t_o2_v;
+extern uint32_t EEPROMClass_get_param_t_o2;
+extern std::vector<uint32_t> EEPROMClass_get_param_t_o2_v;
+extern uint32_t  EEPROMClass_get_param_t_o2_r;
+extern std::vector<uint32_t > EEPROMClass_get_param_t_o2_vr;
 
 extern uint16_t EEPROMClass_length_return;
 extern unsigned int EEPROMClass_length_invocations;
@@ -113,7 +117,53 @@ void TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime()
     ASSERT_TEST(first == 1 && second == 2 && third == 3 && fourth == 4);
 }
 
-// TODO: WRITE A TEST FOR DATAPACKET WHERE YOU NEED TO USE THE SAME MOCKED FUNCITON MULTIPLE TIMES.
+void TestIfOverwriteReferenceVectorIsWorking_Works()
+{
+    uint32_t expected1 = 1337;
+    uint32_t expected2 = 13;
+    EEPROMClass_get_param_t_o2_vr.push_back(expected1);
+    EEPROMClass_get_param_t_o2_vr.push_back(expected2);
+    uint32_t result1;
+    uint32_t result2;
+
+    EEPROM.get(0, result1);
+    EEPROM.get(0, result2);
+
+    ASSERT_TEST(result1 == expected1 && 
+                result2 == expected2);
+}
+
+void TestIfOverwriteReferenceVectorResettingIsWorking_ResetsBetweenTests()
+{
+    uint32_t result1;
+
+    EEPROM.get(0, result1);
+
+    ASSERT_TEST(result1 != 1337);
+}
+
+void TestIfOverwriteReferenceIsWorking_Works()
+{
+    uint32_t expected = 1337;
+    EEPROMClass_get_param_t_o2_r = expected;
+    uint32_t result1;
+    uint32_t result2;
+
+    EEPROM.get(0, result1);
+    EEPROM.get(0, result2);
+
+    ASSERT_TEST(result1 == expected &&
+                result2 == expected);
+}
+
+void TestIfOverwriteReferenceResettingIsWorking_ResetsBetweenTests()
+{
+    uint32_t result1;
+
+    EEPROM.get(0, result1);
+
+    ASSERT_TEST(result1 != 1337);
+}
 
 void SavePacketToEEPROM_SavesStxToFirstGivenAdress()
 {
@@ -138,6 +188,8 @@ void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
 
     ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[1] == expectedEtxPosition && EEPROMClass_put_param_t_o1_v[1] == packet.etx);
 }
+
+// TODO: WRITE A TEST FOR DATAPACKET WHERE YOU NEED TO USE THE SAME MOCKED FUNCITON MULTIPLE TIMES.
 
 void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
 {
@@ -177,42 +229,41 @@ void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
                 EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == ((uint8_t *)&data)[1]);
 }
 
-// void ParsePacketFromEEPROM_ReturnsCorrectPackage_Part1()
-// {
-//     unsigned int adress = 13;
-//     uint16_t data = 42;
-//     DataPacket expectedPacket;
-//     expectedPacket.payloadLength = sizeof(data);
-//     expectedPacket.payload = (uint8_t*) &data;
-//     expectedPacket.crc = 1337;
+void ParsePacketFromEEPROM_ReturnsCorrectPackage()
+{
+    unsigned int adress = 13;
+    uint16_t data = 42;
+    DataPacket expectedPacket;
+    expectedPacket.payloadLength = sizeof(data);
+    expectedPacket.payload = (uint8_t*) &data;
+    expectedPacket.crc = 1337;
 
-//     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
-//     EEPROMClass_get_return_o1_v.push_back(expectedPacket.payloadLength);
-//     EEPROMClass_get_return_o2_v.push_back(expectedPacket.crc);
-//     EEPROMClass_read_return_v.push_back(expectedPacket.etx);
-//     EEPROMClass_read_return_v.push_back(expectedPacket.payload[0]);
-//     EEPROMClass_read_return_v.push_back(expectedPacket.payload[1]);
-//     EEPROMClass_length_return = expectedPacket.payloadLength + 20;
+    EEPROMClass_read_return_v.push_back(expectedPacket.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
+    EEPROMClass_get_param_t_o2_vr.push_back(expectedPacket.crc);
+    EEPROMClass_read_return_v.push_back(expectedPacket.etx); // TODO: This crashes program (expectedPacket.etx + 1);. Find out why!
+    EEPROMClass_read_return_v.push_back(expectedPacket.payload[0]);
+    EEPROMClass_read_return_v.push_back(expectedPacket.payload[1]);
+    EEPROMClass_length_return = expectedPacket.payloadLength + 20;
 
-//     DataPacket result;
-//     result.payloadLength = expectedPacket.payloadLength;
-//     unsigned int packetSize;
-//     bool resultBool = ParsePacketFromEEPROM(adress, result, packetSize);
-//     printf("%d", EEPROMClass_get_invocations_o2);
+    DataPacket *resultPtr = new DataPacket(); // TODO: THIS CRASHES THE PROGRAM IF NOT HERE.
+    DataPacket result = *resultPtr; // TODO: MUST HAVE A REFERENCE TO A HEAP ALLOCATION! FIND OUT WHY!
+    result.payloadLength = expectedPacket.payloadLength;
+    unsigned int packetSize;
+    bool resultBool = ParsePacketFromEEPROM(adress, result, packetSize);
 
+    // uint8_t stx = EEPROM.read(currentAdress);
+    // EEPROM.get(currentAdress, packet.payloadLength);
+    // EEPROM.get(currentAdress, packet.crc);
+    // EEPROM.read(currentAdress + packet.payloadLength) != packet.etx
+    // payload[i] = EEPROM.read(currentAdress + i);
 
-//     // uint8_t stx = EEPROM.read(currentAdress);
-//     // EEPROM.get(currentAdress, packet.payloadLength);
-//     // EEPROM.get(currentAdress, packet.crc);
-//     // EEPROM.read(currentAdress + packet.payloadLength) != packet.etx
-//     // payload[i] = EEPROM.read(currentAdress + i);
-
-//     ASSERT_TEST(expectedPacket.etx == result.etx &&
-//                 expectedPacket.payloadLength == result.payloadLength &&
-//                 expectedPacket.crc == result.crc &&
-//                 expectedPacket.payload[0] == result.payload[0] &&
-//                 expectedPacket.payload[1] == result.payload[1] &&
-//                 expectedPacket.etx == result.etx);
-// }
+    ASSERT_TEST(expectedPacket.stx == result.stx &&
+                expectedPacket.payloadLength == result.payloadLength &&
+                expectedPacket.crc == result.crc &&
+                expectedPacket.payload[0] == result.payload[0] &&
+                expectedPacket.payload[1] == result.payload[1] &&
+                expectedPacket.etx == result.etx);
+}
 
 // TODO: Mock framework can't mock references.

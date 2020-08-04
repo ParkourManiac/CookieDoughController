@@ -39,7 +39,7 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
 
     // Fill adress of packet.payload with the payload from eeprom.
     unsigned int payloadByteSize = packet.payloadLength * sizeof(packet.payload[0]);
-    packet.payload = (uint8_t*) realloc(packet.payload, payloadByteSize); // TODO: PREVENT THIS FROM BEING A MEMORY LEAK.
+    packet.payload = (uint8_t*) realloc(packet.payload, payloadByteSize); // TODO: THIS CRASHES THE PROGRAM IF THE DATA PACKET IS NOT ALLOCATED ON THE HEAP! TODO: PREVENT THIS FROM BEING A MEMORY LEAK.
     for (unsigned int i = 0; i < packet.payloadLength; i++)
     {
         packet.payload[i] = payload[i];

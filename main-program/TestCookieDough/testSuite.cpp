@@ -10,10 +10,15 @@ void DataPacket_EtxIsThree();
 void CalculateCRC_UsesAlgorithCRC32();
 void TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime();
 void TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime();
+void TestIfOverwriteReferenceVectorIsWorking_Works();
+void TestIfOverwriteReferenceVectorResettingIsWorking_ResetsBetweenTests();
+void TestIfOverwriteReferenceIsWorking_Works();
+void TestIfOverwriteReferenceResettingIsWorking_ResetsBetweenTests();
 void SavePacketToEEPROM_SavesStxToFirstGivenAdress();
 void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket();
 void SavePacketToEEPROM_PacketIsCorrectlyPutDown();
 void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData();
+void ParsePacketFromEEPROM_ReturnsCorrectPackage();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
 void Toggle_WhenEnabled_BecomesDisabled();
@@ -142,10 +147,15 @@ void RunTests()
 	RUN_TEST(CalculateCRC_UsesAlgorithCRC32);
 	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime);
 	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime);
+	RUN_TEST(TestIfOverwriteReferenceVectorIsWorking_Works);
+	RUN_TEST(TestIfOverwriteReferenceVectorResettingIsWorking_ResetsBetweenTests);
+	RUN_TEST(TestIfOverwriteReferenceIsWorking_Works);
+	RUN_TEST(TestIfOverwriteReferenceResettingIsWorking_ResetsBetweenTests);
 	RUN_TEST(SavePacketToEEPROM_SavesStxToFirstGivenAdress);
 	RUN_TEST(SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket);
 	RUN_TEST(SavePacketToEEPROM_PacketIsCorrectlyPutDown);
 	RUN_TEST(SavePacketToEEPROM_AdaptsSizeOfPacketToFitData);
+	RUN_TEST(ParsePacketFromEEPROM_ReturnsCorrectPackage);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
 	RUN_TEST(Toggle_WhenEnabled_BecomesDisabled);
@@ -604,6 +614,8 @@ int EEPROMClass_get_param_idx_o1;
 std::vector<int> EEPROMClass_get_param_idx_o1_v;
 uint16_t  EEPROMClass_get_param_t_o1;
 std::vector<uint16_t > EEPROMClass_get_param_t_o1_v;
+uint16_t  EEPROMClass_get_param_t_o1_r;
+std::vector<uint16_t > EEPROMClass_get_param_t_o1_vr;
 uint16_t & EEPROMClass::get(int idx, uint16_t & t)
 {
 	EEPROMClass_get_invocations_o1++;
@@ -611,6 +623,9 @@ uint16_t & EEPROMClass::get(int idx, uint16_t & t)
 	EEPROMClass_get_param_idx_o1_v.push_back((int)idx);
 	EEPROMClass_get_param_t_o1 = (uint16_t &)t;
 	EEPROMClass_get_param_t_o1_v.push_back((uint16_t &)t);
+
+	if(EEPROMClass_get_param_t_o1_vr.size() < EEPROMClass_get_invocations_o1) t = (uint16_t &)EEPROMClass_get_param_t_o1_r;
+	else t = (uint16_t &)EEPROMClass_get_param_t_o1_vr.at(EEPROMClass_get_invocations_o1-1);
 
 	if(EEPROMClass_get_return_o1_v.size() < EEPROMClass_get_invocations_o1)
 	{
@@ -629,6 +644,8 @@ int EEPROMClass_get_param_idx_o2;
 std::vector<int> EEPROMClass_get_param_idx_o2_v;
 uint32_t  EEPROMClass_get_param_t_o2;
 std::vector<uint32_t > EEPROMClass_get_param_t_o2_v;
+uint32_t  EEPROMClass_get_param_t_o2_r;
+std::vector<uint32_t > EEPROMClass_get_param_t_o2_vr;
 uint32_t & EEPROMClass::get(int idx, uint32_t & t)
 {
 	EEPROMClass_get_invocations_o2++;
@@ -636,6 +653,9 @@ uint32_t & EEPROMClass::get(int idx, uint32_t & t)
 	EEPROMClass_get_param_idx_o2_v.push_back((int)idx);
 	EEPROMClass_get_param_t_o2 = (uint32_t &)t;
 	EEPROMClass_get_param_t_o2_v.push_back((uint32_t &)t);
+
+	if(EEPROMClass_get_param_t_o2_vr.size() < EEPROMClass_get_invocations_o2) t = (uint32_t &)EEPROMClass_get_param_t_o2_r;
+	else t = (uint32_t &)EEPROMClass_get_param_t_o2_vr.at(EEPROMClass_get_invocations_o2-1);
 
 	if(EEPROMClass_get_return_o2_v.size() < EEPROMClass_get_invocations_o2)
 	{
@@ -823,6 +843,8 @@ void ResetMocks()
 	EEPROMClass_get_param_idx_o1_v.clear();
 	EEPROMClass_get_param_t_o1 = uint16_t();
 	EEPROMClass_get_param_t_o1_v.clear();
+	EEPROMClass_get_param_t_o1_r = uint16_t();
+	EEPROMClass_get_param_t_o1_vr.clear();
 	EEPROMClass_get_invocations_o1 = 0;
 	EEPROMClass_get_return_o1 = uint16_t();
 	EEPROMClass_get_return_o1_v.clear();
@@ -830,6 +852,8 @@ void ResetMocks()
 	EEPROMClass_get_param_idx_o2_v.clear();
 	EEPROMClass_get_param_t_o2 = uint32_t();
 	EEPROMClass_get_param_t_o2_v.clear();
+	EEPROMClass_get_param_t_o2_r = uint32_t();
+	EEPROMClass_get_param_t_o2_vr.clear();
 	EEPROMClass_get_invocations_o2 = 0;
 	EEPROMClass_get_return_o2 = uint32_t();
 	EEPROMClass_get_return_o2_v.clear();
