@@ -3,6 +3,11 @@
 
 #include "LinkedList.h"
 
+template<class T>
+bool LinkedList<T>::IsEmpty() {
+    return head == nullptr;
+}
+
 template <class T>
 void LinkedList<T>::Add(T item)
 {
@@ -33,7 +38,7 @@ void LinkedList<T>::Insert(size_t index, T item)
     {
         if (head == nullptr)
         {
-            delete(newNode);
+            delete (newNode);
             Add(item);
             return; // Will prevent adding to length twice.
         }
@@ -65,7 +70,7 @@ void LinkedList<T>::Insert(size_t index, T item)
         else
         {
             // Throw error: Out of range.
-            delete(newNode);
+            delete (newNode);
             return;
         }
     }
@@ -74,7 +79,7 @@ void LinkedList<T>::Insert(size_t index, T item)
 }
 
 template <class T>
-T *LinkedList<T>::RemoveAtIndex(size_t index) // TODO: Needs to be tested for memory leaks
+bool LinkedList<T>::RemoveAtIndex(size_t index, T *valueOfDeleted) // TODO: Needs to be tested for memory leaks
 {
     Node<T> *nodeToBeDeleted;
     if (index == 0)
@@ -82,7 +87,7 @@ T *LinkedList<T>::RemoveAtIndex(size_t index) // TODO: Needs to be tested for me
         if (head == nullptr) // Empty list
         {
             // Throw error: No elements in list!
-            return nullptr;
+            return false;
         }
         else
         {
@@ -119,22 +124,32 @@ T *LinkedList<T>::RemoveAtIndex(size_t index) // TODO: Needs to be tested for me
             else // we are one step past the end.
             {
                 // Throw error: Out of range.
-                return nullptr;
+                return false;
             }
         }
         else
         {
             // Throw error: Out of range.
-            return nullptr;
+            return false;
         }
     }
 
-    T valueOfDeleted = nodeToBeDeleted->value;
+    *valueOfDeleted = nodeToBeDeleted->value;
 
     delete (nodeToBeDeleted);
     length--;
 
-    return &valueOfDeleted; // TODO: Compiler warns this is a stack variable. This could either be fixed by throwing errors and returning a copy of the value. 2. This can be fixed by modifying a parameter reference instead of returning a pointer.
+    return true;
+}
+
+template <class T>
+bool LinkedList<T>::RemoveAtIndex(size_t index)
+{
+    T *ptr = new T();
+    bool result =  LinkedList<T>::RemoveAtIndex(index, ptr);
+    delete(ptr);
+
+    return result;
 }
 
 template <class T>
@@ -147,7 +162,7 @@ void LinkedList<T>::Clear()
 }
 
 template <class T>
-Node<T>* LinkedList<T>::GetNodeAtIndex(size_t idx)
+Node<T> *LinkedList<T>::GetNodeAtIndex(size_t idx)
 {
     if (head == nullptr)
         return nullptr; // Throw error: List is empty.
@@ -170,7 +185,7 @@ Node<T>* LinkedList<T>::GetNodeAtIndex(size_t idx)
 }
 
 template <class T>
-T* LinkedList<T>::operator[](size_t idx)
+T *LinkedList<T>::operator[](size_t idx)
 {
     return &GetNodeAtIndex(idx)->value;
 }

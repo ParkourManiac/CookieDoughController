@@ -34,6 +34,14 @@ public:
     unsigned int length = 0;
 
     /**
+     * @brief Returns true if the list is empty.
+     * 
+     * @return true When the list is empty.
+     * @return false When the list contains one or more items.
+     */
+    bool IsEmpty();
+
+    /**
      * @brief Add the item to the end of the list.
      * 
      * @param item The item to be added.
@@ -54,9 +62,16 @@ public:
      * @brief Removes the item at the specified index.
      * 
      * @param index The index of the item to be removed.
-     * @return T The value of the removed item.
+     * @param valueOfDeleted A pointer to the value of the deleted item.
      */
-    T* RemoveAtIndex(size_t index);
+    bool RemoveAtIndex(size_t index, T *valueOfDeleted);
+
+    /**
+     * @brief Removes the item at the specified index.
+     * 
+     * @param index The index of the item to be removed.
+     */
+    bool RemoveAtIndex(size_t index);
 
     /**
      * @brief Removes all items of the array and clears the memory.

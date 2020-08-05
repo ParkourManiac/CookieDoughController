@@ -378,21 +378,21 @@ void InsertItemAtLastIndexUsingLength_ItemIsTail()
     ASSERT_TEST(list.tail->value == expected);
 }
 
-void TryToRemoveItemOfEmptyList_ReturnsNullptr()
+void TryToRemoveItemOfEmptyList_ReturnsFalse()
 {
     LinkedList<int> list;
 
-    ASSERT_TEST(list.RemoveAtIndex(0) == nullptr);
+    ASSERT_TEST(list.RemoveAtIndex(0) == false);
 }
 
-void TryToRemoveItemOutOfRange_ReturnsNullptr()
+void TryToRemoveItemOutOfRange_ReturnsFalse()
 {
     LinkedList<int> list;
     list.Add(1);
     list.Add(2);
     list.Add(3);
 
-    ASSERT_TEST(list.RemoveAtIndex(3) == nullptr);
+    ASSERT_TEST(list.RemoveAtIndex(3) == false);
 }
 
 void RemovesSpecificItemFromList_ReturnsCorrectItem() {
@@ -406,9 +406,11 @@ void RemovesSpecificItemFromList_ReturnsCorrectItem() {
     list.Add(5);
 
     list.Insert(expectedIndex, expectedValue);
-    int result = *list.RemoveAtIndex(expectedIndex);
+    int *result = new int;
+    list.RemoveAtIndex(expectedIndex, result);
 
-    ASSERT_TEST(result == expectedValue);
+    ASSERT_TEST(*result == expectedValue);
+    delete(result);
 }
 
 void RemoveOnlyItemInList_ReturnsCorrectItem() {
@@ -416,9 +418,11 @@ void RemoveOnlyItemInList_ReturnsCorrectItem() {
     int expected = 1337;
     list.Add(expected);
     
-    int result = *list.RemoveAtIndex(0);
+    int *result = new int;
+    list.RemoveAtIndex(0, result);
 
-    ASSERT_TEST(result == expected);
+    ASSERT_TEST(*result == expected);
+    delete(result);
 }
 
 void RemoveOnlyItemInList_HeadIsNullptr()
@@ -603,6 +607,47 @@ void ClearList_LengthIsZero() {
     list.Clear();
     
     ASSERT_TEST(list.length == 0);
+}
+
+void CheckIsEmptyWhenListHasNoItems_ReturnsTrue() {
+    LinkedList<int> list;
+    ASSERT_TEST(list.IsEmpty() == true);
+}
+
+void CheckIsEmptyWhenNotEmpty_ReturnsFalse() {
+    LinkedList<int> list;
+
+    list.Add(0);
+
+    ASSERT_TEST(list.IsEmpty() == false);
+}
+
+void CheckIsEmptyAfterInsertingItem_ReturnsFalse() {
+    LinkedList<int> list;
+
+    list.Insert(0, 0);
+
+    ASSERT_TEST(list.IsEmpty() == false);
+}
+
+void CheckIsEmptyAfterBecomingEmpty_ReturnsTrue() {
+    LinkedList<int> list;
+
+    list.Add(0);
+    list.RemoveAtIndex(0);
+
+    ASSERT_TEST(list.IsEmpty() == true);
+}
+
+void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse() {
+    LinkedList<int> list;
+
+    list.Add(0);
+    list.Add(1);
+    list.Add(2);
+    list.RemoveAtIndex(0);
+
+    ASSERT_TEST(list.IsEmpty() == false);
 }
 
 // TODO: void ClearList_AllMemoryIsFreed()

@@ -3,7 +3,6 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 
-// TODO: Needs to be tested.
 bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int &packetSize)
 {
     packetSize = 0;
@@ -39,7 +38,7 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
 
     // Fill adress of packet.payload with the payload from eeprom.
     unsigned int payloadByteSize = packet.payloadLength * sizeof(packet.payload[0]);
-    packet.payload = (uint8_t*) realloc(packet.payload, payloadByteSize); // TODO: PREVENT THIS FROM BEING A MEMORY LEAK.
+    packet.payload = (uint8_t*) realloc(packet.payload, payloadByteSize); // TODO: PREVENT THIS FROM BEING A MEMORY LEAK. If possible avoid realloc so that user can pass in packet allocated on stack instead of heap.
     for (unsigned int i = 0; i < packet.payloadLength; i++)
     {
         packet.payload[i] = payload[i];
@@ -65,7 +64,6 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
     return true;
 }
 
-// TODO: NEEDS TO BE TESTED
 bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSize, unsigned int &packetSize) 
 {
     packetSize = 0;
@@ -103,13 +101,13 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
 
     // Verify that package can be read from memory correctly.
     DataPacket *dataPtr = new DataPacket();
-    DataPacket packetFromEeprom =  *dataPtr;
+    DataPacket packetFromEeprom = *dataPtr;
     unsigned int _sizeOfPacket;
     bool success = ParsePacketFromEEPROM(adress, packetFromEeprom, _sizeOfPacket);
     if (!success || packet.crc != packetFromEeprom.crc)
     {
         delete(dataPtr);
-        return false; // Something went wrong when writing.
+        return false; // Throw: Something went wrong when writing.
     }
 
     packetSize = currentAdress - adress;
@@ -119,7 +117,6 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
 
 unsigned long CalculateCRC(uint8_t *data, unsigned int length)
 {
-
     const unsigned long crc_table[16] = {
         0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
         0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,

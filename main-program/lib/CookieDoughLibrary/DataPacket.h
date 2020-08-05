@@ -17,9 +17,11 @@ struct DataPacket
 
 /**
  * @brief Reads and parses a DataPacket from the eeprom.
+ * @note The DataPacket packet reference must be allocated on the heap. 
+ * otherwise this will cause an error.
  * 
  * @param adress The eeprom adress of the DataPacket. (The adress of the stx).
- * @param packet A DataPacket where the result will be stored.
+ * @param packet A DataPacket where the result will be stored. (MUST be allocated on the heap)
  * @param packetSize The complete size of the parsed DataPacket in bytes.
  * @return true When we successfully parsed the DataPacket from the eeprom.
  * @return false When the adress couldn't be parsed as a DataPacket.
@@ -40,7 +42,7 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
 bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSize, unsigned int &packetSize);
 
 /**
- * @brief Calculates a CRC checksum for the given array of bytes.
+ * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
  * 
  * @param data The data we want to calculate a CRC checksum for.
  * @param length The size of the data in bytes.
