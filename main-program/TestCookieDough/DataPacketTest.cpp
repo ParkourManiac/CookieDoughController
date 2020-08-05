@@ -189,8 +189,6 @@ void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
     ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[1] == expectedEtxPosition && EEPROMClass_put_param_t_o1_v[1] == packet.etx);
 }
 
-// TODO: WRITE A TEST FOR DATAPACKET WHERE YOU NEED TO USE THE SAME MOCKED FUNCITON MULTIPLE TIMES.
-
 void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
 {
     uint16_t data = 42;

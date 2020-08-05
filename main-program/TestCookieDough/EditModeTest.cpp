@@ -16,7 +16,7 @@ extern double pow_param_exponent;
 extern unsigned long millis_return;
 extern unsigned int millis_invocations;
 
-void EditMode_Initialized_NotEnabledByDefault() // TODO: Write a few test for EditMode using class mock to test that it's working. Then create a new testSuite_WORKING.txt Test.
+void EditMode_Initialized_NotEnabledByDefault()
 {
     EditMode editmode = EditMode(true);
 

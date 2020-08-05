@@ -389,16 +389,16 @@ def DefineParameterVariableBehaviour(variable, prefix, suffix, options):
 
     return code
 
-def DefineReferenceVariableBehaviour(variable, invocationsVariableName, prefix, suffix, options):   # TODO: Double check that this makes sense and works!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def DefineReferenceVariableBehaviour(variable, invocationsVariableName, prefix, suffix, options):
     code = ''
 
     if 'overwriteReference' in options:
         if variable['type'][-1] == '&':
             parameterVariable = prefix + variable['name'] + suffix
-            referenceVectorName = parameterVariable + '_vr'
             referenceVariableName = parameterVariable + '_r'
 
             if 'useVector' in options: 
+                referenceVectorName = parameterVariable + '_vr'
                 # Check if vector has an element at the current position
                 code += '\tif('
                 code += referenceVectorName + '.size() < ' + invocationsVariableName
@@ -428,7 +428,6 @@ def DefineReferenceVariableBehaviour(variable, invocationsVariableName, prefix, 
                 code += '(' + IgnoreConst(variable['type']) + ')'
                 code += referenceVariableName
                 code += ';\n'
-
 
     return code
 
