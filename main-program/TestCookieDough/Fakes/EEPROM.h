@@ -12,8 +12,8 @@ public:
 
     uint16_t length();
 
-    uint16_t &get(int idx, uint16_t &t); // cookieOption: useVector
-    uint32_t &get(int idx, uint32_t &t); // cookieOption: useVector
+    uint16_t &get(int idx, uint16_t &t); // cookieOption: useVector, overwriteReference
+    uint32_t &get(int idx, uint32_t &t); // cookieOption: useVector, overwriteReference
 
     const uint8_t &put(int idx, const uint8_t &t); // cookieOption: useVector
     const uint16_t &put(int idx, const uint16_t &t); // cookieOption: useVector

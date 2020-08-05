@@ -10,10 +10,17 @@ void DataPacket_EtxIsThree();
 void CalculateCRC_UsesAlgorithCRC32();
 void TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime();
 void TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime();
+void TestIfOverwriteReferenceVectorIsWorking_Works();
+void TestIfOverwriteReferenceVectorResettingIsWorking_ResetsBetweenTests();
+void TestIfOverwriteReferenceIsWorking_Works();
+void TestIfOverwriteReferenceResettingIsWorking_ResetsBetweenTests();
 void SavePacketToEEPROM_SavesStxToFirstGivenAdress();
 void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket();
 void SavePacketToEEPROM_PacketIsCorrectlyPutDown();
+void SavePacketToEEPROM_EepromFailedToWriteDownCorrectData_PacketIsCorrectlyPutDown();
 void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData();
+void ParsePacketFromEEPROM_ReturnsCorrectPackage();
+void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
 void Toggle_WhenEnabled_BecomesDisabled();
@@ -142,10 +149,17 @@ void RunTests()
 	RUN_TEST(CalculateCRC_UsesAlgorithCRC32);
 	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime);
 	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime);
+	RUN_TEST(TestIfOverwriteReferenceVectorIsWorking_Works);
+	RUN_TEST(TestIfOverwriteReferenceVectorResettingIsWorking_ResetsBetweenTests);
+	RUN_TEST(TestIfOverwriteReferenceIsWorking_Works);
+	RUN_TEST(TestIfOverwriteReferenceResettingIsWorking_ResetsBetweenTests);
 	RUN_TEST(SavePacketToEEPROM_SavesStxToFirstGivenAdress);
 	RUN_TEST(SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket);
 	RUN_TEST(SavePacketToEEPROM_PacketIsCorrectlyPutDown);
+	RUN_TEST(SavePacketToEEPROM_EepromFailedToWriteDownCorrectData_PacketIsCorrectlyPutDown);
 	RUN_TEST(SavePacketToEEPROM_AdaptsSizeOfPacketToFitData);
+	RUN_TEST(ParsePacketFromEEPROM_ReturnsCorrectPackage);
+	RUN_TEST(ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
 	RUN_TEST(Toggle_WhenEnabled_BecomesDisabled);
@@ -273,8 +287,9 @@ unsigned int digitalRead_invocations = 0;
 uint8_t digitalRead_param_pin;
 int digitalRead(uint8_t pin)
 {
-	digitalRead_param_pin = (uint8_t)pin;
 	digitalRead_invocations++;
+	digitalRead_param_pin = (uint8_t)pin;
+
 	return digitalRead_return;
 }
 
@@ -283,9 +298,10 @@ uint8_t pinMode_param_pin;
 uint8_t pinMode_param_mode;
 void pinMode(uint8_t pin, uint8_t mode)
 {
+	pinMode_invocations++;
 	pinMode_param_pin = (uint8_t)pin;
 	pinMode_param_mode = (uint8_t)mode;
-	pinMode_invocations++;
+
 }
 
 unsigned long millis_return;
@@ -293,6 +309,7 @@ unsigned int millis_invocations = 0;
 unsigned long millis()
 {
 	millis_invocations++;
+
 	return millis_return;
 }
 
@@ -301,17 +318,19 @@ uint8_t digitalWrite_param_pin;
 uint8_t digitalWrite_param_val;
 void digitalWrite(uint8_t pin, uint8_t val)
 {
+	digitalWrite_invocations++;
 	digitalWrite_param_pin = (uint8_t)pin;
 	digitalWrite_param_val = (uint8_t)val;
-	digitalWrite_invocations++;
+
 }
 
 unsigned int delay_invocations = 0;
 unsigned long delay_param_ms;
 void delay(unsigned long ms)
 {
-	delay_param_ms = (unsigned long)ms;
 	delay_invocations++;
+	delay_param_ms = (unsigned long)ms;
+
 }
 
 double pow_return;
@@ -320,9 +339,10 @@ double pow_param_base;
 double pow_param_exponent;
 double pow(double base, double exponent)
 {
+	pow_invocations++;
 	pow_param_base = (double)base;
 	pow_param_exponent = (double)exponent;
-	pow_invocations++;
+
 	return pow_return;
 }
 
@@ -331,8 +351,9 @@ unsigned int Serial__print_invocations_o1 = 0;
 char * Serial__print_param_a_o1;
 size_t Serial_::print(const char * a)
 {
-	Serial__print_param_a_o1 = (char *)a;
 	Serial__print_invocations_o1++;
+	Serial__print_param_a_o1 = (char *)a;
+
 	return Serial__print_return_o1;
 }
 
@@ -341,8 +362,9 @@ unsigned int Serial__print_invocations_o2 = 0;
 char Serial__print_param_a_o2;
 size_t Serial_::print(char a)
 {
-	Serial__print_param_a_o2 = (char)a;
 	Serial__print_invocations_o2++;
+	Serial__print_param_a_o2 = (char)a;
+
 	return Serial__print_return_o2;
 }
 
@@ -352,9 +374,10 @@ unsigned char Serial__print_param_a_o3;
 int Serial__print_param_b_o3;
 size_t Serial_::print(unsigned char a, int b)
 {
+	Serial__print_invocations_o3++;
 	Serial__print_param_a_o3 = (unsigned char)a;
 	Serial__print_param_b_o3 = (int)b;
-	Serial__print_invocations_o3++;
+
 	return Serial__print_return_o3;
 }
 
@@ -364,9 +387,10 @@ int Serial__print_param_a_o4;
 int Serial__print_param_b_o4;
 size_t Serial_::print(int a, int b)
 {
+	Serial__print_invocations_o4++;
 	Serial__print_param_a_o4 = (int)a;
 	Serial__print_param_b_o4 = (int)b;
-	Serial__print_invocations_o4++;
+
 	return Serial__print_return_o4;
 }
 
@@ -376,9 +400,10 @@ unsigned int Serial__print_param_a_o5;
 int Serial__print_param_b_o5;
 size_t Serial_::print(unsigned int a, int b)
 {
+	Serial__print_invocations_o5++;
 	Serial__print_param_a_o5 = (unsigned int)a;
 	Serial__print_param_b_o5 = (int)b;
-	Serial__print_invocations_o5++;
+
 	return Serial__print_return_o5;
 }
 
@@ -388,9 +413,10 @@ long Serial__print_param_a_o6;
 int Serial__print_param_b_o6;
 size_t Serial_::print(long a, int b)
 {
+	Serial__print_invocations_o6++;
 	Serial__print_param_a_o6 = (long)a;
 	Serial__print_param_b_o6 = (int)b;
-	Serial__print_invocations_o6++;
+
 	return Serial__print_return_o6;
 }
 
@@ -400,9 +426,10 @@ unsigned long Serial__print_param_a_o7;
 int Serial__print_param_b_o7;
 size_t Serial_::print(unsigned long a, int b)
 {
+	Serial__print_invocations_o7++;
 	Serial__print_param_a_o7 = (unsigned long)a;
 	Serial__print_param_b_o7 = (int)b;
-	Serial__print_invocations_o7++;
+
 	return Serial__print_return_o7;
 }
 
@@ -412,9 +439,10 @@ double Serial__print_param_a_o8;
 int Serial__print_param_b_o8;
 size_t Serial_::print(double a, int b)
 {
+	Serial__print_invocations_o8++;
 	Serial__print_param_a_o8 = (double)a;
 	Serial__print_param_b_o8 = (int)b;
-	Serial__print_invocations_o8++;
+
 	return Serial__print_return_o8;
 }
 
@@ -423,8 +451,9 @@ unsigned int Serial__println_invocations_o1 = 0;
 char * Serial__println_param_a_o1;
 size_t Serial_::println(const char * a)
 {
-	Serial__println_param_a_o1 = (char *)a;
 	Serial__println_invocations_o1++;
+	Serial__println_param_a_o1 = (char *)a;
+
 	return Serial__println_return_o1;
 }
 
@@ -433,8 +462,9 @@ unsigned int Serial__println_invocations_o2 = 0;
 char Serial__println_param_b_o2;
 size_t Serial_::println(char b)
 {
-	Serial__println_param_b_o2 = (char)b;
 	Serial__println_invocations_o2++;
+	Serial__println_param_b_o2 = (char)b;
+
 	return Serial__println_return_o2;
 }
 
@@ -444,9 +474,10 @@ unsigned char Serial__println_param_a_o3;
 int Serial__println_param_b_o3;
 size_t Serial_::println(unsigned char a, int b)
 {
+	Serial__println_invocations_o3++;
 	Serial__println_param_a_o3 = (unsigned char)a;
 	Serial__println_param_b_o3 = (int)b;
-	Serial__println_invocations_o3++;
+
 	return Serial__println_return_o3;
 }
 
@@ -456,9 +487,10 @@ int Serial__println_param_a_o4;
 int Serial__println_param_b_o4;
 size_t Serial_::println(int a, int b)
 {
+	Serial__println_invocations_o4++;
 	Serial__println_param_a_o4 = (int)a;
 	Serial__println_param_b_o4 = (int)b;
-	Serial__println_invocations_o4++;
+
 	return Serial__println_return_o4;
 }
 
@@ -468,9 +500,10 @@ unsigned int Serial__println_param_a_o5;
 int Serial__println_param_b_o5;
 size_t Serial_::println(unsigned int a, int b)
 {
+	Serial__println_invocations_o5++;
 	Serial__println_param_a_o5 = (unsigned int)a;
 	Serial__println_param_b_o5 = (int)b;
-	Serial__println_invocations_o5++;
+
 	return Serial__println_return_o5;
 }
 
@@ -480,9 +513,10 @@ long Serial__println_param_a_o6;
 int Serial__println_param_b_o6;
 size_t Serial_::println(long a, int b)
 {
+	Serial__println_invocations_o6++;
 	Serial__println_param_a_o6 = (long)a;
 	Serial__println_param_b_o6 = (int)b;
-	Serial__println_invocations_o6++;
+
 	return Serial__println_return_o6;
 }
 
@@ -492,9 +526,10 @@ unsigned long Serial__println_param_a_o7;
 int Serial__println_param_b_o7;
 size_t Serial_::println(unsigned long a, int b)
 {
+	Serial__println_invocations_o7++;
 	Serial__println_param_a_o7 = (unsigned long)a;
 	Serial__println_param_b_o7 = (int)b;
-	Serial__println_invocations_o7++;
+
 	return Serial__println_return_o7;
 }
 
@@ -504,9 +539,10 @@ double Serial__println_param_a_o8;
 int Serial__println_param_b_o8;
 size_t Serial_::println(double a, int b)
 {
+	Serial__println_invocations_o8++;
 	Serial__println_param_a_o8 = (double)a;
 	Serial__println_param_b_o8 = (int)b;
-	Serial__println_invocations_o8++;
+
 	return Serial__println_return_o8;
 }
 
@@ -515,6 +551,7 @@ unsigned int Serial__println_invocations_o9 = 0;
 size_t Serial_::println()
 {
 	Serial__println_invocations_o9++;
+
 	return Serial__println_return_o9;
 }
 
@@ -525,9 +562,10 @@ int EEPROMClass_read_param_idx;
 std::vector<int> EEPROMClass_read_param_idx_v;
 uint8_t EEPROMClass::read(int idx)
 {
+	EEPROMClass_read_invocations++;
 	EEPROMClass_read_param_idx = (int)idx;
 	EEPROMClass_read_param_idx_v.push_back((int)idx);
-	EEPROMClass_read_invocations++;
+
 	if(EEPROMClass_read_return_v.size() < EEPROMClass_read_invocations)
 	{
 		return EEPROMClass_read_return;
@@ -543,9 +581,10 @@ int EEPROMClass_write_param_idx;
 uint8_t EEPROMClass_write_param_val;
 void EEPROMClass::write(int idx, uint8_t val)
 {
+	EEPROMClass_write_invocations++;
 	EEPROMClass_write_param_idx = (int)idx;
 	EEPROMClass_write_param_val = (uint8_t)val;
-	EEPROMClass_write_invocations++;
+
 }
 
 unsigned int EEPROMClass_update_invocations = 0;
@@ -555,11 +594,12 @@ uint8_t EEPROMClass_update_param_val;
 std::vector<uint8_t> EEPROMClass_update_param_val_v;
 void EEPROMClass::update(int idx, uint8_t val)
 {
+	EEPROMClass_update_invocations++;
 	EEPROMClass_update_param_idx = (int)idx;
 	EEPROMClass_update_param_idx_v.push_back((int)idx);
 	EEPROMClass_update_param_val = (uint8_t)val;
 	EEPROMClass_update_param_val_v.push_back((uint8_t)val);
-	EEPROMClass_update_invocations++;
+
 }
 
 uint16_t EEPROMClass_length_return;
@@ -567,6 +607,7 @@ unsigned int EEPROMClass_length_invocations = 0;
 uint16_t EEPROMClass::length()
 {
 	EEPROMClass_length_invocations++;
+
 	return EEPROMClass_length_return;
 }
 
@@ -577,13 +618,19 @@ int EEPROMClass_get_param_idx_o1;
 std::vector<int> EEPROMClass_get_param_idx_o1_v;
 uint16_t  EEPROMClass_get_param_t_o1;
 std::vector<uint16_t > EEPROMClass_get_param_t_o1_v;
+uint16_t  EEPROMClass_get_param_t_o1_r;
+std::vector<uint16_t > EEPROMClass_get_param_t_o1_vr;
 uint16_t & EEPROMClass::get(int idx, uint16_t & t)
 {
+	EEPROMClass_get_invocations_o1++;
 	EEPROMClass_get_param_idx_o1 = (int)idx;
 	EEPROMClass_get_param_idx_o1_v.push_back((int)idx);
 	EEPROMClass_get_param_t_o1 = (uint16_t &)t;
 	EEPROMClass_get_param_t_o1_v.push_back((uint16_t &)t);
-	EEPROMClass_get_invocations_o1++;
+
+	if(EEPROMClass_get_param_t_o1_vr.size() < EEPROMClass_get_invocations_o1) t = (uint16_t &)EEPROMClass_get_param_t_o1_r;
+	else t = (uint16_t &)EEPROMClass_get_param_t_o1_vr.at(EEPROMClass_get_invocations_o1-1);
+
 	if(EEPROMClass_get_return_o1_v.size() < EEPROMClass_get_invocations_o1)
 	{
 		return EEPROMClass_get_return_o1;
@@ -601,13 +648,19 @@ int EEPROMClass_get_param_idx_o2;
 std::vector<int> EEPROMClass_get_param_idx_o2_v;
 uint32_t  EEPROMClass_get_param_t_o2;
 std::vector<uint32_t > EEPROMClass_get_param_t_o2_v;
+uint32_t  EEPROMClass_get_param_t_o2_r;
+std::vector<uint32_t > EEPROMClass_get_param_t_o2_vr;
 uint32_t & EEPROMClass::get(int idx, uint32_t & t)
 {
+	EEPROMClass_get_invocations_o2++;
 	EEPROMClass_get_param_idx_o2 = (int)idx;
 	EEPROMClass_get_param_idx_o2_v.push_back((int)idx);
 	EEPROMClass_get_param_t_o2 = (uint32_t &)t;
 	EEPROMClass_get_param_t_o2_v.push_back((uint32_t &)t);
-	EEPROMClass_get_invocations_o2++;
+
+	if(EEPROMClass_get_param_t_o2_vr.size() < EEPROMClass_get_invocations_o2) t = (uint32_t &)EEPROMClass_get_param_t_o2_r;
+	else t = (uint32_t &)EEPROMClass_get_param_t_o2_vr.at(EEPROMClass_get_invocations_o2-1);
+
 	if(EEPROMClass_get_return_o2_v.size() < EEPROMClass_get_invocations_o2)
 	{
 		return EEPROMClass_get_return_o2;
@@ -627,11 +680,12 @@ uint8_t EEPROMClass_put_param_t_o1;
 std::vector<uint8_t> EEPROMClass_put_param_t_o1_v;
 const uint8_t & EEPROMClass::put(int idx, const uint8_t & t)
 {
+	EEPROMClass_put_invocations_o1++;
 	EEPROMClass_put_param_idx_o1 = (int)idx;
 	EEPROMClass_put_param_idx_o1_v.push_back((int)idx);
 	EEPROMClass_put_param_t_o1 = (uint8_t &)t;
 	EEPROMClass_put_param_t_o1_v.push_back((uint8_t &)t);
-	EEPROMClass_put_invocations_o1++;
+
 	if(EEPROMClass_put_return_o1_v.size() < EEPROMClass_put_invocations_o1)
 	{
 		return EEPROMClass_put_return_o1;
@@ -651,11 +705,12 @@ uint16_t EEPROMClass_put_param_t_o2;
 std::vector<uint16_t> EEPROMClass_put_param_t_o2_v;
 const uint16_t & EEPROMClass::put(int idx, const uint16_t & t)
 {
+	EEPROMClass_put_invocations_o2++;
 	EEPROMClass_put_param_idx_o2 = (int)idx;
 	EEPROMClass_put_param_idx_o2_v.push_back((int)idx);
 	EEPROMClass_put_param_t_o2 = (uint16_t &)t;
 	EEPROMClass_put_param_t_o2_v.push_back((uint16_t &)t);
-	EEPROMClass_put_invocations_o2++;
+
 	if(EEPROMClass_put_return_o2_v.size() < EEPROMClass_put_invocations_o2)
 	{
 		return EEPROMClass_put_return_o2;
@@ -675,11 +730,12 @@ uint32_t EEPROMClass_put_param_t_o3;
 std::vector<uint32_t> EEPROMClass_put_param_t_o3_v;
 const uint32_t & EEPROMClass::put(int idx, const uint32_t & t)
 {
+	EEPROMClass_put_invocations_o3++;
 	EEPROMClass_put_param_idx_o3 = (int)idx;
 	EEPROMClass_put_param_idx_o3_v.push_back((int)idx);
 	EEPROMClass_put_param_t_o3 = (uint32_t &)t;
 	EEPROMClass_put_param_t_o3_v.push_back((uint32_t &)t);
-	EEPROMClass_put_invocations_o3++;
+
 	if(EEPROMClass_put_return_o3_v.size() < EEPROMClass_put_invocations_o3)
 	{
 		return EEPROMClass_put_return_o3;
@@ -791,6 +847,8 @@ void ResetMocks()
 	EEPROMClass_get_param_idx_o1_v.clear();
 	EEPROMClass_get_param_t_o1 = uint16_t();
 	EEPROMClass_get_param_t_o1_v.clear();
+	EEPROMClass_get_param_t_o1_r = uint16_t();
+	EEPROMClass_get_param_t_o1_vr.clear();
 	EEPROMClass_get_invocations_o1 = 0;
 	EEPROMClass_get_return_o1 = uint16_t();
 	EEPROMClass_get_return_o1_v.clear();
@@ -798,6 +856,8 @@ void ResetMocks()
 	EEPROMClass_get_param_idx_o2_v.clear();
 	EEPROMClass_get_param_t_o2 = uint32_t();
 	EEPROMClass_get_param_t_o2_v.clear();
+	EEPROMClass_get_param_t_o2_r = uint32_t();
+	EEPROMClass_get_param_t_o2_vr.clear();
 	EEPROMClass_get_invocations_o2 = 0;
 	EEPROMClass_get_return_o2 = uint32_t();
 	EEPROMClass_get_return_o2_v.clear();
