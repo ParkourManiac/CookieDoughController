@@ -93,7 +93,6 @@ def ExtractClassesFromText(text, removeMatchedText=False):
         classes.append(newClass)
 
     newText = re.sub(regex, '', text) if removeMatchedText else text
-    # classes = [] # DEBUG: REMOVE THIS LINE
     return (classes, newText)
 
 
