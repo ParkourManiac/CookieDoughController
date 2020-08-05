@@ -193,7 +193,43 @@ void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
 
 void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
 {
-    uint8_t data = 42;
+    uint16_t data = 42;
+    uint8_t *dataPtr = (uint8_t*) &data;
+    unsigned int adress = 20;
+    DataPacket packet;
+    unsigned int expectedStxAdress = adress;
+    unsigned int expectedPayloadLengthAdress = adress + sizeof(packet.stx);
+    unsigned int expectedCRCAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength);
+    unsigned int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
+    unsigned int expectedEtxAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
+    unsigned int expectedPacketSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data) + sizeof(packet.etx);
+
+    // This ensures that ParsePacketFromEEPROM returns true
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(sizeof(data));
+    EEPROMClass_length_return = sizeof(data) + 20;
+    EEPROMClass_get_param_t_o2_vr.push_back(55561893);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+    EEPROMClass_read_return_v.push_back(dataPtr[0]);
+    EEPROMClass_read_return_v.push_back(dataPtr[1]);
+
+    unsigned int packetSize;
+    bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), packetSize);
+
+    ASSERT_TEST(resultBool == true && 
+                EEPROMClass_put_param_idx_o1_v[0] == adress && EEPROMClass_put_param_t_o1_v[0] == packet.stx &&
+                EEPROMClass_put_param_idx_o2_v[0] == expectedPayloadLengthAdress && EEPROMClass_put_param_t_o2_v[0] == sizeof(data) &&
+                EEPROMClass_put_param_idx_o3_v[0] == expectedCRCAdress && EEPROMClass_put_param_t_o3_v[0] == CalculateCRC(dataPtr, sizeof(data)) &&
+                EEPROMClass_update_param_idx_v[0] == expectedPayloadAdress && EEPROMClass_update_param_val_v[0] == dataPtr[0] &&
+                EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == dataPtr[1] &&
+                EEPROMClass_put_param_idx_o1_v[1] == expectedEtxAdress && EEPROMClass_put_param_t_o1_v[1] == packet.etx &&
+                packetSize == expectedPacketSize);
+}
+
+void SavePacketToEEPROM_EepromFailedToWriteDownCorrectData_PacketIsCorrectlyPutDown()
+{
+    uint16_t data = 42;
+    uint8_t *dataPtr = (uint8_t*) &data;
     unsigned int adress = 20;
     DataPacket packet;
     unsigned int expectedStxAdress = adress;
@@ -202,16 +238,19 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
     unsigned int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
     unsigned int expectedEtxAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
 
+    // This ensures that ParsePacketFromEEPROM returns true
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(sizeof(data));
+    EEPROMClass_length_return = sizeof(data) + 20;
+    EEPROMClass_get_param_t_o2_vr.push_back(55561893);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+    EEPROMClass_read_return_v.push_back(dataPtr[0] + 13);
+    EEPROMClass_read_return_v.push_back(dataPtr[1]);
+
     unsigned int packetSize;
-    adress + sizeof(packet.etx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data) + sizeof(packet.etx);
+    bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), packetSize);
 
-    SavePacketToEEPROM(adress, &data, sizeof(data), packetSize);
-
-    ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[0] == adress && EEPROMClass_put_param_t_o1_v[0] == packet.stx &&
-                EEPROMClass_put_param_idx_o2_v[0] == expectedPayloadLengthAdress && EEPROMClass_put_param_t_o2_v[0] == sizeof(data) &&
-                EEPROMClass_put_param_idx_o3_v[0] == expectedCRCAdress && EEPROMClass_put_param_t_o3_v[0] == CalculateCRC(&data, sizeof(data)) &&
-                EEPROMClass_update_param_idx_v[0] == expectedPayloadAdress && EEPROMClass_update_param_val_v[0] == (&data)[0] &&
-                EEPROMClass_put_param_idx_o1_v[1] == expectedEtxAdress && EEPROMClass_put_param_t_o1_v[1] == packet.etx);
+    ASSERT_TEST(resultBool == false);
 }
 
 void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
@@ -232,31 +271,58 @@ void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
 void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite.
 {
     unsigned int adress = 13;
-    uint16_t data = 42;
+    uint16_t data = 421;
     DataPacket expectedPacket;
     expectedPacket.payloadLength = sizeof(data);
     expectedPacket.payload = (uint8_t*) &data;
-    expectedPacket.crc = 55561893;
+    expectedPacket.crc = -934053193;
 
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
     EEPROMClass_length_return = expectedPacket.payloadLength + 20;
     EEPROMClass_get_param_t_o2_vr.push_back(expectedPacket.crc);
-    EEPROMClass_read_return_v.push_back(expectedPacket.etx); // TODO: This crashes program (expectedPacket.etx + 1);. Find out why!
+    EEPROMClass_read_return_v.push_back(expectedPacket.etx);
     EEPROMClass_read_return_v.push_back(expectedPacket.payload[0]);
     EEPROMClass_read_return_v.push_back(expectedPacket.payload[1]);
 
-    DataPacket *resultPtr = new DataPacket(); // TODO: THIS CRASHES THE PROGRAM IF NOT HERE.
-    DataPacket result = *resultPtr; // TODO: MUST HAVE A REFERENCE TO A HEAP ALLOCATION! FIND OUT WHY!
+    DataPacket *resultPtr = new DataPacket(); 
+    DataPacket result = *resultPtr;
     unsigned int packetSize;
     bool resultBool = ParsePacketFromEEPROM(adress, result, packetSize);
 
-    ASSERT_TEST(expectedPacket.stx == result.stx &&
+    ASSERT_TEST(resultBool == true &&
+                expectedPacket.stx == result.stx &&
                 expectedPacket.payloadLength == result.payloadLength &&
                 expectedPacket.crc == result.crc &&
                 expectedPacket.payload[0] == result.payload[0] &&
                 expectedPacket.payload[1] == result.payload[1] &&
                 expectedPacket.etx == result.etx &&
-                resultBool == true &&
                 packetSize == 10);
+    delete(resultPtr);
+}
+
+void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite.
+{
+    unsigned int adress = 13;
+    uint16_t data = 421;
+    DataPacket expectedPacket;
+    expectedPacket.payloadLength = sizeof(data);
+    expectedPacket.payload = (uint8_t*) &data;
+    expectedPacket.crc = -934053193;
+
+    EEPROMClass_read_return_v.push_back(expectedPacket.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
+    EEPROMClass_length_return = expectedPacket.payloadLength + 20;
+    EEPROMClass_get_param_t_o2_vr.push_back(expectedPacket.crc);
+    EEPROMClass_read_return_v.push_back(expectedPacket.etx);
+    EEPROMClass_read_return_v.push_back(expectedPacket.payload[0] + 13);
+    EEPROMClass_read_return_v.push_back(expectedPacket.payload[1]);
+
+    DataPacket *resultPtr = new DataPacket(); 
+    DataPacket result = *resultPtr;
+    unsigned int packetSize;
+    bool resultBool = ParsePacketFromEEPROM(adress, result, packetSize);
+
+    ASSERT_TEST(resultBool == false);
+    delete(resultPtr);
 }
