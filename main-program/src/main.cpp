@@ -270,7 +270,7 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
  * to the next keyMap in the list.
  * 
  */
-void CycleKeyMap()
+void CycleKeyMap() // TODO: Check if working.
 {
     if (customKeyMaps.IsEmpty())
     {
