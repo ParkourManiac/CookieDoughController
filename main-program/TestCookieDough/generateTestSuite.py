@@ -535,7 +535,6 @@ def DefineParameterVariableResetBehaviour(variable, prefix, suffix, options):
 def DefineReferenceVariableResetBehaviour(variable, prefix, suffix, options):
     code = ''
 
-    # TODO: Write stuff here. Look at DefineParameterVariableResetBehaviour.
     if 'overwriteReference' in options:
         if variable['type'][-1] == '&':
             parameterVariableName = prefix + variable['name'] + suffix

@@ -229,41 +229,34 @@ void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
                 EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == ((uint8_t *)&data)[1]);
 }
 
-void ParsePacketFromEEPROM_ReturnsCorrectPackage()
+void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite.
 {
     unsigned int adress = 13;
     uint16_t data = 42;
     DataPacket expectedPacket;
     expectedPacket.payloadLength = sizeof(data);
     expectedPacket.payload = (uint8_t*) &data;
-    expectedPacket.crc = 1337;
+    expectedPacket.crc = 55561893;
 
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
+    EEPROMClass_length_return = expectedPacket.payloadLength + 20;
     EEPROMClass_get_param_t_o2_vr.push_back(expectedPacket.crc);
     EEPROMClass_read_return_v.push_back(expectedPacket.etx); // TODO: This crashes program (expectedPacket.etx + 1);. Find out why!
     EEPROMClass_read_return_v.push_back(expectedPacket.payload[0]);
     EEPROMClass_read_return_v.push_back(expectedPacket.payload[1]);
-    EEPROMClass_length_return = expectedPacket.payloadLength + 20;
 
     DataPacket *resultPtr = new DataPacket(); // TODO: THIS CRASHES THE PROGRAM IF NOT HERE.
     DataPacket result = *resultPtr; // TODO: MUST HAVE A REFERENCE TO A HEAP ALLOCATION! FIND OUT WHY!
-    result.payloadLength = expectedPacket.payloadLength;
     unsigned int packetSize;
     bool resultBool = ParsePacketFromEEPROM(adress, result, packetSize);
-
-    // uint8_t stx = EEPROM.read(currentAdress);
-    // EEPROM.get(currentAdress, packet.payloadLength);
-    // EEPROM.get(currentAdress, packet.crc);
-    // EEPROM.read(currentAdress + packet.payloadLength) != packet.etx
-    // payload[i] = EEPROM.read(currentAdress + i);
 
     ASSERT_TEST(expectedPacket.stx == result.stx &&
                 expectedPacket.payloadLength == result.payloadLength &&
                 expectedPacket.crc == result.crc &&
                 expectedPacket.payload[0] == result.payload[0] &&
                 expectedPacket.payload[1] == result.payload[1] &&
-                expectedPacket.etx == result.etx);
+                expectedPacket.etx == result.etx &&
+                resultBool == true &&
+                packetSize == 10);
 }
-
-// TODO: Mock framework can't mock references.

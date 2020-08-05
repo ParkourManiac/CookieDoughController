@@ -17,9 +17,11 @@ struct DataPacket
 
 /**
  * @brief Reads and parses a DataPacket from the eeprom.
+ * @note The DataPacket packet reference must be allocated on the heap. 
+ * otherwise this will cause an error.
  * 
  * @param adress The eeprom adress of the DataPacket. (The adress of the stx).
- * @param packet A DataPacket where the result will be stored.
+ * @param packet A DataPacket where the result will be stored. (MUST be allocated on the heap)
  * @param packetSize The complete size of the parsed DataPacket in bytes.
  * @return true When we successfully parsed the DataPacket from the eeprom.
  * @return false When the adress couldn't be parsed as a DataPacket.

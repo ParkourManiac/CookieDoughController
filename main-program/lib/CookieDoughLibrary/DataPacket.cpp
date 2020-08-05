@@ -3,7 +3,6 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 
-// TODO: Needs to be tested.
 bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int &packetSize)
 {
     packetSize = 0;
@@ -65,7 +64,6 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
     return true;
 }
 
-// TODO: NEEDS TO BE TESTED
 bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSize, unsigned int &packetSize) 
 {
     packetSize = 0;
