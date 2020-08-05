@@ -402,10 +402,8 @@ def DefineReferenceVariableBehaviour(variable, invocationsVariableName, prefix, 
                 code += '\tif('
                 code += referenceVectorName + '.size() < ' + invocationsVariableName
                 code += ') '
-                # code += '\n'
                 
                 # Handle overwriting reference with correct value
-                # code += '\t\t'
                 code += variable['parameter']['name']
                 code += ' = '
                 code += '(' + IgnoreConst(variable['type']) + ')'
@@ -413,8 +411,6 @@ def DefineReferenceVariableBehaviour(variable, invocationsVariableName, prefix, 
                 code += ';\n'
 
                 code += '\telse '
-                # code += '\n'
-                # code += '\t\t'
                 code += variable['parameter']['name']
                 code += ' = '
                 code += '(' + IgnoreConst(variable['type']) + ')'
