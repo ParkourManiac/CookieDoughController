@@ -77,18 +77,18 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
 
         if (packetAdress >= EEPROM.length())
         {
-            // Serial.println("Failed to read data from memory!");
-            // delay(100);
+            Serial.println("Failed to read data from memory!"); // DEBUG
+            delay(100); // DEBUG
 
             // TODO: Implement error code.
             return;
         }
     } while (!foundPacket && packetAdress < EEPROM.length());
 
-    // Serial.println("Began loading...");
-    // delay(100);
+    Serial.println("Began loading..."); // DEBUG
+    delay(100); // DEBUG
 
-    // Convert
+    // Convert to bare keys
     unsigned int amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
     BareKeyboardKey payloadAsBareKeys[normalKeyCount * amountOfKeys];
     for (unsigned int i = 0; i < amountOfKeys; i++)
@@ -96,6 +96,12 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
         payloadAsBareKeys[i] = ((BareKeyboardKey *)packet.payload)[i];
     }
 
+    // Check if the bare keys are somewhat reasonable
+    // TODO: Check if pin values are lower than NUM_DIGITAL_PINS + NUM_ANALOG_INPUTS
+    Serial.println(NUM_DIGITAL_PINS + NUM_ANALOG_INPUTS); // DEBUG
+    delay(100); // DEBUG
+
+    // Convert bare keys to keys with pin state
     unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
     for (unsigned int i = 0; i < amountOfKeymaps; i++) // For each keymap
     {
@@ -105,26 +111,41 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
             BareKeyboardKey currentKey = payloadAsBareKeys[i * normalKeyCount + j];
             keyMap[j].pin = currentKey.pin;
             keyMap[j].keyCode = currentKey.keyCode;
+            
+            // DEBUG
+            Serial.println("BareKey:");
+            Serial.print("    .pin: ");
+            Serial.println(currentKey.pin);
+            Serial.print("    .keyCode: ");
+            Serial.println(currentKey.keyCode);
+
+            Serial.println("ConvertedKey:");
+            Serial.print("    .pin: ");
+            Serial.println(keyMap[j].pin);
+            Serial.print("    .keyCode: ");
+            Serial.println(keyMap[j].keyCode);
+            delay(100);
+            // DEBUG
         }
         keyMapList.Add(keyMap);
     }
 
-    // // DEBUG
-    // Serial.println("Data:");
-    // for (unsigned int i = 0; i < keyMapList.length; i++)
-    // {
-    //     Serial.println("{");
-    //     for (int j = 0; j < normalKeyCount; j++)
-    //     {
-    //         Serial.print("    .pin: ");
-    //         Serial.println((*keyMapList[i])[j].pin);
-    //         Serial.print("    .keyCode: ");
-    //         Serial.println((*keyMapList[i])[j].keyCode);
-    //     }
-    //     Serial.println("}");
-    // }
-    // delay(100);
-    // // DEBUG
+    // DEBUG
+    Serial.println("Data:");
+    for (unsigned int i = 0; i < keyMapList.length; i++)
+    {
+        Serial.println("{");
+        for (int j = 0; j < normalKeyCount; j++)
+        {
+            Serial.print("    .pin: ");
+            Serial.println((*keyMapList[i])[j].pin);
+            Serial.print("    .keyCode: ");
+            Serial.println((*keyMapList[i])[j].keyCode);
+        }
+        Serial.println("}");
+    }
+    delay(100);
+    // DEBUG
 
     // Serial.println("DATA:::::");
     // for(int i = 0; i < packet.payloadLength; i++) {
@@ -141,7 +162,7 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
 
     eepromAdress = packetAdress;
     nextFreeEepromAdress = packetAdress + packetSize;
-    delete (dataPtr);
+    delete(dataPtr);
 }
 
 void CycleKeyMap() // TODO: Check if working.
@@ -149,6 +170,7 @@ void CycleKeyMap() // TODO: Check if working.
     if (customKeyMaps.IsEmpty())
     {
         // We can't cycle through an empty list of keymaps...
+        Serial.println("Empty"); // DEBUG
         SignalErrorToUser();
         return;
     }
@@ -170,6 +192,7 @@ void CycleKeyMap() // TODO: Check if working.
 
 void ChangeKeyMap(Key *keyMap)
 {
+    Serial.println("Changing keymap"); // DEBUG
     currentKeyMap = keyMap;
     ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
 }

@@ -10,10 +10,10 @@
 
 #include <stdint.h>
 
-#include <Key.h>
-#include <LinkedList.h>
-#include <LinkedList.cpp>
-#include <EditMode.h>
+#include "Key.h"
+#include "LinkedList.h"
+#include "LinkedList.cpp"
+#include "EditMode.h"
 
 extern Key defaultKeyMap[NORMAL_KEY_COUNT];
 extern SpecialKey specialKeys[SPECIAL_KEY_COUNT];
