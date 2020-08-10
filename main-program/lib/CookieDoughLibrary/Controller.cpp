@@ -141,6 +141,7 @@ void Controller::LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
 
     // Check if the bare keys are somewhat reasonable
     // TODO: Check if pin values are lower than NUM_DIGITAL_PINS + NUM_ANALOG_INPUTS
+    // OR check if the pin numbers are present in the default keymap.
     Serial.println(NUM_DIGITAL_PINS + NUM_ANALOG_INPUTS); // DEBUG
     delay(100); // DEBUG
 
