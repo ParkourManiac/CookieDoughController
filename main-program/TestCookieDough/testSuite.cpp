@@ -5,7 +5,6 @@
 #include "Fakes/Arduino.h"
 #include "Fakes/EEPROM.h"
 
-void LoadKeyMapsFromMemory_CorrectlyLoadsKeymapIntoList();
 void DataPacket_StxIsTwo();
 void DataPacket_EtxIsThree();
 void CalculateCRC_UsesAlgorithCRC32();
@@ -145,7 +144,6 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
-	RUN_TEST(LoadKeyMapsFromMemory_CorrectlyLoadsKeymapIntoList);
 	RUN_TEST(DataPacket_StxIsTwo);
 	RUN_TEST(DataPacket_EtxIsThree);
 	RUN_TEST(CalculateCRC_UsesAlgorithCRC32);

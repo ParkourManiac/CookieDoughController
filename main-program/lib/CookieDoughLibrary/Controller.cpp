@@ -4,25 +4,68 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 
+void Controller::Setup() 
+{
+    // for(unsigned int i = 0; i < EEPROM.length(); i++) {
+    //     EEPROM.write(i, 0);
+    // }
+    // Key keys[normalKeyCount] = {
+    //     Key(2, 4),
+    //     Key(3, 26),
+    //     Key(4, 22),
+    //     Key(5, 7),
+    // };
+    // nextFreeEepromAdress = 50;
+    // customKeyMaps.Add(keys);
+    // SaveKeyMapsToMemory(customKeyMaps);
+    
+    LoadKeyMapsFromMemory(customKeyMaps);
+    ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount);
+    ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount);
 
-Key *currentKeyMap = defaultKeyMap;
-unsigned int customKeyMapIndex = 0;
+    // // DEBUG
+    // Serial.println();
+    // Serial.println("New current keymap:");
+    // for(int i = 0; i < normalKeyCount; i++) {
+    //     Serial.print("Current .pin = ");
+    //     Serial.print(currentKeyMap[i].pin);
+    //     Serial.print(", .keyCode = ");
+    //     Serial.println(currentKeyMap[i].keyCode);
+    // }
+    // delay(100);
 
-LinkedList<Key *> *customKeyMapsPtr = new LinkedList<Key *>();
-LinkedList<Key *> customKeyMaps = *customKeyMapsPtr;
+    // for (unsigned int i = 0; i < customKeyMaps.length; i++)
+    // {
+    //     Serial.println("{");
+    //     for (unsigned int j = 0; j < normalKeyCount; j++)
+    //     {
+    //         Serial.print("    .pin: ");
+    //         Serial.println((*customKeyMaps[i])[j].pin);
+    //         Serial.print("    .keyCode: ");
+    //         Serial.println((*customKeyMaps[i])[j].keyCode);
+    //     }
+    //     Serial.println("}");
+    // }
+    // // DEBUG
+}
 
-uint8_t buf[8] = {0}; // Keyboard report buffer.
+void Controller::Update()
+{
+    ReadPinValuesForKeyMap(currentKeyMap, normalKeyCount);
+    ReadPinValuesForKeyMap(specialKeys, specialKeyCount);
 
-unsigned int eepromAdress = 0;
-unsigned int nextFreeEepromAdress = 0;
+    ExecuteSpecialCommands();
+    if (editmode.enabled)
+    {
+        editmode.EditModeLoop(currentKeyMap);
+    }
+    else
+    {
+        SendKeyInfo();
+    }
+}
 
-EditMode editmode = EditMode(true);
-
-const float longPressDuration = 4000;
-
-
-
-void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be tested.
+void Controller::SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be tested.
 {
     unsigned int serializedSize = sizeof(BareKeyboardKey[keyMapList.length * normalKeyCount]);
     // Key *serializedKeyMaps = new Key[keyMapList.length * normalKeyCount];
@@ -61,7 +104,7 @@ void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList) // TODO: Needs to be test
     delete (serializedKeyMaps);
 }
 
-void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
+void Controller::LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
 {
     unsigned int packetAdress = 0;
     DataPacket *dataPtr = new DataPacket();
@@ -111,7 +154,7 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
             BareKeyboardKey currentKey = payloadAsBareKeys[i * normalKeyCount + j];
             keyMap[j].pin = currentKey.pin;
             keyMap[j].keyCode = currentKey.keyCode;
-            
+
             // DEBUG
             Serial.println("BareKey:");
             Serial.print("    .pin: ");
@@ -165,7 +208,7 @@ void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList)
     delete(dataPtr);
 }
 
-void CycleKeyMap() // TODO: Check if working.
+void Controller::CycleKeyMap() // TODO: Check if working.
 {
     if (customKeyMaps.IsEmpty())
     {
@@ -190,14 +233,14 @@ void CycleKeyMap() // TODO: Check if working.
     }
 }
 
-void ChangeKeyMap(Key *keyMap)
+void Controller::ChangeKeyMap(Key *keyMap)
 {
     Serial.println("Changing keymap"); // DEBUG
     currentKeyMap = keyMap;
     ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
 }
 
-void ToggleDefaultKeyMap()
+void Controller::ToggleDefaultKeyMap()
 {
     bool toggleToDefault = currentKeyMap != defaultKeyMap;
     if (toggleToDefault)
@@ -220,7 +263,7 @@ void ToggleDefaultKeyMap()
     }
 }
 
-void SendKeyInfo()
+void Controller::SendKeyInfo()
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -286,10 +329,12 @@ void SendKeyInfo()
     }
 }
 
-void ExecuteSpecialCommands()
+void Controller::ExecuteSpecialCommands()
 {
-    for (SpecialKey &specialKey : specialKeys)
+    for (int i = 0; i < specialKeyCount; i++)
     {
+        SpecialKey &specialKey = specialKeys[i];
+
         if (specialKey.oldValue != specialKey.value)
         {
             if (specialKey.value)
@@ -328,7 +373,8 @@ void ExecuteSpecialCommands()
                         if (currentKeyMap != defaultKeyMap)
                         {
                             editmode.RestoreKeyMapFromTemporaryCopy(currentKeyMap);
-                        } else 
+                        }
+                        else
                         {
                             SignalErrorToUser();
                         }
@@ -388,7 +434,7 @@ void ExecuteSpecialCommands()
     }
 }
 
-void ToggleEditMode() {
+void Controller::ToggleEditMode() {
     bool enteringEditMode = !editmode.enabled;
 
     // If we are trying to start editing the default keymap...
@@ -420,7 +466,7 @@ void ToggleEditMode() {
     }
 }
 
-void SaveControllerSettings()
+void Controller::SaveControllerSettings()
 {
     SaveKeyMapsToMemory(customKeyMaps);
 
@@ -450,7 +496,7 @@ void SaveControllerSettings()
     digitalWrite(LED_BUILTIN, LOW);
 }
 
-void DeleteCurrentKeyMap()
+void Controller::DeleteCurrentKeyMap()
 {
     if (!editmode.enabled)
         return;
@@ -480,7 +526,7 @@ void DeleteCurrentKeyMap()
     // DEBUG
 
     // TODO: Try replacing **removedKeyMapPtr with *removedKeyMapPtr and pass in &removedKeyMapPtr to the function RemoveAtIndex.
-    Key **removedKeyMapPtr = new Key *; 
+    Key **removedKeyMapPtr = new Key *;
     bool success = customKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr);
     // If we successfully removed the keymap...
     if (success)
@@ -562,7 +608,7 @@ void DeleteCurrentKeyMap()
     // DEBUG
 }
 
-bool CreateNewKeyMap()
+bool Controller::CreateNewKeyMap()
 {
     bool successful = false;
     // TODO: Implement real check to see if the arduino can
@@ -620,7 +666,7 @@ bool CreateNewKeyMap()
     return successful;
 }
 
-void SignalErrorToUser()
+void Controller::SignalErrorToUser()
 {
     // We can't cycle through 0 keymaps...
     // Signal that something is wrong.

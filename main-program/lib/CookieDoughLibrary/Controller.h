@@ -1,10 +1,3 @@
-#ifndef NORMAL_KEY_COUNT 
-#define NORMAL_KEY_COUNT 4 // Move controller into class and set these as a class variable instead
-#endif
-#ifndef SPECIAL_KEY_COUNT
-#define SPECIAL_KEY_COUNT 3 // Move controller into class and set these as a class variable instead
-#endif
-
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
@@ -15,80 +8,108 @@
 #include "LinkedList.cpp"
 #include "EditMode.h"
 
-extern Key defaultKeyMap[NORMAL_KEY_COUNT];
-extern SpecialKey specialKeys[SPECIAL_KEY_COUNT];
+class Controller
+{
+private:
+    Key *defaultKeyMap;
+    int normalKeyCount;
+    
+    SpecialKey *specialKeys;
+    int specialKeyCount;
 
-/**
- * @brief Saves a list of keymaps to memory.
- * Note: Will overwrite existing keymaps on the eeprom.
- * 
- * @param keyMapList The list of keymaps to be saved.
- */
-void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList);
+    Key *currentKeyMap = defaultKeyMap;
+    unsigned int customKeyMapIndex = 0;
 
-/**
- * @brief Loads the list of keymaps from memory
- * into the provided keyMap list.
- * 
- * @param keyMapList The keyMap list to store the result.
- */
-void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList);
+    LinkedList<Key *> *customKeyMapsPtr = new LinkedList<Key *>();
+    LinkedList<Key *> customKeyMaps = *customKeyMapsPtr;
 
-/**
- * @brief Switches to the next keyMap configuration in the list
- * of available keyMaps.
- * Note: If we are using the default keyMap then it will 
- * switch back to the previous keyMap instead of moving
- * to the next keyMap in the list.
- * 
- */
-void CycleKeyMap();
+    uint8_t buf[8] ={ 0 }; // Keyboard report buffer.
 
-/**
- * @brief Changes the current keymap to the keymap specified at
- * the given index (in the available keyMaps).
- * 
- * @param index The index of the keymap to be switched to.
- */
-void ChangeKeyMap(Key *keyMap);
-/**
- * @brief Switches to the built in default keyMap.
- */
-void ToggleDefaultKeyMap();
+    unsigned int eepromAdress = 0;
+    unsigned int nextFreeEepromAdress = 0;
 
-/**
- * @brief Writes the keypress events to the buffer and sends them to the computer. 
- */
-void SendKeyInfo();
+    EditMode editmode = EditMode(true);
 
-/**
- * @brief Executes the corresponding special function when a special key is pressed.
- */
-void ExecuteSpecialCommands();
+    const float longPressDuration = 4000;
 
-void ToggleEditMode();
+public:
+    /**
+     * @brief Sets up the controllers initial keymap and the keymap used for special functions.
+     *
+     */
+    Controller(Key *_defaultKeyMap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKey) 
+        : defaultKeyMap(_defaultKeyMap)
+        , normalKeyCount(amountOfDefaultKeys)
+        , specialKeys(_specialKeys)
+        , specialKeyCount(amountOfSpecialKey)
+    {
+    }
 
-void SaveControllerSettings();
-void DeleteCurrentKeyMap();
-bool CreateNewKeyMap();
-void SignalErrorToUser();
+    /**
+     * @brief Sets up the controller by loading the keymaps from memory and configuring the corresponding Arduino pin for each key.
+     */
+    void Setup();
 
+    /**
+     * @brief The update loop of the controller. Handles everything from updating state to sending the keystrokes.
+     */
+    void Update();
 
-// Miscellaneous:
-// Key setup WASD
-// Key keys[4] = {
-// {.pin = 2, .keyCode = 4},
-// {.pin = 3, .keyCode = 26},
-// {.pin = 4, .keyCode = 22},
-// {.pin = 5, .keyCode = 7},
-// };
+    /**
+     * @brief Saves a list of keymaps to memory.
+     * Note: Will overwrite existing keymaps on the eeprom.
+     *
+     * @param keyMapList The list of keymaps to be saved.
+     */
+    void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList);
 
-// Key setup Arrow keys
-// Key keys[4] = {
-//     {.pin = 2, .keyCode = 80},
-//     {.pin = 3, .keyCode = 82},
-//     {.pin = 4, .keyCode = 81},
-//     {.pin = 5, .keyCode = 79},
-// };
+    /**
+     * @brief Loads the list of keymaps from memory
+     * into the provided keyMap list.
+     *
+     * @param keyMapList The keyMap list to store the result.
+     */
+    void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList);
+
+    /**
+     * @brief Switches to the next keyMap configuration in the list
+     * of available keyMaps.
+     * Note: If we are using the default keyMap then it will
+     * switch back to the previous keyMap instead of moving
+     * to the next keyMap in the list.
+     *
+     */
+    void CycleKeyMap();
+
+    /**
+     * @brief Changes the current keymap to the keymap specified at
+     * the given index (in the available keyMaps).
+     *
+     * @param index The index of the keymap to be switched to.
+     */
+    void ChangeKeyMap(Key *keyMap);
+    /**
+     * @brief Switches to the built in default keyMap.
+     */
+    void ToggleDefaultKeyMap();
+
+    /**
+     * @brief Writes the keypress events to the buffer and sends them to the computer.
+     */
+    void SendKeyInfo();
+
+    /**
+     * @brief Executes the corresponding special function when a special key is pressed.
+     */
+    void ExecuteSpecialCommands();
+
+    // TODO: Document all functions
+    void ToggleEditMode();
+
+    void SaveControllerSettings();
+    void DeleteCurrentKeyMap();
+    bool CreateNewKeyMap();
+    void SignalErrorToUser();
+};
 
 #endif
