@@ -10,7 +10,7 @@ public:
     void write(int idx, uint8_t val);
     void update(int idx, uint8_t val); // cookieOption: useVector
 
-    uint16_t length();
+    uint16_t length(); // cookieOption: useVector
 
     uint16_t &get(int idx, uint16_t &t); // cookieOption: useVector, overwriteReference
     uint32_t &get(int idx, uint32_t &t); // cookieOption: useVector, overwriteReference

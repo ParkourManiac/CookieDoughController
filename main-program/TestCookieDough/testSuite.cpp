@@ -5,6 +5,8 @@
 #include "Fakes/Arduino.h"
 #include "Fakes/EEPROM.h"
 
+void LoadKeyMapsFromMemory_CorrectlyLoadsKeymapIntoList();
+void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket();
 void DataPacket_StxIsTwo();
 void DataPacket_EtxIsThree();
 void CalculateCRC_UsesAlgorithCRC32();
@@ -144,6 +146,8 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
+	RUN_TEST(LoadKeyMapsFromMemory_CorrectlyLoadsKeymapIntoList);
+	RUN_TEST(Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket);
 	RUN_TEST(DataPacket_StxIsTwo);
 	RUN_TEST(DataPacket_EtxIsThree);
 	RUN_TEST(CalculateCRC_UsesAlgorithCRC32);
@@ -603,12 +607,20 @@ void EEPROMClass::update(int idx, uint8_t val)
 }
 
 uint16_t EEPROMClass_length_return;
+std::vector<uint16_t> EEPROMClass_length_return_v;
 unsigned int EEPROMClass_length_invocations = 0;
 uint16_t EEPROMClass::length()
 {
 	EEPROMClass_length_invocations++;
 
-	return EEPROMClass_length_return;
+	if(EEPROMClass_length_return_v.size() < EEPROMClass_length_invocations)
+	{
+		return EEPROMClass_length_return;
+	}
+	else
+	{
+		return EEPROMClass_length_return_v.at(EEPROMClass_length_invocations-1);
+	}
 }
 
 uint16_t  EEPROMClass_get_return_o1;
@@ -843,6 +855,7 @@ void ResetMocks()
 	EEPROMClass_update_invocations = 0;
 	EEPROMClass_length_invocations = 0;
 	EEPROMClass_length_return = uint16_t();
+	EEPROMClass_length_return_v.clear();
 	EEPROMClass_get_param_idx_o1 = int();
 	EEPROMClass_get_param_idx_o1_v.clear();
 	EEPROMClass_get_param_t_o1 = uint16_t();
