@@ -14,7 +14,7 @@ extern std::vector<uint16_t> EEPROMClass_length_return_v;
 Controller SetUpController()
 {
     const int normalKeyCount = 4;
-    Key defaultKeyMap[normalKeyCount] ={
+    Key defaultKeymap[normalKeyCount] ={
         // Key map Arrow keys
         Key(2, 80),
         Key(3, 82),
@@ -29,7 +29,7 @@ Controller SetUpController()
         SpecialKey(12, toggleDefaultKeyMap),
     };
 
-    return Controller(defaultKeyMap, normalKeyCount, specialKeys, specialKeyCount);
+    return Controller(defaultKeymap, normalKeyCount, specialKeys, specialKeyCount);
 }
 
 void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue()
@@ -162,7 +162,7 @@ void LoadBareKeyboardKeysIntoKeymapList_PopulatestTheListWithTheGivenKeys()
 void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue()
 {
     const int normalKeyCount = 4;
-    Key defaultKeyMap[normalKeyCount] ={
+    Key defaultKeymap[normalKeyCount] ={
         // Key map Arrow keys
         Key(2, 0),
         Key(3, 0),
@@ -170,7 +170,7 @@ void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue()
         Key(5, 0),
     };
     SpecialKey specialKeys[0];
-    Controller controller(defaultKeyMap, normalKeyCount, specialKeys, 0);
+    Controller controller(defaultKeymap, normalKeyCount, specialKeys, 0);
     BareKeyboardKey key;
     key.pin = 2;
     key.keyCode = 1337;
@@ -183,7 +183,7 @@ void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue()
 void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
 {
     const int normalKeyCount = 4;
-    Key defaultKeyMap[normalKeyCount] ={
+    Key defaultKeymap[normalKeyCount] ={
         // Key map Arrow keys
         Key(2, 0),
         Key(3, 0),
@@ -191,7 +191,7 @@ void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
         Key(5, 0),
     };
     SpecialKey specialKeys[0];
-    Controller controller(defaultKeyMap, normalKeyCount, specialKeys, 0);
+    Controller controller(defaultKeymap, normalKeyCount, specialKeys, 0);
     BareKeyboardKey key;
     key.pin = 94234;
     key.keyCode = 1337;
@@ -201,7 +201,7 @@ void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
     ASSERT_TEST(result == false);
 }
 
-// void LoadKeyMapsFromMemory_CorrectlyLoadsKeymapIntoList() {
+// void LoadKeymapsFromMemory_CorrectlyLoadsKeymapIntoList() {
 //     // TODO:  
 //     // * Refactor Controller to only use Class variables.
 //     // - Setup info to be retrieved through Parse packet.
@@ -230,7 +230,7 @@ void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
 //     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
 //     LinkedList<Key *> resultingKeymaps;
-//     controller.LoadKeyMapsFromMemory(resultingKeymaps);
+//     controller.LoadKeymapsFromMemory(resultingKeymaps);
 //     bool isEmpty = resultingKeymaps[0] == nullptr;
 //     printf("%d", isEmpty);
 //     printf("\n");
