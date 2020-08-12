@@ -7,6 +7,7 @@
 #include "LinkedList.h"
 #include "LinkedList.cpp"
 #include "EditMode.h"
+#include "DataPacket.h"
 
 class Controller
 {
@@ -70,6 +71,44 @@ public:
      * @param keyMapList The keyMap list to store the result.
      */
     void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList);
+
+    /**
+     * @brief Finds and retrieves a DataPacket stored on the EEPROM.
+     * 
+     * @param packet The DataPacket found on the EEPROM.
+     * @param packetAdress The adress where the DataPacket was found.
+     * @param packetSize The size of the DataPacket.
+     * @return true The DataPacket was succesfully found and retrieved.
+     * @return false The DataPacket was not found or the DataPackets found were corrupt.
+     */
+    bool RetrieveDataPacketFromMemory(DataPacket &packet, unsigned int &packetSize, unsigned int &packetAdress);
+
+    /**
+     * @brief Converts a DataPacket payload into an array of BareKeyboardKeys.
+     * 
+     * @param packet The packet to be processed.
+     * @param result The payload as an array of BareKeyboardKeys.
+     * @param amountOfKeys The amount of keys in the payload.
+     */
+    void ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result);
+
+    /**
+     * @brief Populates the provided keymap list using the BareKeyboardKeys.
+     * 
+     * @param keys The keys to be inserted into the list.
+     * @param amountOfKeys The amount of keys to be inserted.
+     * @param keymapList The list in which the keys will be inserted.
+     */
+    void LoadBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<Key *> &keymapList);
+
+    /**
+     * @brief Determines whether a key is valid (i.e can be used) or not.
+     * 
+     * @param key The key to be validated.
+     * @return true The key is valid.
+     * @return false The key is invalid or corrupt.
+     */
+    bool IsKeyValid(IKey key);
 
     /**
      * @brief Switches to the next keyMap configuration in the list

@@ -5,7 +5,12 @@
 #include "Fakes/Arduino.h"
 #include "Fakes/EEPROM.h"
 
-void LoadKeyMapsFromMemory_CorrectlyLoadsKeymapIntoList();
+void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue();
+void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse();
+void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys();
+void LoadBareKeyboardKeysIntoKeymapList_PopulatestTheListWithTheGivenKeys();
+void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue();
+void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse();
 void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket();
 void DataPacket_StxIsTwo();
 void DataPacket_EtxIsThree();
@@ -146,7 +151,12 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
-	RUN_TEST(LoadKeyMapsFromMemory_CorrectlyLoadsKeymapIntoList);
+	RUN_TEST(RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue);
+	RUN_TEST(RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse);
+	RUN_TEST(ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys);
+	RUN_TEST(LoadBareKeyboardKeysIntoKeymapList_PopulatestTheListWithTheGivenKeys);
+	RUN_TEST(IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue);
+	RUN_TEST(IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse);
 	RUN_TEST(Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket);
 	RUN_TEST(DataPacket_StxIsTwo);
 	RUN_TEST(DataPacket_EtxIsThree);
@@ -559,6 +569,19 @@ size_t Serial_::println()
 	return Serial__println_return_o9;
 }
 
+size_t Serial__write_return;
+unsigned int Serial__write_invocations = 0;
+uint8_t * Serial__write_param_buffer;
+size_t Serial__write_param_size;
+size_t Serial_::write(const uint8_t * buffer, size_t size)
+{
+	Serial__write_invocations++;
+	Serial__write_param_buffer = (uint8_t *)buffer;
+	Serial__write_param_size = (size_t)size;
+
+	return Serial__write_return;
+}
+
 uint8_t EEPROMClass_read_return;
 std::vector<uint8_t> EEPROMClass_read_return_v;
 unsigned int EEPROMClass_read_invocations = 0;
@@ -840,6 +863,10 @@ void ResetMocks()
 	Serial__println_return_o8 = size_t();
 	Serial__println_invocations_o9 = 0;
 	Serial__println_return_o9 = size_t();
+	Serial__write_param_buffer = nullptr;
+	Serial__write_param_size = size_t();
+	Serial__write_invocations = 0;
+	Serial__write_return = size_t();
 	EEPROMClass_read_param_idx = int();
 	EEPROMClass_read_param_idx_v.clear();
 	EEPROMClass_read_invocations = 0;

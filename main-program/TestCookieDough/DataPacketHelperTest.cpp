@@ -14,9 +14,6 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuc
     DataPacket result = *resultPtr;
     unsigned int packetSize;
     bool resultBool = ParsePacketFromEEPROM(0, result, packetSize);
-    printf("%d", packetSize);
-    printf("\n");
-    printf("%d", packet.payload[1]);
 
     ASSERT_TEST(resultBool == true &&
                 packet.stx == result.stx &&

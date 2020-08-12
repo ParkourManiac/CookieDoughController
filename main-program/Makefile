@@ -12,7 +12,9 @@ compileTests: TestCookieDough
 		./lib/CookieDoughLibrary/LinkedList.cpp \
 		./lib/CookieDoughLibrary/Key.cpp \
 		./lib/CookieDoughLibrary/EditMode.cpp \
-		./lib/CookieDoughLibrary/DataPacket.cpp
+		./lib/CookieDoughLibrary/DataPacket.cpp \
+		./lib/CookieDoughLibrary/Controller.cpp
+
 
 test: compileTests # "Dependent" on compileTests. ("compileTests" will run before this command).
 	./TestCookieDough/Testrun/latestTestRun

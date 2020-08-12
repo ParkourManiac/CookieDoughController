@@ -36,6 +36,8 @@ public:
     size_t println(unsigned long a, int b);
     size_t println(double a, int b);
     size_t println();
+
+    size_t write(const uint8_t *buffer, size_t size);
 };
 
 extern Serial_ Serial;
