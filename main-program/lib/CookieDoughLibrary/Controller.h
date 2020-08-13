@@ -74,8 +74,9 @@ public:
 
     /**
      * @brief Retrieves the saved BareKeyboardKeys stored in the EEPROM.
+     * WARNING: payloadAsBareKeys MUST BE ALLOCATED ON THE HEAP (IF NOT THE PROGRAM WILL CRASH).
      * 
-     * @param payloadAsBareKeys A pointer to an array of the retrieved keys.
+     * @param payloadAsBareKeys A pointer to an array of the retrieved keys. 
      * @param amountOfKeys The amount of keys retrieved
      * @param packetAdress The location of the packet from which the keys were retrieved.
      * @param packetSize The size of the packet from which the keys were retrieved.
@@ -93,7 +94,7 @@ public:
      * @return true The DataPacket was succesfully found and retrieved.
      * @return false The DataPacket was not found or the DataPackets found were corrupt.
      */
-    bool RetrieveDataPacketFromMemory(DataPacket &packet, unsigned int &packetSize, unsigned int &packetAdress);
+    bool RetrieveDataPacketFromMemory(DataPacket &packet, unsigned int &packetSize, unsigned int &packetAdress, unsigned int startAdress = 0);
 
     /**
      * @brief Converts a DataPacket payload into an array of BareKeyboardKeys.

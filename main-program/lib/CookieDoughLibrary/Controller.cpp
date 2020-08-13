@@ -2,6 +2,7 @@
 
 #include <EEPROM.h>
 #include <Arduino.h>
+#include <stdlib.h>
 
 void Controller::Setup()
 {
@@ -107,12 +108,14 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<Key *> &keymapList)
 {
     unsigned int packetAdress;
     unsigned int packetSize;
-    BareKeyboardKey *payloadAsBareKeys;
-    unsigned int amountOfKeys;
 
-    RetrieveBareKeyboardKeysFromMemory(payloadAsBareKeys, amountOfKeys, packetAdress, packetSize);
+    unsigned int amountOfKeys;
+    BareKeyboardKey *payloadAsBareKeys = new BareKeyboardKey[normalKeyCount];
+    bool success = RetrieveBareKeyboardKeysFromMemory(payloadAsBareKeys, amountOfKeys, packetAdress, packetSize);
+    if(!success) return;
 
     ParseBareKeyboardKeysIntoKeymapList(payloadAsBareKeys, amountOfKeys, keymapList);
+    delete[](payloadAsBareKeys);
 
     // DEBUG
     Serial.println("Data:");
@@ -160,7 +163,7 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *payloadAsBa
     while (!foundValidPacket)
     {
         unsigned int startAdress = packetAdress;
-        bool foundPacket = RetrieveDataPacketFromMemory(packet, packetSize, packetAdress); // TODO: Add start adress here
+        bool foundPacket = RetrieveDataPacketFromMemory(packet, packetSize, packetAdress, startAdress);
         if (!foundPacket)
             return false;
 
@@ -168,15 +171,17 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *payloadAsBa
         delay(100);                                                  // DEBUG
 
         amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
+        payloadAsBareKeys = (BareKeyboardKey*) realloc(payloadAsBareKeys, sizeof(BareKeyboardKey) * amountOfKeys);
         ConvertDataPacketToBareKeyboardKeys(packet, payloadAsBareKeys);
 
         foundValidPacket = true;
         for (unsigned int i = 0; i < amountOfKeys; i++)
         {
             bool isValid = IsKeyValid(payloadAsBareKeys[i]);
-            if (!isValid) 
+            if (!isValid)
             {
                 foundValidPacket = false;
+                packetAdress += packetSize;
                 break;
             }
         }
@@ -186,9 +191,9 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *payloadAsBa
     return true;
 }
 
-bool Controller::RetrieveDataPacketFromMemory(DataPacket &packet, unsigned int &packetSize, unsigned int &packetAdress)
+bool Controller::RetrieveDataPacketFromMemory(DataPacket &packet, unsigned int &packetSize, unsigned int &packetAdress, unsigned int startAdress)
 {
-    packetAdress = 0;
+    packetAdress = startAdress;
     packetSize = 0;
     bool foundPacket = false;
     do
@@ -632,7 +637,7 @@ void Controller::DeleteCurrentKeyMap()
         Serial.println(customKeyMapIndex);              // DEBUG
     }
 
-    delete (removedKeyMapPtr);
+    delete (removedKeyMapPtr); // TODO: Check if this is correct or not.
     Serial.println("Deleted pointer... removedKeyMapPtr"); // DEBUG
     ToggleEditMode();
 
