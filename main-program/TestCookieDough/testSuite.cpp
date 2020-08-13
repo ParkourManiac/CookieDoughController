@@ -5,12 +5,16 @@
 #include "Fakes/Arduino.h"
 #include "Fakes/EEPROM.h"
 
+void DestroyController();
 void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue();
 void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse();
 void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys();
 void LoadBareKeyboardKeysIntoKeymapList_PopulatestTheListWithTheGivenKeys();
 void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue();
 void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse();
+void LoadKeymapsFromMemory_CorrectlyLoadsKeymapIntoList();
+void LoadKeymapsFromMemory_EepromHasDefectKeymaps_DoesNotLoadKeymaps();
+void LoadKeymapsFromMemory_EepromHasDefectKeymapsFollowedByValidKeymaps_LoadsTheValidKeymaps();
 void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket();
 void DataPacket_StxIsTwo();
 void DataPacket_EtxIsThree();
@@ -151,12 +155,16 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
+	RUN_TEST(DestroyController);
 	RUN_TEST(RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue);
 	RUN_TEST(RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse);
 	RUN_TEST(ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys);
 	RUN_TEST(LoadBareKeyboardKeysIntoKeymapList_PopulatestTheListWithTheGivenKeys);
 	RUN_TEST(IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue);
 	RUN_TEST(IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse);
+	RUN_TEST(LoadKeymapsFromMemory_CorrectlyLoadsKeymapIntoList);
+	RUN_TEST(LoadKeymapsFromMemory_EepromHasDefectKeymaps_DoesNotLoadKeymaps);
+	RUN_TEST(LoadKeymapsFromMemory_EepromHasDefectKeymapsFollowedByValidKeymaps_LoadsTheValidKeymaps);
 	RUN_TEST(Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket);
 	RUN_TEST(DataPacket_StxIsTwo);
 	RUN_TEST(DataPacket_EtxIsThree);

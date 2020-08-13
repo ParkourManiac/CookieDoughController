@@ -11,10 +11,12 @@ extern std::vector<uint8_t> EEPROMClass_read_return_v;
 
 extern std::vector<uint16_t> EEPROMClass_length_return_v;
 
+Key *defaultKeymap;
+SpecialKey *specialKeys;
 Controller SetUpController()
 {
     const int normalKeyCount = 4;
-    Key defaultKeymap[normalKeyCount] ={
+    defaultKeymap = new Key[normalKeyCount]{
         // Key map Arrow keys
         Key(2, 80),
         Key(3, 82),
@@ -23,13 +25,19 @@ Controller SetUpController()
     };
 
     const int specialKeyCount = 3;
-    SpecialKey specialKeys[specialKeyCount] ={
+    specialKeys = new SpecialKey[specialKeyCount]{
         SpecialKey(10, toggleEditMode),
         SpecialKey(11, cycleKeyMap),
         SpecialKey(12, toggleDefaultKeyMap),
     };
 
     return Controller(defaultKeymap, normalKeyCount, specialKeys, specialKeyCount);
+}
+
+void DestroyController()
+{
+    delete[](defaultKeymap);
+    delete[](specialKeys);
 }
 
 void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue()
@@ -39,19 +47,18 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
     EEPROMClass_read_return_v.push_back(0);
     EEPROMClass_length_return_v.push_back(1000);
     EEPROMClass_length_return_v.push_back(1000);
-    // Makes the function fail to find a packet on the second adress.    
+    // Makes the function fail to find a packet on the second adress.
     EEPROMClass_read_return_v.push_back(0);
     EEPROMClass_length_return_v.push_back(1000);
     EEPROMClass_length_return_v.push_back(1000);
     // Makes the function find a packet on the third adress. (Index 2 in EEPROM)
     uint16_t data = 1337;
-    uint8_t *dataPtr = (uint8_t*)&data;
+    uint8_t *dataPtr = (uint8_t *)&data;
     DataPacket packet;
     packet.payloadLength = sizeof(data);
     packet.payload = dataPtr;
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
-
 
     DataPacket *resultPtr = new DataPacket();
     DataPacket result = *resultPtr;
@@ -64,13 +71,13 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
         packet.stx == result.stx &&
         packet.payloadLength == result.payloadLength &&
         packet.crc == result.crc &&
-        *((uint16_t*)packet.payload) == data &&
+        *((uint16_t *)packet.payload) == data &&
         packet.etx == result.etx &&
         packetAdress == 2 &&
-        packetSize == 10
-    );
+        packetSize == 10);
 
-    delete(resultPtr);
+    delete (resultPtr);
+    DestroyController();
 }
 
 void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse()
@@ -84,7 +91,8 @@ void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse()
     bool resultBool = controller.RetrieveDataPacketFromMemory(result, packetSize, packetAdress);
 
     ASSERT_TEST(resultBool == false);
-    delete(resultPtr);
+    delete (resultPtr);
+    DestroyController();
 }
 
 void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys()
@@ -96,11 +104,11 @@ void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBar
     key1.keyCode = 2;
     key2.pin = 3;
     key2.keyCode = 4;
-    BareKeyboardKey data[2] ={
+    BareKeyboardKey data[2] = {
         key1,
         key2,
     };
-    uint8_t *dataPtr = (uint8_t*)&data;
+    uint8_t *dataPtr = (uint8_t *)&data;
     DataPacket packet;
     packet.payloadLength = sizeof(data);
     packet.payload = dataPtr;
@@ -110,7 +118,8 @@ void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBar
     controller.ConvertDataPacketToBareKeyboardKeys(packet, result);
 
     ASSERT_TEST(result[0].pin == key1.pin && result[0].keyCode == key1.keyCode &&
-        result[1].pin == key2.pin && result[1].keyCode == key2.keyCode);
+                result[1].pin == key2.pin && result[1].keyCode == key2.keyCode);
+    DestroyController();
 }
 
 void LoadBareKeyboardKeysIntoKeymapList_PopulatestTheListWithTheGivenKeys()
@@ -134,35 +143,36 @@ void LoadBareKeyboardKeysIntoKeymapList_PopulatestTheListWithTheGivenKeys()
     key7.keyCode = 14;
     key8.pin = 15;
     key8.keyCode = 16;
-    BareKeyboardKey keys[amountOfKeys] ={ key1, key2, key3, key4, key5, key6, key7, key8 };
+    BareKeyboardKey keys[amountOfKeys] = {key1, key2, key3, key4, key5, key6, key7, key8};
 
-    LinkedList<Key*> result = LinkedList<Key*>();
-    controller.LoadBareKeyboardKeysIntoKeymapList(keys, amountOfKeys, result);
+    LinkedList<Key *> result = LinkedList<Key *>();
+    controller.ParseBareKeyboardKeysIntoKeymapList(keys, amountOfKeys, result);
 
     bool isEmpty = result[0] == nullptr || result[1] == nullptr;
     Key *resultKeymap1, *resultKeymap2;
-    if(!isEmpty) {
+    if (!isEmpty)
+    {
         resultKeymap1 = *(result[0]);
         resultKeymap2 = *(result[1]);
     }
-    
-    ASSERT_TEST(isEmpty == false &&
-        resultKeymap1[0].pin == 1 && resultKeymap1[0].keyCode == 2 &&
-        resultKeymap1[1].pin == 3 && resultKeymap1[1].keyCode == 4 &&
-        resultKeymap1[2].pin == 5 && resultKeymap1[2].keyCode == 6 &&
-        resultKeymap1[3].pin == 7 && resultKeymap1[3].keyCode == 8 &&
 
-        resultKeymap2[0].pin == 9 && resultKeymap2[0].keyCode == 10 &&
-        resultKeymap2[1].pin == 11 && resultKeymap2[1].keyCode == 12 &&
-        resultKeymap2[2].pin == 13 && resultKeymap2[2].keyCode == 14 &&
-        resultKeymap2[3].pin == 15 && resultKeymap2[3].keyCode == 16
-    );
+    ASSERT_TEST(isEmpty == false &&
+                resultKeymap1[0].pin == 1 && resultKeymap1[0].keyCode == 2 &&
+                resultKeymap1[1].pin == 3 && resultKeymap1[1].keyCode == 4 &&
+                resultKeymap1[2].pin == 5 && resultKeymap1[2].keyCode == 6 &&
+                resultKeymap1[3].pin == 7 && resultKeymap1[3].keyCode == 8 &&
+
+                resultKeymap2[0].pin == 9 && resultKeymap2[0].keyCode == 10 &&
+                resultKeymap2[1].pin == 11 && resultKeymap2[1].keyCode == 12 &&
+                resultKeymap2[2].pin == 13 && resultKeymap2[2].keyCode == 14 &&
+                resultKeymap2[3].pin == 15 && resultKeymap2[3].keyCode == 16);
+    DestroyController();
 }
 
 void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue()
 {
     const int normalKeyCount = 4;
-    Key defaultKeymap[normalKeyCount] ={
+    Key defaultKeymap[normalKeyCount] = {
         // Key map Arrow keys
         Key(2, 0),
         Key(3, 0),
@@ -183,15 +193,15 @@ void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue()
 void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
 {
     const int normalKeyCount = 4;
-    Key defaultKeymap[normalKeyCount] ={
+    Key defaultKeymapConfiguration[normalKeyCount] = {
         // Key map Arrow keys
         Key(2, 0),
         Key(3, 0),
         Key(4, 0),
         Key(5, 0),
     };
-    SpecialKey specialKeys[0];
-    Controller controller(defaultKeymap, normalKeyCount, specialKeys, 0);
+    SpecialKey specialKeysConfiguration[0];
+    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
     BareKeyboardKey key;
     key.pin = 94234;
     key.keyCode = 1337;
@@ -201,45 +211,148 @@ void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
     ASSERT_TEST(result == false);
 }
 
-// void LoadKeymapsFromMemory_CorrectlyLoadsKeymapIntoList() {
-//     // TODO:  
-//     // * Refactor Controller to only use Class variables.
-//     // - Setup info to be retrieved through Parse packet.
-//     // - Create test for returning false if the pin numbers retrieved are not present in the default keymap.
-//     Controller controller = SetUpController();
-//     BareKeyboardKey key1, key2, key3, key4;
-//     key1.pin = 2;
-//     key1.keyCode = 4;
-//     key2.pin = 3;
-//     key2.keyCode = 26;
-//     key3.pin = 4;
-//     key3.keyCode = 22;
-//     key4.pin = 5;
-//     key4.keyCode = 7;
-//     BareKeyboardKey data[controller.normalKeyCount] = {
-//          key1,
-//          key2,
-//          key3,
-//          key4,
-//     };
-//     uint8_t *dataPtr = (uint8_t*) &data;
-//     DataPacket packet;
-//     packet.payloadLength = sizeof(data);
-//     packet.payload = dataPtr;
-//     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-//     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+void LoadKeymapsFromMemory_CorrectlyLoadsKeymapIntoList() {
+    Controller controller = SetUpController();
+    BareKeyboardKey key1, key2, key3, key4;
+    key1.pin = 2;
+    key1.keyCode = 4;
+    key2.pin = 3;
+    key2.keyCode = 26;
+    key3.pin = 4;
+    key3.keyCode = 22;
+    key4.pin = 5;
+    key4.keyCode = 7;
+    BareKeyboardKey data[controller.normalKeyCount] = {
+         key1,
+         key2,
+         key3,
+         key4,
+    };
+    uint8_t *dataPtr = (uint8_t*) &data;
+    DataPacket packet;
+    packet.payloadLength = sizeof(data);
+    packet.payload = dataPtr;
+    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
-//     LinkedList<Key *> resultingKeymaps;
-//     controller.LoadKeymapsFromMemory(resultingKeymaps);
-//     bool isEmpty = resultingKeymaps[0] == nullptr;
-//     printf("%d", isEmpty);
-//     printf("\n");
-//     Key *result;
-//     if(!isEmpty) result = *(resultingKeymaps[0]);
+    LinkedList<Key *> resultingKeymaps = LinkedList<Key*>();
+    controller.LoadKeymapsFromMemoryIntoList(resultingKeymaps);
+    bool isEmpty = resultingKeymaps[0] == nullptr;
+    Key *result;
+    if(!isEmpty) result = *(resultingKeymaps[0]);
 
-//     ASSERT_TEST(isEmpty == false &&
-//                 result[0].pin == data[0].pin &&
-//                 result[1].pin == data[1].pin &&
-//                 result[2].pin == data[2].pin &&
-//                 result[3].pin == data[3].pin);
-// }
+    ASSERT_TEST(isEmpty == false &&
+                result[0].pin == data[0].pin &&
+                result[1].pin == data[1].pin &&
+                result[2].pin == data[2].pin &&
+                result[3].pin == data[3].pin);
+   DestroyController();
+}
+
+void LoadKeymapsFromMemory_EepromHasDefectKeymaps_DoesNotLoadKeymaps() {
+    const int normalKeyCount = 4;
+    Key defaultKeymapConfiguration[normalKeyCount] = {
+        Key(2, 0),
+        Key(3, 0),
+        Key(4, 0),
+        Key(5, 0),
+    };
+    SpecialKey specialKeysConfiguration[0];
+    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
+    BareKeyboardKey key1, key2, key3, key4;
+    key1.pin = 14028;
+    key2.pin = 39675;
+    key3.pin = 45786;
+    key4.pin = 53188;
+    key1.keyCode = 4;
+    key2.keyCode = 26;
+    key3.keyCode = 22;
+    key4.keyCode = 7;
+    BareKeyboardKey data[controller.normalKeyCount] = {
+         key1,
+         key2,
+         key3,
+         key4,
+    };
+    uint8_t *dataPtr = (uint8_t*) &data;
+    DataPacket packet;
+    packet.payloadLength = sizeof(data);
+    packet.payload = dataPtr;
+    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+
+    LinkedList<Key *> resultingKeymaps = LinkedList<Key*>();
+    controller.LoadKeymapsFromMemoryIntoList(resultingKeymaps);
+    
+    ASSERT_TEST(resultingKeymaps.IsEmpty());
+   DestroyController();
+}
+
+void LoadKeymapsFromMemory_EepromHasDefectKeymapsFollowedByValidKeymaps_LoadsTheValidKeymaps() {
+    const int normalKeyCount = 4;
+    Key defaultKeymapConfiguration[normalKeyCount] = {
+        Key(2, 0),
+        Key(3, 0),
+        Key(4, 0),
+        Key(5, 0),
+    };
+    SpecialKey specialKeysConfiguration[0];
+    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
+    BareKeyboardKey defectKey1, defectKey2, defectKey3, defectKey4, validKey1, validKey2, validKey3, validKey4;
+    defectKey1.pin = 14028;
+    defectKey2.pin = 39675;
+    defectKey3.pin = 45786;
+    defectKey4.pin = 53188;
+    defectKey1.keyCode = 4;
+    defectKey2.keyCode = 26;
+    defectKey3.keyCode = 22;
+    defectKey4.keyCode = 7;
+    validKey1.pin = 2;
+    validKey2.pin = 3;
+    validKey3.pin = 4;
+    validKey4.pin = 5;
+    validKey1.keyCode = 4;
+    validKey2.keyCode = 26;
+    validKey3.keyCode = 22;
+    validKey4.keyCode = 7;
+    BareKeyboardKey defectData[controller.normalKeyCount] = {
+         defectKey1,
+         defectKey2,
+         defectKey3,
+         defectKey4,
+    };
+    BareKeyboardKey validData[controller.normalKeyCount] = {
+         validKey1,
+         validKey2,
+         validKey3,
+         validKey4,
+    };
+    // Set up valid packet.
+    uint8_t *validDataPtr = (uint8_t*) &validData;
+    DataPacket validPacket;
+    validPacket.payloadLength = sizeof(validData);
+    validPacket.payload = validDataPtr;
+    validPacket.crc = CalculateCRC(validPacket.payload, validPacket.payloadLength);
+    // Set up defect packet.
+    uint8_t *defectDataPtr = (uint8_t*) &defectData;
+    DataPacket defectPacket;
+    defectPacket.payloadLength = sizeof(defectData);
+    defectPacket.payload = defectDataPtr;
+    defectPacket.crc = CalculateCRC(defectPacket.payload, defectPacket.payloadLength);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(defectPacket);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(validPacket);
+
+    LinkedList<Key *> resultingKeymaps = LinkedList<Key*>();
+    controller.LoadKeymapsFromMemoryIntoList(resultingKeymaps);
+    Key *result;
+    if(!resultingKeymaps.IsEmpty()) result = *(resultingKeymaps[0]);
+
+    ASSERT_TEST(resultingKeymaps.IsEmpty() == false &&
+                result[0].pin == validData[0].pin &&
+                result[1].pin == validData[1].pin &&
+                result[2].pin == validData[2].pin &&
+                result[3].pin == validData[3].pin);
+   DestroyController();
+}
+
+// TODO: Test that LoadKeymapsFromMemoryIntoList keeps trying to find a packet after finding a defect packet.

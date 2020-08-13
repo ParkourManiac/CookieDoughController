@@ -70,7 +70,19 @@ public:
      *
      * @param keyMapList The keyMap list to store the result.
      */
-    void LoadKeyMapsFromMemory(LinkedList<Key *> &keyMapList);
+    void LoadKeymapsFromMemoryIntoList(LinkedList<Key *> &keyMapList);
+
+    /**
+     * @brief Retrieves the saved BareKeyboardKeys stored in the EEPROM.
+     * 
+     * @param payloadAsBareKeys A pointer to an array of the retrieved keys.
+     * @param amountOfKeys The amount of keys retrieved
+     * @param packetAdress The location of the packet from which the keys were retrieved.
+     * @param packetSize The size of the packet from which the keys were retrieved.
+     * @return true If we succesfully retrieved the array of keys.
+     * @return false If we were unable to find any valid packet.
+     */
+    bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *payloadAsBareKeys, unsigned int &amountOfKeys, unsigned int &packetAdress, unsigned int &packetSize);
 
     /**
      * @brief Finds and retrieves a DataPacket stored on the EEPROM.
@@ -99,7 +111,7 @@ public:
      * @param amountOfKeys The amount of keys to be inserted.
      * @param keymapList The list in which the keys will be inserted.
      */
-    void LoadBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<Key *> &keymapList);
+    void ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<Key *> &keymapList);
 
     /**
      * @brief Determines whether a key is valid (i.e can be used) or not.
