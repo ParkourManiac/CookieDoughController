@@ -217,7 +217,6 @@ bool Controller::RetrieveDataPacketFromMemory(DataPacket &packet, unsigned int &
 
 void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result)
 {
-    // Convert to bare keys
     unsigned int amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
     for (unsigned int i = 0; i < amountOfKeys; i++)
     {

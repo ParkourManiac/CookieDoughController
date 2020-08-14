@@ -35,8 +35,12 @@ private:
 
 public:
     /**
-     * @brief Sets up the controllers initial keymap and the keymap used for special functions.
-     *
+     * @brief Construct a new Controller object and sets up the Controllers initial keymap and the keymap used for special functions.
+     * 
+     * @param _defaultKeyMap The keymap to be used as the default keymap.
+     * @param amountOfDefaultKeys The amount of keys inside the default keymap.
+     * @param _specialKeys The keymap to be used for special function keys.
+     * @param amountOfSpecialKey The amount of keys inside the specialKeys keymap.
      */
     Controller(Key *_defaultKeyMap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKey) 
         : defaultKeyMap(_defaultKeyMap)
@@ -65,7 +69,7 @@ public:
     void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList);
 
     /**
-     * @brief Loads the list of keymaps from memory
+     * @brief If present on the EEPROM, Loads a list of keymaps from memory
      * into the provided keyMap list.
      *
      * @param keyMapList The keyMap list to store the result.
@@ -74,12 +78,12 @@ public:
 
     /**
      * @brief Retrieves the saved BareKeyboardKeys stored in the EEPROM.
-     * WARNING: payloadAsBareKeys MUST BE ALLOCATED ON THE HEAP (IF NOT THE PROGRAM WILL CRASH).
+     * WARNING, payloadAsBareKeys MUST BE ALLOCATED ON THE HEAP (IF NOT THE PROGRAM WILL CRASH).
      * 
-     * @param payloadAsBareKeys A pointer to an array of the retrieved keys. 
-     * @param amountOfKeys The amount of keys retrieved
-     * @param packetAdress The location of the packet from which the keys were retrieved.
-     * @param packetSize The size of the packet from which the keys were retrieved.
+     * @param payloadAsBareKeys A pointer to the output array of retrieved keys. 
+     * @param amountOfKeys The amount of keys retrieved.
+     * @param packetAdress The EEPROM location of the packet.
+     * @param packetSize The size of the packet.
      * @return true If we succesfully retrieved the array of keys.
      * @return false If we were unable to find any valid packet.
      */
@@ -89,7 +93,7 @@ public:
      * @brief Finds and retrieves a DataPacket stored on the EEPROM.
      * 
      * @param packet The DataPacket found on the EEPROM.
-     * @param packetAdress The adress where the DataPacket was found.
+     * @param packetAdress The EEPROM adress where the DataPacket was found.
      * @param packetSize The size of the DataPacket.
      * @return true The DataPacket was succesfully found and retrieved.
      * @return false The DataPacket was not found or the DataPackets found were corrupt.
@@ -100,8 +104,7 @@ public:
      * @brief Converts a DataPacket payload into an array of BareKeyboardKeys.
      * 
      * @param packet The packet to be processed.
-     * @param result The payload as an array of BareKeyboardKeys.
-     * @param amountOfKeys The amount of keys in the payload.
+     * @param result A pointer to the resulting array of BareKeyboardKeys.
      */
     void ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result);
 
