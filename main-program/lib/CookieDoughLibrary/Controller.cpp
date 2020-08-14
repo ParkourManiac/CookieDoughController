@@ -128,10 +128,11 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<Key *> &keymapList)
         Serial.println("{");
         for (int j = 0; j < normalKeyCount; j++)
         {
-            Serial.print("    .pin: ");
-            Serial.println((*keymapList[i])[j].pin);
-            Serial.print("    .keyCode: ");
-            Serial.println((*keymapList[i])[j].keyCode);
+            Serial.print("    ( pin: ");
+            Serial.print((*keymapList[i])[j].pin);
+            Serial.print(", keyCode: ");
+            Serial.print((*keymapList[i])[j].keyCode);
+            Serial.println(" )");
         }
         Serial.println("}");
     }
@@ -243,17 +244,6 @@ void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyb
 
 void Controller::ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<Key *> &keymapList)
 {
-    // DEBUG    
-    for(int i = 0; i < amountOfKeys; i ++) 
-    {
-        Serial.println("BareKey Unchanged:");
-        Serial.print("    .pin: ");
-        Serial.println(keys[i].pin);
-        Serial.print("    .keyCode: ");
-        Serial.println(keys[i].keyCode);
-    }
-    // DEBUG
-
     // Convert bare keys to keys with pin state
     unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
     for (unsigned int i = 0; i < amountOfKeymaps; i++) // For each keymap
@@ -265,20 +255,20 @@ void Controller::ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsi
             keyMap[j].pin = currentKey.pin;
             keyMap[j].keyCode = currentKey.keyCode;
 
-            // DEBUG
-            Serial.println("BareKey:");
-            Serial.print("    .pin: ");
-            Serial.println(currentKey.pin);
-            Serial.print("    .keyCode: ");
-            Serial.println(currentKey.keyCode);
+            // // DEBUG
+            // Serial.println("BareKey:");
+            // Serial.print("    .pin: ");
+            // Serial.println(currentKey.pin);
+            // Serial.print("    .keyCode: ");
+            // Serial.println(currentKey.keyCode);
 
-            Serial.println("ConvertedKey:");
-            Serial.print("    .pin: ");
-            Serial.println(keyMap[j].pin);
-            Serial.print("    .keyCode: ");
-            Serial.println(keyMap[j].keyCode);
-            delay(100);
-            // DEBUG
+            // Serial.println("ConvertedKey:");
+            // Serial.print("    .pin: ");
+            // Serial.println(keyMap[j].pin);
+            // Serial.print("    .keyCode: ");
+            // Serial.println(keyMap[j].keyCode);
+            // delay(100);
+            // // DEBUG
         }
         keymapList.Add(keyMap);
     }
