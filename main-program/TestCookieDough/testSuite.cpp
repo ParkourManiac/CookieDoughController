@@ -5,6 +5,21 @@
 #include "Fakes/Arduino.h"
 #include "Fakes/EEPROM.h"
 
+void DestroyController();
+void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeysInside();
+void RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse();
+void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPacket_ReturnsKeysFromValidPacket();
+void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue();
+void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse();
+void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtStartAdress();
+void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys();
+void ParseBareKeyboardKeysIntoKeymapList_PopulatesTheListWithTheGivenKeys();
+void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue();
+void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse();
+void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList();
+void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps();
+void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_LoadsTheValidKeymaps();
+void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket();
 void DataPacket_StxIsTwo();
 void DataPacket_EtxIsThree();
 void CalculateCRC_UsesAlgorithCRC32();
@@ -144,6 +159,21 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
+	RUN_TEST(DestroyController);
+	RUN_TEST(RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeysInside);
+	RUN_TEST(RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse);
+	RUN_TEST(RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPacket_ReturnsKeysFromValidPacket);
+	RUN_TEST(RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue);
+	RUN_TEST(RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse);
+	RUN_TEST(RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtStartAdress);
+	RUN_TEST(ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys);
+	RUN_TEST(ParseBareKeyboardKeysIntoKeymapList_PopulatesTheListWithTheGivenKeys);
+	RUN_TEST(IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue);
+	RUN_TEST(IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse);
+	RUN_TEST(LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList);
+	RUN_TEST(LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps);
+	RUN_TEST(LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_LoadsTheValidKeymaps);
+	RUN_TEST(Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket);
 	RUN_TEST(DataPacket_StxIsTwo);
 	RUN_TEST(DataPacket_EtxIsThree);
 	RUN_TEST(CalculateCRC_UsesAlgorithCRC32);
@@ -555,6 +585,19 @@ size_t Serial_::println()
 	return Serial__println_return_o9;
 }
 
+size_t Serial__write_return;
+unsigned int Serial__write_invocations = 0;
+uint8_t * Serial__write_param_buffer;
+size_t Serial__write_param_size;
+size_t Serial_::write(const uint8_t * buffer, size_t size)
+{
+	Serial__write_invocations++;
+	Serial__write_param_buffer = (uint8_t *)buffer;
+	Serial__write_param_size = (size_t)size;
+
+	return Serial__write_return;
+}
+
 uint8_t EEPROMClass_read_return;
 std::vector<uint8_t> EEPROMClass_read_return_v;
 unsigned int EEPROMClass_read_invocations = 0;
@@ -603,12 +646,20 @@ void EEPROMClass::update(int idx, uint8_t val)
 }
 
 uint16_t EEPROMClass_length_return;
+std::vector<uint16_t> EEPROMClass_length_return_v;
 unsigned int EEPROMClass_length_invocations = 0;
 uint16_t EEPROMClass::length()
 {
 	EEPROMClass_length_invocations++;
 
-	return EEPROMClass_length_return;
+	if(EEPROMClass_length_return_v.size() < EEPROMClass_length_invocations)
+	{
+		return EEPROMClass_length_return;
+	}
+	else
+	{
+		return EEPROMClass_length_return_v.at(EEPROMClass_length_invocations-1);
+	}
 }
 
 uint16_t  EEPROMClass_get_return_o1;
@@ -828,6 +879,10 @@ void ResetMocks()
 	Serial__println_return_o8 = size_t();
 	Serial__println_invocations_o9 = 0;
 	Serial__println_return_o9 = size_t();
+	Serial__write_param_buffer = nullptr;
+	Serial__write_param_size = size_t();
+	Serial__write_invocations = 0;
+	Serial__write_return = size_t();
 	EEPROMClass_read_param_idx = int();
 	EEPROMClass_read_param_idx_v.clear();
 	EEPROMClass_read_invocations = 0;
@@ -843,6 +898,7 @@ void ResetMocks()
 	EEPROMClass_update_invocations = 0;
 	EEPROMClass_length_invocations = 0;
 	EEPROMClass_length_return = uint16_t();
+	EEPROMClass_length_return_v.clear();
 	EEPROMClass_get_param_idx_o1 = int();
 	EEPROMClass_get_param_idx_o1_v.clear();
 	EEPROMClass_get_param_t_o1 = uint16_t();

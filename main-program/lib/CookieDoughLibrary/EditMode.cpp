@@ -3,7 +3,7 @@
 
 EditMode::EditMode(bool _useEditModeLedSignal)
 {
-    useEditModeLedSignal = useEditModeLedSignal;
+    useEditModeLedSignal = _useEditModeLedSignal;
 }
 
 void EditMode::Toggle()

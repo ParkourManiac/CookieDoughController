@@ -9,9 +9,9 @@
 struct DataPacket
 {
     uint8_t stx = 0x02;
-    uint16_t payloadLength;
-    uint32_t crc;
-    uint8_t *payload;
+    uint16_t payloadLength = 0;
+    uint32_t crc = 0;
+    uint8_t *payload = nullptr;
     uint8_t etx = 0x03;
 };
 
