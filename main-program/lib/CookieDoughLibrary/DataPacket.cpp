@@ -37,8 +37,8 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
     currentAdress += packet.payloadLength * sizeof(packet.payload[0]);
 
     // Fill adress of packet.payload with the payload from eeprom.
-    unsigned int payloadByteSize = packet.payloadLength * sizeof(packet.payload[0]);
-    packet.payload = (uint8_t*) realloc(packet.payload, payloadByteSize); // TODO: PREVENT THIS FROM BEING A MEMORY LEAK. If possible avoid realloc so that user can pass in packet allocated on stack instead of heap.
+    delete[](packet.payload);
+    packet.payload = new uint8_t[packet.payloadLength]; // TODO: Is there a way to avoid using new here?
     for (unsigned int i = 0; i < packet.payloadLength; i++)
     {
         packet.payload[i] = payload[i];

@@ -369,12 +369,11 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
 
     LinkedList<Key *> resultingKeymaps = LinkedList<Key *>();
     controller.LoadKeymapsFromMemoryIntoList(resultingKeymaps);
-    bool isEmpty = resultingKeymaps[0] == nullptr;
     Key *result;
-    if (!isEmpty)
+    if (!resultingKeymaps.IsEmpty())
         result = *(resultingKeymaps[0]);
 
-    ASSERT_TEST(isEmpty == false &&
+    ASSERT_TEST(resultingKeymaps.IsEmpty() == false &&
                 result[0].pin == data[0].pin &&
                 result[1].pin == data[1].pin &&
                 result[2].pin == data[2].pin &&

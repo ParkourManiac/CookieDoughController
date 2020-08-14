@@ -87,7 +87,7 @@ public:
      * @return true If we succesfully retrieved the array of keys.
      * @return false If we were unable to find any valid packet.
      */
-    bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *payloadAsBareKeys, unsigned int &amountOfKeys, unsigned int &packetAdress, unsigned int &packetSize);
+    bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *&payloadAsBareKeys, unsigned int &amountOfKeys, unsigned int &packetAdress, unsigned int &packetSize);
 
     /**
      * @brief Finds and retrieves a DataPacket stored on the EEPROM.

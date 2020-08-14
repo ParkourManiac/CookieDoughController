@@ -22,6 +22,8 @@ void setup()
     {
         // Wait for serial port to start.
     }
+    // Without this delay the serial port sends a few weird null letters in serial monitor when initially connected.
+    delay(1000);
 
     controller.Setup();
 }

@@ -93,8 +93,8 @@ void Controller::SaveKeyMapsToMemory(LinkedList<Key *> keymapList) // TODO: Need
     bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, packetSize);
     if (!success)
     {
-        // Serial.println("Failed to write data to memory!");
-        // delay(100);
+        Serial.println("Failed to write data to memory!"); // DEBUG
+        delay(100); // DEBUG
 
         // TODO: Implement error code.
     }
@@ -110,9 +110,13 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<Key *> &keymapList)
     unsigned int packetSize;
 
     unsigned int amountOfKeys;
-    BareKeyboardKey *payloadAsBareKeys = new BareKeyboardKey[normalKeyCount];
+    BareKeyboardKey *payloadAsBareKeys = new BareKeyboardKey[1];
     bool success = RetrieveBareKeyboardKeysFromMemory(payloadAsBareKeys, amountOfKeys, packetAdress, packetSize);
-    if(!success) return;
+    if (!success) 
+    {
+        delete[](payloadAsBareKeys);
+        return;
+    }
 
     ParseBareKeyboardKeysIntoKeymapList(payloadAsBareKeys, amountOfKeys, keymapList);
     delete[](payloadAsBareKeys);
@@ -153,7 +157,7 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<Key *> &keymapList)
     nextFreeEepromAdress = packetAdress + packetSize;
 }
 
-bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *payloadAsBareKeys, unsigned int &amountOfKeys, unsigned int &packetAdress, unsigned int &packetSize)
+bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *&payloadAsBareKeys, unsigned int &amountOfKeys, unsigned int &packetAdress, unsigned int &packetSize)
 {
     amountOfKeys = packetAdress = packetSize = 0;
     DataPacket *dataPtr = new DataPacket();
@@ -171,13 +175,26 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *payloadAsBa
         delay(100);                                                  // DEBUG
 
         amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
-        payloadAsBareKeys = (BareKeyboardKey*) realloc(payloadAsBareKeys, sizeof(BareKeyboardKey) * amountOfKeys);
+        delete[](payloadAsBareKeys);
+        payloadAsBareKeys = new BareKeyboardKey[amountOfKeys];
         ConvertDataPacketToBareKeyboardKeys(packet, payloadAsBareKeys);
 
         foundValidPacket = true;
         for (unsigned int i = 0; i < amountOfKeys; i++)
         {
             bool isValid = IsKeyValid(payloadAsBareKeys[i]);
+
+            // DEBUG
+            Serial.print("IsValid?: "); 
+            Serial.print(isValid); 
+            Serial.print("  {");
+            Serial.print(" .pin: ");
+            Serial.print(payloadAsBareKeys[i].pin);
+            Serial.print(", .keyCode: ");
+            Serial.print(payloadAsBareKeys[i].keyCode);
+            Serial.println(" }");
+            delay(100);
+            // DEBUG
             if (!isValid)
             {
                 foundValidPacket = false;
@@ -226,6 +243,17 @@ void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyb
 
 void Controller::ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<Key *> &keymapList)
 {
+    // DEBUG    
+    for(int i = 0; i < amountOfKeys; i ++) 
+    {
+        Serial.println("BareKey Unchanged:");
+        Serial.print("    .pin: ");
+        Serial.println(keys[i].pin);
+        Serial.print("    .keyCode: ");
+        Serial.println(keys[i].keyCode);
+    }
+    // DEBUG
+
     // Convert bare keys to keys with pin state
     unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
     for (unsigned int i = 0; i < amountOfKeymaps; i++) // For each keymap
@@ -454,12 +482,10 @@ void Controller::ExecuteSpecialCommands()
                 {
                 case toggleEditMode:
                 {
-                    bool wasALongPress = false;
                     if (editmode.enabled)
                     {
-                        wasALongPress = OnLongPress(specialKey, longPressDuration);
                         // if we did a long press in editmode....
-                        if (wasALongPress)
+                        if (OnLongPress(specialKey, longPressDuration))
                         {
                             // Serial.println("Long press, released. Save to memory..."); // DEBUG
                             SaveControllerSettings();
@@ -636,7 +662,7 @@ void Controller::DeleteCurrentKeyMap()
         Serial.println(customKeyMapIndex);              // DEBUG
     }
 
-    delete (removedKeyMapPtr); // TODO: Check if this is correct or not.
+    delete (removedKeyMapPtr);                             // TODO: Check if this is correct or not.
     Serial.println("Deleted pointer... removedKeyMapPtr"); // DEBUG
     ToggleEditMode();
 
