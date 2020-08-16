@@ -23,21 +23,21 @@ void EditMode::CopyKeyMapToTemporary(Key *keyMap)
 void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
 {
     // DEBUG
-    Serial.println();
-    Serial.println("Applying temp to current keymap...");
+    DEBUG_PRINTLN();
+    DEBUG_PRINTLN("Applying temp to current keymap...");
     for (int i = 0; i < normalKeyCount; i++)
     {
-        Serial.print("Temp .pin ");
-        Serial.print(tempCopy[i].pin);
-        Serial.print(", .keyCode ");
-        Serial.print(tempCopy[i].keyCode);
-        Serial.print(" -> ");
+        DEBUG_PRINT("Temp .pin ");
+        DEBUG_PRINT(tempCopy[i].pin);
+        DEBUG_PRINT(", .keyCode ");
+        DEBUG_PRINT(tempCopy[i].keyCode);
+        DEBUG_PRINT(" -> ");
 
-        Serial.print("Current .pin ");
-        Serial.print(keyMapToRestore[i].pin);
-        Serial.print(", .keyCode ");
-        Serial.print(keyMapToRestore[i].keyCode);
-        Serial.println(".");
+        DEBUG_PRINT("Current .pin ");
+        DEBUG_PRINT(keyMapToRestore[i].pin);
+        DEBUG_PRINT(", .keyCode ");
+        DEBUG_PRINT(keyMapToRestore[i].keyCode);
+        DEBUG_PRINTLN(".");
     }
     delay(100);
     // DEBUG
@@ -49,13 +49,13 @@ void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
     Reset();
 
     // DEBUG
-    Serial.println("Current keymap reset to:");
+    DEBUG_PRINTLN("Current keymap reset to:");
     for (int i = 0; i < normalKeyCount; i++)
     {
-        Serial.print("Current .pin = ");
-        Serial.print(keyMapToRestore[i].pin);
-        Serial.print(", .keyCode = ");
-        Serial.println(keyMapToRestore[i].keyCode);
+        DEBUG_PRINT("Current .pin = ");
+        DEBUG_PRINT(keyMapToRestore[i].pin);
+        DEBUG_PRINT(", .keyCode = ");
+        DEBUG_PRINTLN(keyMapToRestore[i].keyCode);
     }
     delay(100);
     // DEBUG
@@ -75,7 +75,7 @@ void EditMode::EditModeLoop(Key *keyMapBeingEdited)
         }
         else if (OnKeyRelease(key))
         {
-            Serial.println("Keyrelease."); // DEBUG
+            DEBUG_PRINTLN("Keyrelease."); // DEBUG
             digitalWrite(LED_BUILTIN, LOW);
 
             RegisterKeyRelease();
@@ -93,16 +93,16 @@ void EditMode::RegisterKeyPress(Key &pressedKey)
 {
     keysPressed += 1;
 
-    Serial.println("Keypress.");    // DEBUG
-    Serial.print("Keys pressed: "); // DEBUG
-    Serial.println(keysPressed);    // DEBUG
+    DEBUG_PRINTLN("Keypress.");    // DEBUG
+    DEBUG_PRINT("Keys pressed: "); // DEBUG
+    DEBUG_PRINTLN(keysPressed);    // DEBUG
 
     if (selectedKey == nullptr)
     {
         selectedKey = &pressedKey;
 
-        Serial.print("Selected key: ");   // DEBUG
-        Serial.println(selectedKey->pin); // DEBUG
+        DEBUG_PRINT("Selected key: ");   // DEBUG
+        DEBUG_PRINTLN(selectedKey->pin); // DEBUG
     }
 
     if (keysPressed > 1)
@@ -128,16 +128,16 @@ void EditMode::RegisterKeyRelease()
         // DEBUG
         if (selectedKey != nullptr)
         {
-            Serial.print("Inputed keycode: ");
-            Serial.print(inputKeyCode);
-            Serial.print(", (for pin: ");
-            Serial.print(selectedKey->pin);
-            Serial.print(", keycode: ");
-            Serial.print(selectedKey->keyCode);
-            Serial.println(")");
+            DEBUG_PRINT("Inputed keycode: ");
+            DEBUG_PRINT(inputKeyCode);
+            DEBUG_PRINT(", (for pin: ");
+            DEBUG_PRINT(selectedKey->pin);
+            DEBUG_PRINT(", keycode: ");
+            DEBUG_PRINT(selectedKey->keyCode);
+            DEBUG_PRINTLN(")");
         }
         else
-            Serial.println("Selected is nullptr!");
+            DEBUG_PRINTLN("Selected is nullptr!");
         // DEBUG
     }
 
@@ -147,17 +147,17 @@ void EditMode::RegisterKeyRelease()
         selectedKey->keyCode = inputKeyCode;
 
         // DEBUG
-        Serial.print("Updated key: .pin = ");
-        Serial.print(selectedKey->pin);
-        Serial.print(", .keyCode = ");
-        Serial.println(selectedKey->keyCode);
+        DEBUG_PRINT("Updated key: .pin = ");
+        DEBUG_PRINT(selectedKey->pin);
+        DEBUG_PRINT(", .keyCode = ");
+        DEBUG_PRINTLN(selectedKey->keyCode);
         // DEBUG
 
         Reset();
     }
 
-    Serial.print("Amount of keys pressed: "); // DEBUG
-    Serial.println(keysPressed);              // DEBUG
+    DEBUG_PRINT("Amount of keys pressed: "); // DEBUG
+    DEBUG_PRINTLN(keysPressed);              // DEBUG
 }
 
 void EditMode::SignalLedEditMode() // Not tested. 

@@ -19,7 +19,7 @@ void DebounceRead(IPinState &key) // NOTE: This causes a slight input delay. Con
     {
         key.lastDebounceTime = currentTime;
         // // Print debounce catches.
-        // Serial.print("he");
+        // DEBUG_PRINT("he");
     }
 
     unsigned long timePassedSinceDebounce = (currentTime - key.lastDebounceTime);
@@ -42,9 +42,9 @@ void DebounceRead(IPinState &key) // NOTE: This causes a slight input delay. Con
 
             // // Print debounce catches.
             // if(key.value) {
-            //     Serial.print(" hej");
-            // } else {Serial.print(" hå");}
-            // Serial.println();
+            //     DEBUG_PRINT(" hej");
+            // } else {DEBUG_PRINT(" hå");}
+            // DEBUG_PRINTLN();
         }
     }
 

@@ -1,6 +1,10 @@
 #include <Arduino.h>
 
 #include <Controller.h>
+#include <SRAM.cpp>  // DEBUG
+
+// #define DEBUG_PRINT(VALUE) Serial.print(VALUE)
+// #define DEBUG_PRINTLN(VALUE) Serial.println(VALUE)
 
 /**
  * @brief A pre-defined controller object, set up with the prefered keymap settings.
@@ -25,11 +29,16 @@ void setup()
     // Without this delay the serial port sends a few weird null letters in serial monitor when initially connected.
     delay(1000);
 
-    controller.Setup();
+    controller.Setup(); // SRAM: -??
 }
 
 void loop()
 {
-    controller.Update();
+    controller.Update(); // SRAM: -??
+    delay(1000); // DEBUG
+    Serial.println(freeMemory()); // DEBUG
 }
 
+// "If you run out of SRAM..." - https://www.arduino.cc/en/tutorial/memory
+
+// TODO: ADD ISSUE ON GITHUB. "Förhindra att mikrokontrollern får slut på SRAM, eller att man skriver in för många keymaps i EEPROM."

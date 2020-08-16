@@ -19,49 +19,49 @@ void Controller::Setup()
     // customKeyMaps.Add(keys);
     // SaveKeyMapsToMemory(customKeyMaps);
 
-    LoadKeymapsFromMemoryIntoList(customKeyMaps);
-    ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount);
-    ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount);
+    LoadKeymapsFromMemoryIntoList(customKeyMaps); // SRAM: -??
+    ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount); //SRAM: -??
+    ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount); //SRAM: -??
 
     // // DEBUG
-    // Serial.println();
-    // Serial.println("New current keymap:");
+    // DEBUG_PRINTLN();
+    // DEBUG_PRINTLN("New current keymap:");
     // for(int i = 0; i < normalKeyCount; i++) {
-    //     Serial.print("Current .pin = ");
-    //     Serial.print(currentKeyMap[i].pin);
-    //     Serial.print(", .keyCode = ");
-    //     Serial.println(currentKeyMap[i].keyCode);
+    //     DEBUG_PRINT("Current .pin = ");
+    //     DEBUG_PRINT(currentKeyMap[i].pin);
+    //     DEBUG_PRINT(", .keyCode = ");
+    //     DEBUG_PRINTLN(currentKeyMap[i].keyCode);
     // }
     // delay(100);
 
     // for (unsigned int i = 0; i < customKeyMaps.length; i++)
     // {
-    //     Serial.println("{");
+    //     DEBUG_PRINTLN("{");
     //     for (unsigned int j = 0; j < normalKeyCount; j++)
     //     {
-    //         Serial.print("    .pin: ");
-    //         Serial.println((*customKeyMaps[i])[j].pin);
-    //         Serial.print("    .keyCode: ");
-    //         Serial.println((*customKeyMaps[i])[j].keyCode);
+    //         DEBUG_PRINT("    .pin: ");
+    //         DEBUG_PRINTLN((*customKeyMaps[i])[j].pin);
+    //         DEBUG_PRINT("    .keyCode: ");
+    //         DEBUG_PRINTLN((*customKeyMaps[i])[j].keyCode);
     //     }
-    //     Serial.println("}");
+    //     DEBUG_PRINTLN("}");
     // }
     // // DEBUG
 }
 
 void Controller::Update()
 {
-    ReadPinValuesForKeyMap(currentKeyMap, normalKeyCount);
-    ReadPinValuesForKeyMap(specialKeys, specialKeyCount);
+    ReadPinValuesForKeyMap(currentKeyMap, normalKeyCount); // SRAM: -??
+    ReadPinValuesForKeyMap(specialKeys, specialKeyCount); // SRAM: -??
 
-    ExecuteSpecialCommands();
+    ExecuteSpecialCommands(); // SRAM: -??
     if (editmode.enabled)
     {
-        editmode.EditModeLoop(currentKeyMap);
+        editmode.EditModeLoop(currentKeyMap); // SRAM: -??
     }
     else
     {
-        SendKeyInfo();
+        SendKeyInfo(); // SRAM: -??
     }
 }
 
@@ -81,11 +81,11 @@ void Controller::SaveKeyMapsToMemory(LinkedList<Key *> keymapList) // TODO: Need
 
     uint8_t *dataPtr = (uint8_t *)serializedKeyMaps;
     // // DEBUG
-    // Serial.print("Passed in: ");
+    // DEBUG_PRINT("Passed in: ");
     // for(int i = 0; i < serializedSize; i++) {
-    //     Serial.print(dataPtr[i], HEX);
+    //     DEBUG_PRINT(dataPtr[i], HEX);
     // }
-    // Serial.println();
+    // DEBUG_PRINTLN();
     // delay(100);
     // // DEBUG
     unsigned int packetSize;
@@ -93,10 +93,13 @@ void Controller::SaveKeyMapsToMemory(LinkedList<Key *> keymapList) // TODO: Need
     bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, packetSize);
     if (!success)
     {
-        Serial.println("Failed to write data to memory!"); // DEBUG
+        DEBUG_PRINTLN("Failed to write data to memory!"); // DEBUG
         delay(100); // DEBUG
 
         // TODO: Implement error code.
+    } else {
+        DEBUG_PRINTLN("Settings saved!"); // DEBUG
+        delay(100); // DEBUG
     }
     nextFreeEepromAdress += packetSize;
 
@@ -122,35 +125,35 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<Key *> &keymapList)
     delete[](payloadAsBareKeys);
 
     // DEBUG
-    Serial.println("Data:");
     for (unsigned int i = 0; i < keymapList.length; i++)
     {
-        Serial.println("{");
+        DEBUG_PRINT("Data ");
+        DEBUG_PRINT(i);
+        DEBUG_PRINTLN(":");
         for (int j = 0; j < normalKeyCount; j++)
         {
-            Serial.print("    ( pin: ");
-            Serial.print((*keymapList[i])[j].pin);
-            Serial.print(", keyCode: ");
-            Serial.print((*keymapList[i])[j].keyCode);
-            Serial.println(" )");
+            DEBUG_PRINT("    ( pin: ");
+            DEBUG_PRINT((*keymapList[i])[j].pin);
+            DEBUG_PRINT(", keyCode: ");
+            DEBUG_PRINT((*keymapList[i])[j].keyCode);
+            DEBUG_PRINTLN(" )");
         }
-        Serial.println("}");
     }
     delay(100);
     // DEBUG
 
     // DEBUG
-    // Serial.println("DATA:::::");
+    // DEBUG_PRINTLN("DATA:::::");
     // for(int i = 0; i < packet.payloadLength; i++) {
-    //     Serial.println(packet.payload[i], HEX);
+    //     DEBUG_PRINTLN(packet.payload[i], HEX);
     // }
-    // Serial.println(":::::");
+    // DEBUG_PRINTLN(":::::");
 
-    // Serial.println("Finished loading.");
+    // DEBUG_PRINTLN("Finished loading.");
 
-    // Serial.println();
-    // Serial.print("Packet size: ");
-    // Serial.println(packetSize);
+    // DEBUG_PRINTLN();
+    // DEBUG_PRINT("Packet size: ");
+    // DEBUG_PRINTLN(packetSize);
     // delay(100);
     // DEBUG
 
@@ -172,8 +175,8 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *&payloadAsB
         if (!foundPacket)
             return false;
 
-        Serial.println("Began Converting DataPacket to Keymaps..."); // DEBUG
-        delay(100);                                                  // DEBUG
+        // DEBUG_PRINTLN("Began Converting DataPacket to Keymaps..."); // DEBUG
+        // delay(100);                                                  // DEBUG
 
         amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
         delete[](payloadAsBareKeys);
@@ -186,14 +189,14 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *&payloadAsB
             bool isValid = IsKeyValid(payloadAsBareKeys[i]);
 
             // DEBUG
-            Serial.print("IsValid?: "); 
-            Serial.print(isValid); 
-            Serial.print("  {");
-            Serial.print(" .pin: ");
-            Serial.print(payloadAsBareKeys[i].pin);
-            Serial.print(", .keyCode: ");
-            Serial.print(payloadAsBareKeys[i].keyCode);
-            Serial.println(" }");
+            DEBUG_PRINT("IsValid?: "); 
+            DEBUG_PRINT(isValid); 
+            DEBUG_PRINT("  {");
+            DEBUG_PRINT(" .pin: ");
+            DEBUG_PRINT(payloadAsBareKeys[i].pin);
+            DEBUG_PRINT(", .keyCode: ");
+            DEBUG_PRINT(payloadAsBareKeys[i].keyCode);
+            DEBUG_PRINTLN(" }");
             delay(100);
             // DEBUG
             if (!isValid)
@@ -222,7 +225,7 @@ bool Controller::RetrieveDataPacketFromMemory(DataPacket &packet, unsigned int &
             packetAdress++;
             if (packetAdress >= EEPROM.length())
             {
-                Serial.println("Failed to read data from memory!"); // DEBUG
+                DEBUG_PRINTLN("Failed to read data from memory!"); // DEBUG
                 delay(100);                                         // DEBUG
 
                 return false;
@@ -256,17 +259,17 @@ void Controller::ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsi
             keyMap[j].keyCode = currentKey.keyCode;
 
             // // DEBUG
-            // Serial.println("BareKey:");
-            // Serial.print("    .pin: ");
-            // Serial.println(currentKey.pin);
-            // Serial.print("    .keyCode: ");
-            // Serial.println(currentKey.keyCode);
+            // DEBUG_PRINTLN("BareKey:");
+            // DEBUG_PRINT("    .pin: ");
+            // DEBUG_PRINTLN(currentKey.pin);
+            // DEBUG_PRINT("    .keyCode: ");
+            // DEBUG_PRINTLN(currentKey.keyCode);
 
-            // Serial.println("ConvertedKey:");
-            // Serial.print("    .pin: ");
-            // Serial.println(keyMap[j].pin);
-            // Serial.print("    .keyCode: ");
-            // Serial.println(keyMap[j].keyCode);
+            // DEBUG_PRINTLN("ConvertedKey:");
+            // DEBUG_PRINT("    .pin: ");
+            // DEBUG_PRINTLN(keyMap[j].pin);
+            // DEBUG_PRINT("    .keyCode: ");
+            // DEBUG_PRINTLN(keyMap[j].keyCode);
             // delay(100);
             // // DEBUG
         }
@@ -290,7 +293,7 @@ void Controller::CycleKeyMap() // TODO: Check if working.
     if (customKeyMaps.IsEmpty())
     {
         // We can't cycle through an empty list of keymaps...
-        Serial.println("Empty"); // DEBUG
+        DEBUG_PRINTLN("Empty"); // DEBUG
         SignalErrorToUser();
         return;
     }
@@ -312,7 +315,7 @@ void Controller::CycleKeyMap() // TODO: Check if working.
 
 void Controller::ChangeKeyMap(Key *keyMap)
 {
-    Serial.println("Changing keymap"); // DEBUG
+    DEBUG_PRINTLN("Changing keymap"); // DEBUG
     currentKeyMap = keyMap;
     ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
 }
@@ -477,7 +480,7 @@ void Controller::ExecuteSpecialCommands()
                         // if we did a long press in editmode....
                         if (OnLongPress(specialKey, longPressDuration))
                         {
-                            // Serial.println("Long press, released. Save to memory..."); // DEBUG
+                            // DEBUG_PRINTLN("Long press, released. Save to memory..."); // DEBUG
                             SaveControllerSettings();
                         }
                     }
@@ -495,7 +498,7 @@ void Controller::ExecuteSpecialCommands()
                     {
                         if (OnLongPress(specialKey, longPressDuration))
                         {
-                            // Serial.println("Long press, released. Delete keymap..."); // DEBUG
+                            // DEBUG_PRINTLN("Long press, released. Delete keymap..."); // DEBUG
                             DeleteCurrentKeyMap();
                         }
                     }
@@ -503,7 +506,7 @@ void Controller::ExecuteSpecialCommands()
                 }
                 }
 
-                //Serial.println((millis() - specialKey.timeOfActivation)); // DEBUG
+                //DEBUG_PRINTLN((millis() - specialKey.timeOfActivation)); // DEBUG
             }
         }
     }
@@ -549,8 +552,8 @@ void Controller::SaveControllerSettings()
     unsigned long timeNeeded = customKeyMaps.length * normalKeyCount * sizeof(BareKeyboardKey) * 5;
 
     // // DEBUG
-    // Serial.print("Time needed to save: ");
-    // Serial.println(timeNeeded);
+    // DEBUG_PRINT("Time needed to save: ");
+    // DEBUG_PRINTLN(timeNeeded);
     // // DEBUG
 
     // Signal that we are saving. Loop will wait for 800ms total.
@@ -588,15 +591,17 @@ void Controller::DeleteCurrentKeyMap()
     // DEBUG
     for (unsigned int i = 0; i < customKeyMaps.length; i++)
     {
-        Serial.println(" Before deleting{");
+        DEBUG_PRINT("Before deleting ");
+        DEBUG_PRINT(i);
+        DEBUG_PRINTLN(":");
         for (int j = 0; j < normalKeyCount; j++)
         {
-            Serial.print("    .pin: ");
-            Serial.println((*customKeyMaps[i])[j].pin);
-            Serial.print("    .keyCode: ");
-            Serial.println((*customKeyMaps[i])[j].keyCode);
+            DEBUG_PRINT("    ( pin: ");
+            DEBUG_PRINT((*customKeyMaps[i])[j].pin);
+            DEBUG_PRINT(", keyCode: ");
+            DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
+            DEBUG_PRINTLN(" )");
         }
-        Serial.println("}");
     }
     delay(100);
     // DEBUG
@@ -612,7 +617,7 @@ void Controller::DeleteCurrentKeyMap()
         // If we deleted the last object in the list...
         if (customKeyMaps.IsEmpty())
         {
-            Serial.println("Switched to default keymap"); // DEBUG
+            DEBUG_PRINTLN("Switched to default keymap"); // DEBUG
             ChangeKeyMap(defaultKeyMap);
             customKeyMapIndex = 0;
         }
@@ -627,58 +632,60 @@ void Controller::DeleteCurrentKeyMap()
             nextKeyMapPtr = customKeyMaps[customKeyMapIndex];
             if (nextKeyMapPtr != nullptr)
             {
-                Serial.print("Switched to keymap "); // DEBUG
-                Serial.println(customKeyMapIndex);   // DEBUG
+                DEBUG_PRINT("Switched to keymap "); // DEBUG
+                DEBUG_PRINTLN(customKeyMapIndex);   // DEBUG
                 ChangeKeyMap(*nextKeyMapPtr);
             }
             else
             {
-                Serial.print("Failed to delete keymap at "); // DEBUG
-                Serial.println(customKeyMapIndex);           // DEBUG
+                DEBUG_PRINT("Failed to delete keymap at "); // DEBUG
+                DEBUG_PRINTLN(customKeyMapIndex);           // DEBUG
                 // TODO: Throw error. We failed to retrieve the keymap at position customKeyMapIndex.
             }
         }
 
         if (*removedKeyMapPtr != nullptr) // TODO: Is this needed?
         {
-            Serial.println("Deleted pointer... *removedKeyMapPtr"); // DEBUG
+            DEBUG_PRINTLN("Deleted pointer... *removedKeyMapPtr"); // DEBUG
             delete (*removedKeyMapPtr);
         }
     }
     else
     {
         // TODO: Throw error. We failed to delete the keyMap.
-        Serial.print("Something went really wrong..."); // DEBUG
-        Serial.println(customKeyMapIndex);              // DEBUG
+        DEBUG_PRINT("Something went really wrong..."); // DEBUG
+        DEBUG_PRINTLN(customKeyMapIndex);              // DEBUG
     }
 
     delete (removedKeyMapPtr);                             // TODO: Check if this is correct or not.
-    Serial.println("Deleted pointer... removedKeyMapPtr"); // DEBUG
+    DEBUG_PRINTLN("Deleted pointer... removedKeyMapPtr"); // DEBUG
     ToggleEditMode();
 
     // DEBUG
-    Serial.print("Amount of keymaps left: ");
-    Serial.println(customKeyMaps.length);
-    Serial.print("Current position: ");
-    Serial.println(customKeyMapIndex);
+    DEBUG_PRINT("Amount of keymaps left: ");
+    DEBUG_PRINTLN(customKeyMaps.length);
+    DEBUG_PRINT("Current position: ");
+    DEBUG_PRINTLN(customKeyMapIndex);
     // DEBUG
 
     // DEBUG
-    Serial.println(" After deleting {");
     for (unsigned int i = 0; i < customKeyMaps.length; i++)
     {
+        DEBUG_PRINT("After deleting ");
+        DEBUG_PRINT(i);
+        DEBUG_PRINTLN(":");
         for (int j = 0; j < normalKeyCount; j++)
         {
-            Serial.print("    .pin: ");
-            Serial.println((*customKeyMaps[i])[j].pin);
-            Serial.print("    .keyCode: ");
-            Serial.println((*customKeyMaps[i])[j].keyCode);
+            DEBUG_PRINT("    ( pin: ");
+            DEBUG_PRINT((*customKeyMaps[i])[j].pin);
+            DEBUG_PRINT(", keyCode: ");
+            DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
+            DEBUG_PRINTLN(" )");
         }
-        Serial.println("}");
     }
     if (customKeyMaps.length == 0)
     {
-        Serial.println("avaiableKeyMaps is Empty");
+        DEBUG_PRINTLN("avaiableKeyMaps is Empty");
     }
     delay(100);
     // DEBUG
@@ -712,30 +719,33 @@ bool Controller::CreateNewKeyMap()
 
             successful = true;
 
+            //DEBUG_PRINTLN("Created new keymap!"); // DEBUG
+            delay(100); // DEBUG
+
             // // DEBUG
-            // Serial.println();
-            // Serial.println("New current keymap:");
+            // DEBUG_PRINTLN();
+            // DEBUG_PRINTLN("New current keymap:");
             // for (int i = 0; i < normalKeyCount; i++)
             // {
-            //     Serial.print("Current .pin = ");
-            //     Serial.print(currentKeyMap[i].pin);
-            //     Serial.print(", .keyCode = ");
-            //     Serial.println(currentKeyMap[i].keyCode);
+            //     DEBUG_PRINT("Current .pin = ");
+            //     DEBUG_PRINT(currentKeyMap[i].pin);
+            //     DEBUG_PRINT(", .keyCode = ");
+            //     DEBUG_PRINTLN(currentKeyMap[i].keyCode);
             // }
-            // Serial.print("Amount of keymaps: ");
-            // Serial.println(customKeyMaps.length);
+            // DEBUG_PRINT("Amount of keymaps: ");
+            // DEBUG_PRINTLN(customKeyMaps.length);
             // delay(100);
             // // DEBUG
         }
         else
         {
-            // Serial.println("Something messed up"); // DEBUG
+            // DEBUG_PRINTLN("Something messed up"); // DEBUG
             // TODO: Error we failed to retrieve the newly added keymap.
         }
     }
     else
     {
-        // Serial.println("We don't have enought space to create another keymap..."); // DEBUG
+        // DEBUG_PRINTLN("We don't have enought space to create another keymap..."); // DEBUG
         // TODO: Error we don't have space to create another keyMap.
     }
 

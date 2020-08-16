@@ -45,11 +45,11 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
     }
 
     // // DEBUG
-    // Serial.print("Reading: ");
+    // DEBUG_PRINT("Reading: ");
     // for(int i = 0; i < packet.payloadLength; i++) {
-    //     Serial.print(packet.payload[i], HEX);
+    //     DEBUG_PRINT(packet.payload[i], HEX);
     // }
-    // Serial.println();
+    // DEBUG_PRINTLN();
     // delay(100);
     // // DEBUG
 
@@ -91,11 +91,11 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     currentAdress += sizeof(packet.etx);
 
     // // DEBUG
-    // Serial.print("Putting down: ");
+    // DEBUG_PRINT("Putting down: ");
     // for(int i = 0; i < packet.payloadLength; i++) {
-    //     Serial.print(packet.payload[i], HEX);
+    //     DEBUG_PRINT(packet.payload[i], HEX);
     // }
-    // Serial.println();
+    // DEBUG_PRINTLN();
     // delay(100);
     // // DEBUG
 
@@ -111,6 +111,9 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     }
 
     packetSize = currentAdress - adress;
+    DEBUG_PRINT("Size of packet: "); // DEBUG
+    DEBUG_PRINTLN(packetSize); // DEBUG
+    delay(100); // DEBUG
     delete(dataPtr);
     return true; // Package saved successfully.
 }
