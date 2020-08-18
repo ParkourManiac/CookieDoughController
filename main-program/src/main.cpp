@@ -29,16 +29,14 @@ void setup()
     // Without this delay the serial port sends a few weird null letters in serial monitor when initially connected.
     delay(1000);
 
-    controller.Setup(); // SRAM: -??
+    controller.Setup(); // SRAM: -209
 }
 
 void loop()
 {
-    controller.Update(); // SRAM: -??
+    controller.Update(); // SRAM: -327
     delay(1000); // DEBUG
     Serial.println(freeMemory()); // DEBUG
 }
 
 // "If you run out of SRAM..." - https://www.arduino.cc/en/tutorial/memory
-
-// TODO: ADD ISSUE ON GITHUB. "Förhindra att mikrokontrollern får slut på SRAM, eller att man skriver in för många keymaps i EEPROM."

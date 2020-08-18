@@ -19,9 +19,9 @@ void Controller::Setup()
     // customKeyMaps.Add(keys);
     // SaveKeyMapsToMemory(customKeyMaps);
 
-    LoadKeymapsFromMemoryIntoList(customKeyMaps); // SRAM: -??
-    ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount); //SRAM: -??
-    ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount); //SRAM: -??
+    LoadKeymapsFromMemoryIntoList(customKeyMaps); // SRAM: -162 (When loading one keymap of 4 keys).
+    ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount); //SRAM: -0
+    ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount); //SRAM: -0
 
     // // DEBUG
     // DEBUG_PRINTLN();
@@ -51,17 +51,17 @@ void Controller::Setup()
 
 void Controller::Update()
 {
-    ReadPinValuesForKeyMap(currentKeyMap, normalKeyCount); // SRAM: -??
-    ReadPinValuesForKeyMap(specialKeys, specialKeyCount); // SRAM: -??
+    ReadPinValuesForKeyMap(currentKeyMap, normalKeyCount); // SRAM: -6
+    ReadPinValuesForKeyMap(specialKeys, specialKeyCount); // SRAM: -6
 
-    ExecuteSpecialCommands(); // SRAM: -??
+    ExecuteSpecialCommands(); // SRAM: -105
     if (editmode.enabled)
     {
-        editmode.EditModeLoop(currentKeyMap); // SRAM: -??
+        editmode.EditModeLoop(currentKeyMap); // SRAM: -2
     }
     else
     {
-        SendKeyInfo(); // SRAM: -??
+        SendKeyInfo(); // SRAM: -2
     }
 }
 
