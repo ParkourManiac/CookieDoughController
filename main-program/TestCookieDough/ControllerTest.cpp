@@ -81,8 +81,8 @@ void RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse()
     // Set up packet
     // Set up defect Packet
     BareKeyboardKey defectKey1, defectKey2;
-    defectKey1.pin = 96734;
-    defectKey2.pin = 12345;
+    defectKey1.pin = 123;
+    defectKey2.pin = 111;
     defectKey1.keyCode = 2;
     defectKey2.keyCode = 4;
     BareKeyboardKey defectData[2] = {
@@ -110,8 +110,8 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
     Controller controller = SetUpController();
     // Set up defect Packet
     BareKeyboardKey defectKey1, defectKey2;
-    defectKey1.pin = 12313;
-    defectKey2.pin = 54325;
+    defectKey1.pin = 169;
+    defectKey2.pin = 222;
     defectKey1.keyCode = 2;
     defectKey2.keyCode = 4;
     BareKeyboardKey defectData[2] = {
@@ -334,7 +334,7 @@ void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
     SpecialKey specialKeysConfiguration[0];
     Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
     BareKeyboardKey key;
-    key.pin = 94234;
+    key.pin = 52;
     key.keyCode = 1337;
 
     bool result = controller.IsKeyValid(key);
@@ -393,10 +393,10 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
     SpecialKey specialKeysConfiguration[0];
     Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
     BareKeyboardKey key1, key2, key3, key4;
-    key1.pin = 14028;
-    key2.pin = 39675;
-    key3.pin = 45786;
-    key4.pin = 53188;
+    key1.pin = 111;
+    key2.pin = 24;
+    key3.pin = 91;
+    key4.pin = 87;
     key1.keyCode = 4;
     key2.keyCode = 26;
     key3.keyCode = 22;
@@ -431,10 +431,10 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
     SpecialKey specialKeysConfiguration[0];
     Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
     BareKeyboardKey defectKey1, defectKey2, defectKey3, defectKey4, validKey1, validKey2, validKey3, validKey4;
-    defectKey1.pin = 14028;
-    defectKey2.pin = 39675;
-    defectKey3.pin = 45786;
-    defectKey4.pin = 53188;
+    defectKey1.pin = 140;
+    defectKey2.pin = 75;
+    defectKey3.pin = 86;
+    defectKey4.pin = 188;
     defectKey1.keyCode = 4;
     defectKey2.keyCode = 26;
     defectKey3.keyCode = 22;

@@ -113,7 +113,7 @@ void CopyKeyMapToTemporary_TempCopyIsOverwrittenWithTheValuesOfTheProvidedKeyMap
 {
     EditMode em = EditMode(true);
     Key expected1 = Key(1, 1);
-    Key expected2 = Key(1337, 420);
+    Key expected2 = Key(37, 420);
     Key keymap[normalKeyCount] = {
         expected1,
         expected2,
@@ -129,7 +129,7 @@ void CopyKeyMapToTemporary_TempCopyIsOverwrittenWithTheValuesOfTheProvidedKeyMap
 void RestoreKeyMapFromTemporaryCopy_ProvidedKeyMapIsRestoredToStateWhenCopyKeyMapToTemporaryWasCalled()
 {
     EditMode em = EditMode(true);
-    int expectedPin = 23;
+    uint8_t expectedPin = 23;
     int expectedKeyCode = 3;
     Key keymap[normalKeyCount] = {
         Key(expectedPin, 1),
@@ -137,8 +137,8 @@ void RestoreKeyMapFromTemporaryCopy_ProvidedKeyMapIsRestoredToStateWhenCopyKeyMa
     };
 
     em.CopyKeyMapToTemporary(keymap);
-    keymap[0].pin = 983;
-    keymap[1].keyCode = 8787;
+    keymap[0].pin = 98;
+    keymap[1].keyCode = 87;
     em.RestoreKeyMapFromTemporaryCopy(keymap);
 
     ASSERT_TEST(keymap[0].pin == expectedPin && keymap[1].keyCode == expectedKeyCode);

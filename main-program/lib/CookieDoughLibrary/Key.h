@@ -1,13 +1,15 @@
 #ifndef KEY_H
 #define KEY_H
 
+#include <stdint.h>
+
 /**
  * @brief Used to marks a pin as a key.
  * Contains the pin number.
  */
 struct IKey
 {
-    int pin; /** The pin number. */
+    uint8_t pin; /** The pin number. */
 };
 
 /**
@@ -39,7 +41,7 @@ struct BareKeyboardKey : virtual IKey
 struct Key : virtual BareKeyboardKey, virtual IPinState
 {
     Key() {}
-    Key(int _pin, int _keyCode)
+    Key(uint8_t _pin, int _keyCode)
     {
         pin = _pin;
         keyCode = _keyCode;
@@ -65,7 +67,7 @@ struct SpecialKey : virtual IPinState
 {
     SpecialFunction function; /**< The special function tied to the key. */
 
-    SpecialKey(int _pin, SpecialFunction _function)
+    SpecialKey(uint8_t _pin, SpecialFunction _function)
     {
         pin = _pin;
         function = _function;
@@ -90,9 +92,9 @@ void ConfigurePinForKey(IKey &key);
  * @param keyMapLength The length of the keyMap.
  */
 template <class T>
-void ConfigurePinsForKeyMap(T *keyMap, int keyMapLength)
+void ConfigurePinsForKeyMap(T *keyMap, unsigned int keyMapLength)
 {
-    for (int i = 0; i < keyMapLength; i++)
+    for (unsigned int i = 0; i < keyMapLength; i++)
     {
         ConfigurePinForKey((IKey &)keyMap[i]);
     }
@@ -111,9 +113,9 @@ void DebounceRead(IPinState &key);
  * the provided keyMap.
  */
 template <class T>
-void ReadPinValuesForKeyMap(T *keyMap, int keyMapLength)
+void ReadPinValuesForKeyMap(T *keyMap, unsigned int keyMapLength)
 {
-    for (int i = 0; i < keyMapLength; i++)
+    for (unsigned int i = 0; i < keyMapLength; i++)
     {
         DebounceRead((IPinState &)keyMap[i]);
     }

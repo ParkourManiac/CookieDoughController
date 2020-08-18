@@ -14,7 +14,7 @@ extern unsigned int digitalRead_invocations;
 
 void ConfigurePinForKey_IKeysPinIsPassedToPinMode()
 {
-    int expectedPin = 2;
+    uint8_t expectedPin = 2;
     IKey key = IKey{.pin = expectedPin};
 
     ConfigurePinForKey(key);
@@ -24,7 +24,7 @@ void ConfigurePinForKey_IKeysPinIsPassedToPinMode()
 
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey()
 {
-    int expectedPin = 2;
+    uint8_t expectedPin = 2;
     Key key = Key(expectedPin, 1337);
 
     ConfigurePinForKey(key);
@@ -34,7 +34,7 @@ void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey()
 
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey()
 {
-    int expectedPin = 2;
+    uint8_t expectedPin = 2;
     SpecialKey key = SpecialKey(expectedPin, toggleDefaultKeyMap);
 
     ConfigurePinForKey(key);
@@ -343,7 +343,7 @@ void ReadPinValuesForKeyMap_CorrectlyParsesKeyPin()
     Key keymap[length] = {
         Key(3, 1337),
     };
-    int expectedPin = 3;
+    uint8_t expectedPin = 3;
 
     ReadPinValuesForKeyMap(keymap, length);
 
