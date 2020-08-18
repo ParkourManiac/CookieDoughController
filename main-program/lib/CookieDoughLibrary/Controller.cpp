@@ -18,7 +18,7 @@ void Controller::Setup()
     // nextFreeEepromAdress = 50;
     // customKeyMaps.Add(keys);
     // SaveKeyMapsToMemory(customKeyMaps);
-
+    ChangeKeyMap(defaultKeyMap); // Make sure defaultKeyMap is a BareKeyboardKey*.
     LoadKeymapsFromMemoryIntoList(customKeyMaps); // SRAM: -162 (When loading one keymap of 4 keys).
     ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount); //SRAM: -0
     ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount); //SRAM: -0
@@ -65,7 +65,7 @@ void Controller::Update()
     }
 }
 
-void Controller::SaveKeyMapsToMemory(LinkedList<Key *> keymapList) // TODO: Needs to be tested.
+void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList) // TODO: Needs to be tested. // TODO: Refactored to BareKeyboardKey. Check if code is necessary.
 {
     unsigned int serializedSize = sizeof(BareKeyboardKey[keymapList.length * normalKeyCount]);
     // Key *serializedKeyMaps = new Key[keymapList.length * normalKeyCount];
@@ -107,7 +107,7 @@ void Controller::SaveKeyMapsToMemory(LinkedList<Key *> keymapList) // TODO: Need
     delete (serializedKeyMaps);
 }
 
-void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<Key *> &keymapList)
+void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> &keymapList) // Refactored to BareKeyboardKey. Check if working.
 {
     unsigned int packetAdress;
     unsigned int packetSize;
@@ -245,17 +245,17 @@ void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyb
     }
 }
 
-void Controller::ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<Key *> &keymapList)
+void Controller::ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> &keymapList) // NOTE: Refactored to BareKeyboardKeys
 {
     // Convert bare keys to keys with pin state
     unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
     for (unsigned int i = 0; i < amountOfKeymaps; i++) // For each keymap
     {
-        Key *keyMap = new Key[normalKeyCount];
+        BareKeyboardKey *keyMap = new BareKeyboardKey[normalKeyCount];
         for (int j = 0; j < normalKeyCount; j++) // For each key in a keymap
         {
             BareKeyboardKey currentKey = keys[i * normalKeyCount + j];
-            keyMap[j].pin = currentKey.pin;
+            keyMap[j].pin = currentKey.pin; // TODO: Refactored to BareKeyboardKeys... Is this step neccessary when working with BareKeyboardKeys?
             keyMap[j].keyCode = currentKey.keyCode;
 
             // // DEBUG
@@ -288,7 +288,7 @@ bool Controller::IsKeyValid(IKey key)
     return false;
 }
 
-void Controller::CycleKeyMap() // TODO: Check if working.
+void Controller::CycleKeyMap() // TODO: Check if working. // Refactored for BareKeyboardKeys.
 {
     if (customKeyMaps.IsEmpty())
     {
@@ -300,29 +300,39 @@ void Controller::CycleKeyMap() // TODO: Check if working.
 
     // If we are using the default. Switch back to the
     // previous keymap. Otherwise move to the next.
-    bool isDefault = (currentKeyMap == defaultKeyMap);
+    bool isDefault = IsUsingDefaultKeymap(); // TODO: Refactor this to use a function called IsUsingDefaultKeymap. // Old code: (currentKeyMap == defaultKeyMap);
     int nextIndex = (isDefault) ? customKeyMapIndex : customKeyMapIndex + 1;
 
     customKeyMapIndex = nextIndex % customKeyMaps.length;
-    Key **nextKeyMapPtr = customKeyMaps[customKeyMapIndex];
+    BareKeyboardKey **nextKeyMapPtr = customKeyMaps[customKeyMapIndex];
 
     if (nextKeyMapPtr != nullptr)
     {
-        Key *nextKeyMap = *(nextKeyMapPtr);
+        BareKeyboardKey *nextKeyMap = *(nextKeyMapPtr);
         ChangeKeyMap(nextKeyMap);
     }
 }
 
-void Controller::ChangeKeyMap(Key *keyMap)
+void Controller::ChangeKeyMap(BareKeyboardKey *keyMap) // Refactored for BareKeyboardKeys.
 {
     DEBUG_PRINTLN("Changing keymap"); // DEBUG
-    currentKeyMap = keyMap;
+    // Overwrite currentKeyMap with the keys we want to equip.
+    for(int i = 0; i < normalKeyCount; i++) 
+    {
+        currentKeyMap[i] = Key(keyMap[i].pin, keyMap[i].keyCode);
+    }
+
+    // Perform a key release for all active buttons.
+    WipeKeyboardEventBuffer();
+    SendKeyboardEvent();
+
+    // Configure pins
     ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
 }
 
-void Controller::ToggleDefaultKeyMap()
+void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys
 {
-    bool toggleToDefault = currentKeyMap != defaultKeyMap;
+    bool toggleToDefault = !IsUsingDefaultKeymap();
     if (toggleToDefault)
     {
         ChangeKeyMap(defaultKeyMap);
@@ -335,7 +345,7 @@ void Controller::ToggleDefaultKeyMap()
     else
     {
         // Toggle to custom keymap.
-        Key **lastKeyMapPtr = customKeyMaps[customKeyMapIndex];
+        BareKeyboardKey **lastKeyMapPtr = customKeyMaps[customKeyMapIndex];
         if (lastKeyMapPtr != nullptr)
         {
             ChangeKeyMap(*(lastKeyMapPtr));
@@ -367,7 +377,7 @@ void Controller::SendKeyInfo()
             {
                 // Send keypress
                 buf[index] = key.keyCode;
-                Serial.write(buf, 8);
+                SendKeyboardEvent();
             }
         }
         else if (OnKeyRelease(key))
@@ -403,10 +413,23 @@ void Controller::SendKeyInfo()
                     buf[0] = 0;
 
                 // Send release keypress
-                Serial.write(buf, 8);
+                SendKeyboardEvent();
             }
         }
     }
+}
+
+void Controller::WipeKeyboardEventBuffer() 
+{
+    for(int i = 0; i < 8; i++) 
+    {
+        buf[i] = 0;
+    }
+}
+
+void Controller::SendKeyboardEvent() 
+{
+    Serial.write(buf, 8);
 }
 
 void Controller::ExecuteSpecialCommands()
@@ -608,7 +631,7 @@ void Controller::DeleteCurrentKeyMap()
 
     // TODO: Try replacing **removedKeyMapPtr with *removedKeyMapPtr and pass in &removedKeyMapPtr to the function RemoveAtIndex.
     Key **removedKeyMapPtr = new Key *;
-    bool success = customKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr);
+    bool success = customKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr); // TODO: ERROR. REFACTORED. Change to BareKeyboardKey!
     // If we successfully removed the keymap...
     if (success)
     {
@@ -629,7 +652,7 @@ void Controller::DeleteCurrentKeyMap()
                 customKeyMapIndex = customKeyMaps.length - 1;
             }
 
-            nextKeyMapPtr = customKeyMaps[customKeyMapIndex];
+            nextKeyMapPtr = customKeyMaps[customKeyMapIndex]; // TODO: ERROR. REFACTORED. Change to BareKeyboardKey!
             if (nextKeyMapPtr != nullptr)
             {
                 DEBUG_PRINT("Switched to keymap "); // DEBUG
@@ -711,7 +734,7 @@ bool Controller::CreateNewKeyMap()
         // Add it to the list and set it to the current keymap.
         customKeyMaps.Add(newKeyMap);
         int indexOfNewKeyMap = customKeyMaps.length - 1;
-        Key **lastKeyMapPtr = customKeyMaps[indexOfNewKeyMap];
+        Key **lastKeyMapPtr = customKeyMaps[indexOfNewKeyMap]; // TODO: ERROR. REFACTORED. Change to BareKeyboardKey!
         if (lastKeyMapPtr != nullptr)
         {
             ChangeKeyMap(*lastKeyMapPtr);

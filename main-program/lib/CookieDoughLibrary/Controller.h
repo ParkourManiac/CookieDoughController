@@ -12,19 +12,20 @@
 class Controller
 {
 private:
-    Key *defaultKeyMap;
+    Key *defaultKeyMap; // TODO: Change defaultKeyMap into BareKeyboardKeys. 
+                        // TODO: Replace all evalutations where we check if "currentKeyMap == defaultKeyMap" with function IsUsingDefaultKeymap().
     int normalKeyCount;
     
     SpecialKey *specialKeys;
     int specialKeyCount;
 
-    Key *currentKeyMap = defaultKeyMap;
+    Key *currentKeyMap = new Key[normalKeyCount]; //defaultKeyMap;
     unsigned int customKeyMapIndex = 0;
 
-    LinkedList<Key *> *customKeyMapsPtr = new LinkedList<Key *>();
-    LinkedList<Key *> customKeyMaps = *customKeyMapsPtr;
+    LinkedList<BareKeyboardKey *> *customKeyMapsPtr = new LinkedList<BareKeyboardKey *>();
+    LinkedList<BareKeyboardKey *> customKeyMaps = *customKeyMapsPtr;
 
-    uint8_t buf[8] ={ 0 }; // Keyboard report buffer.
+    uint8_t buf[8] ={ 0 }; // Keyboard report buffer. // TODO: Refactor to use a buffer size variable.
 
     unsigned int eepromAdress = 0;
     unsigned int nextFreeEepromAdress = 0;
@@ -66,7 +67,7 @@ public:
      *
      * @param keyMapList The list of keymaps to be saved.
      */
-    void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList);
+    void SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keyMapList);
 
     /**
      * @brief If present on the EEPROM, Loads a list of keymaps from memory
@@ -74,7 +75,7 @@ public:
      *
      * @param keyMapList The keyMap list to store the result.
      */
-    void LoadKeymapsFromMemoryIntoList(LinkedList<Key *> &keyMapList);
+    void LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> &keyMapList); // NOTE: Refactored to BareKeyboardKeys
 
     /**
      * @brief Retrieves the saved BareKeyboardKeys stored in the EEPROM.
@@ -115,7 +116,7 @@ public:
      * @param amountOfKeys The amount of keys to be inserted.
      * @param keymapList The list in which the keys will be inserted.
      */
-    void ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<Key *> &keymapList);
+    void ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> &keymapList);
 
     /**
      * @brief Determines whether a key is valid (i.e can be used) or not.
@@ -142,7 +143,8 @@ public:
      *
      * @param index The index of the keymap to be switched to.
      */
-    void ChangeKeyMap(Key *keyMap);
+    void ChangeKeyMap(BareKeyboardKey *keyMap);
+    
     /**
      * @brief Switches to the built in default keyMap.
      */
@@ -152,6 +154,16 @@ public:
      * @brief Writes the keypress events to the buffer and sends them to the computer.
      */
     void SendKeyInfo();
+
+    /**
+     * @brief Sets the buffer to only zeroes. Thus, removing all keyboard events from the buffer.
+     */
+    void WipeKeyboardEventBuffer();
+
+    /**
+     * @brief Transmits the buffer data to the connected device through the serial port.
+     */
+    void SendKeyboardEvent();
 
     /**
      * @brief Executes the corresponding special function when a special key is pressed.

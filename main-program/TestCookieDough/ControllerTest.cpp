@@ -485,3 +485,23 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
                 result[2].pin == validData[2].pin &&
                 result[3].pin == validData[3].pin);
 }
+
+void WipeKeyboardEventBuffer_BufferOnlyContainsZeroes() 
+{
+    ASSERT_TEST(false);
+}
+
+void SendKeyboardEvent_CallsSerialWriteWithTheCorrectBuffer()
+{
+    ASSERT_TEST(false);
+}
+
+void IsUsingDefaultKeymap_CurrentKeymapIsInUse_ReturnsTrue() 
+{
+    ASSERT_TEST(false); // TODO: Write this test
+}
+
+void IsUsingDefaultKeymap_CustomKeymapIsInUse_ReturnsFalse() 
+{
+    ASSERT_TEST(false); // TODO: Write this test
+}

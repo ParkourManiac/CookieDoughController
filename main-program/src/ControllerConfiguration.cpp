@@ -1,7 +1,7 @@
 #include <Controller.h>
 
 const int normalKeyCount = 4;
-Key defaultKeyMap[normalKeyCount] = {
+Key defaultKeyMap[normalKeyCount] = { // TODO: Refactor into bareKeyboardKeys
     // Key map Arrow keys
     Key(2, 80),
     Key(3, 82),

@@ -31,6 +31,12 @@ struct IPinState : virtual IKey
 struct BareKeyboardKey : virtual IKey
 {
     int keyCode; /** The keyboard keycode. */
+    BareKeyboardKey() {}
+    BareKeyboardKey(uint8_t _pin, int _keyCode) // TODO: Test if working.
+    {
+        pin = _pin;
+        keyCode = _keyCode;
+    }
 };
 
 /**

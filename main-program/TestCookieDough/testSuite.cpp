@@ -19,6 +19,8 @@ void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse();
 void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList();
 void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps();
 void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_LoadsTheValidKeymaps();
+void IsUsingDefaultKeymap_CurrentKeymapIsInUse_ReturnsTrue();
+void IsUsingDefaultKeymap_CustomKeymapIsInUse_ReturnsFalse();
 void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket();
 void DataPacket_StxIsTwo();
 void DataPacket_EtxIsThree();
@@ -173,6 +175,8 @@ void RunTests()
 	RUN_TEST(LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList);
 	RUN_TEST(LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps);
 	RUN_TEST(LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_LoadsTheValidKeymaps);
+	RUN_TEST(IsUsingDefaultKeymap_CurrentKeymapIsInUse_ReturnsTrue);
+	RUN_TEST(IsUsingDefaultKeymap_CustomKeymapIsInUse_ReturnsFalse);
 	RUN_TEST(Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket);
 	RUN_TEST(DataPacket_StxIsTwo);
 	RUN_TEST(DataPacket_EtxIsThree);
