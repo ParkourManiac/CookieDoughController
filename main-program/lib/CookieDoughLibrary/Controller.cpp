@@ -9,16 +9,16 @@ void Controller::Setup()
     // for(unsigned int i = 0; i < EEPROM.length(); i++) {
     //     EEPROM.write(i, 0);
     // }
-    // Key keys[normalKeyCount] = {
+    // Key keys[normalKeyCount] = { 
     //     Key(2, 4),
     //     Key(3, 26),
     //     Key(4, 22),
     //     Key(5, 7),
     // };
     // nextFreeEepromAdress = 50;
-    // customKeyMaps.Add(keys);
-    // SaveKeyMapsToMemory(customKeyMaps);
-    ChangeKeyMap(defaultKeyMap); // Make sure defaultKeyMap is a BareKeyboardKey*.
+    // customKeyMaps.Add(keys); // NOTE: HAS BEEN REFACTORED TO BARE KEYBOARD KEYS. PLEASE CHANGE THIS.
+    // SaveKeyMapsToMemory(customKeyMaps); // NOTE: HAS BEEN REFACTORED TO BARE KEYBOARD KEYS.
+    ChangeKeyMap(defaultKeyMap);
     LoadKeymapsFromMemoryIntoList(customKeyMaps); // SRAM: -162 (When loading one keymap of 4 keys).
     ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount); //SRAM: -0
     ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount); //SRAM: -0
@@ -245,7 +245,7 @@ void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyb
     }
 }
 
-void Controller::ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> &keymapList) // NOTE: Refactored to BareKeyboardKeys
+void Controller::ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> &keymapList) // NOTE: Refactored to BareKeyboardKeys. View unnessesary code.
 {
     // Convert bare keys to keys with pin state
     unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
@@ -348,7 +348,7 @@ void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys
         BareKeyboardKey **lastKeyMapPtr = customKeyMaps[customKeyMapIndex];
         if (lastKeyMapPtr != nullptr)
         {
-            ChangeKeyMap(*(lastKeyMapPtr));
+            ChangeKeyMap(*lastKeyMapPtr);
         }
     }
 }
@@ -473,7 +473,7 @@ void Controller::ExecuteSpecialCommands()
                 {
                     if (editmode.enabled)
                     {
-                        if (currentKeyMap != defaultKeyMap)
+                        if (!IsUsingDefaultKeymap())
                         {
                             editmode.RestoreKeyMapFromTemporaryCopy(currentKeyMap);
                         }
@@ -540,7 +540,7 @@ void Controller::ToggleEditMode()
     bool enteringEditMode = !editmode.enabled;
 
     // If we are trying to start editing the default keymap...
-    if (currentKeyMap == defaultKeyMap && enteringEditMode)
+    if (IsUsingDefaultKeymap() && enteringEditMode)
     {
         // If we are trying to go into
         // editmode when we have no keymaps...
@@ -555,6 +555,7 @@ void Controller::ToggleEditMode()
         }
         else
         {
+            SignalErrorToUser();
             // We don't want to edit the default keyMap...
             return;
         }
@@ -598,13 +599,13 @@ void Controller::SaveControllerSettings()
     digitalWrite(LED_BUILTIN, LOW);
 }
 
-void Controller::DeleteCurrentKeyMap()
+void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys
 {
     if (!editmode.enabled)
         return;
     if (customKeyMaps.IsEmpty())
         return;
-    if (currentKeyMap == defaultKeyMap)
+    if (IsUsingDefaultKeymap())
         return;
     // If we did not return above:
     // We are in editmode, we have atleast one keymap
@@ -630,12 +631,12 @@ void Controller::DeleteCurrentKeyMap()
     // DEBUG
 
     // TODO: Try replacing **removedKeyMapPtr with *removedKeyMapPtr and pass in &removedKeyMapPtr to the function RemoveAtIndex.
-    Key **removedKeyMapPtr = new Key *;
-    bool success = customKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr); // TODO: ERROR. REFACTORED. Change to BareKeyboardKey!
+    BareKeyboardKey **removedKeyMapPtr = new BareKeyboardKey *;
+    bool success = customKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr);
     // If we successfully removed the keymap...
     if (success)
     {
-        Key **nextKeyMapPtr = nullptr;
+        BareKeyboardKey **nextKeyMapPtr = nullptr;
 
         // If we deleted the last object in the list...
         if (customKeyMaps.IsEmpty())
@@ -652,7 +653,7 @@ void Controller::DeleteCurrentKeyMap()
                 customKeyMapIndex = customKeyMaps.length - 1;
             }
 
-            nextKeyMapPtr = customKeyMaps[customKeyMapIndex]; // TODO: ERROR. REFACTORED. Change to BareKeyboardKey!
+            nextKeyMapPtr = customKeyMaps[customKeyMapIndex];
             if (nextKeyMapPtr != nullptr)
             {
                 DEBUG_PRINT("Switched to keymap "); // DEBUG
@@ -723,18 +724,18 @@ bool Controller::CreateNewKeyMap()
 
     if (weHaveSpaceLeft)
     {
-        Key *newKeyMap = new Key[normalKeyCount]; // TODO: Maybe remove "new"?
-        // Copy the default values to the new keyMap.
+        BareKeyboardKey *newKeyMap = new BareKeyboardKey[normalKeyCount]; // TODO: Maybe remove "new"? // TODO: POTENTIAL SRAM LEAK????!!!!
+        int initialKeycode = 4; // The "a" key.
+        // Copy the default pin values to the new keyMap.
         for (int i = 0; i < normalKeyCount; i++)
         {
-            newKeyMap[i] = defaultKeyMap[i];
-            newKeyMap[i].keyCode = 4; // "a" key.
+            newKeyMap[i] = BareKeyboardKey(defaultKeyMap[i].pin, initialKeycode);
         }
 
         // Add it to the list and set it to the current keymap.
         customKeyMaps.Add(newKeyMap);
         int indexOfNewKeyMap = customKeyMaps.length - 1;
-        Key **lastKeyMapPtr = customKeyMaps[indexOfNewKeyMap]; // TODO: ERROR. REFACTORED. Change to BareKeyboardKey!
+        BareKeyboardKey **lastKeyMapPtr = customKeyMaps[indexOfNewKeyMap];
         if (lastKeyMapPtr != nullptr)
         {
             ChangeKeyMap(*lastKeyMapPtr);
@@ -743,7 +744,7 @@ bool Controller::CreateNewKeyMap()
             successful = true;
 
             //DEBUG_PRINTLN("Created new keymap!"); // DEBUG
-            delay(100); // DEBUG
+            //delay(100); // DEBUG
 
             // // DEBUG
             // DEBUG_PRINTLN();

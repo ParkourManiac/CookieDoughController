@@ -496,7 +496,7 @@ void SendKeyboardEvent_CallsSerialWriteWithTheCorrectBuffer()
     ASSERT_TEST(false);
 }
 
-void IsUsingDefaultKeymap_CurrentKeymapIsInUse_ReturnsTrue() 
+void IsUsingDefaultKeymap_DefaultKeymapIsInUse_ReturnsTrue() 
 {
     ASSERT_TEST(false); // TODO: Write this test
 }

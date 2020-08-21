@@ -12,14 +12,13 @@
 class Controller
 {
 private:
-    Key *defaultKeyMap; // TODO: Change defaultKeyMap into BareKeyboardKeys. 
-                        // TODO: Replace all evalutations where we check if "currentKeyMap == defaultKeyMap" with function IsUsingDefaultKeymap().
+    BareKeyboardKey *defaultKeyMap;
     int normalKeyCount;
     
     SpecialKey *specialKeys;
     int specialKeyCount;
 
-    Key *currentKeyMap = new Key[normalKeyCount]; //defaultKeyMap;
+    Key *currentKeyMap = new Key[normalKeyCount];
     unsigned int customKeyMapIndex = 0;
 
     LinkedList<BareKeyboardKey *> *customKeyMapsPtr = new LinkedList<BareKeyboardKey *>();
@@ -43,7 +42,7 @@ public:
      * @param _specialKeys The keymap to be used for special function keys.
      * @param amountOfSpecialKey The amount of keys inside the specialKeys keymap.
      */
-    Controller(Key *_defaultKeyMap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKey) 
+    Controller(BareKeyboardKey *_defaultKeyMap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKey) 
         : defaultKeyMap(_defaultKeyMap)
         , normalKeyCount(amountOfDefaultKeys)
         , specialKeys(_specialKeys)
