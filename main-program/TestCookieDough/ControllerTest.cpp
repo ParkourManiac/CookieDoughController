@@ -15,6 +15,8 @@ extern std::vector<uint16_t> EEPROMClass_length_return_v;
 extern uint8_t * Serial__write_param_buffer;
 extern size_t Serial__write_param_size;
 
+extern std::vector<uint8_t> EEPROMClass_update_param_val_v;
+
 BareKeyboardKey *defaultKeymap;
 SpecialKey *specialKeys;
 Controller SetUpController()
@@ -693,3 +695,153 @@ void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeOnlyhaveTwoCustomKeymap
     );
     DestroyController();
 }
+
+void SaveKeyMapsToMemory_PutsDownKeysAsBareKeyboardArrayIntoEEPROM() 
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey keymap1[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 1),
+        BareKeyboardKey(4, 2),
+        BareKeyboardKey(5, 3),
+    };
+    BareKeyboardKey keymap2[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 4),
+        BareKeyboardKey(3, 5),
+        BareKeyboardKey(4, 6),
+        BareKeyboardKey(5, 7),
+    };
+    BareKeyboardKey *expectedData = new BareKeyboardKey[controller.normalKeyCount * 2] {
+        keymap1[0], keymap1[1], keymap1[2], keymap1[3],
+        keymap2[0], keymap2[1], keymap2[2], keymap2[3]
+    };
+    uint8_t *expectedDataPtr = (uint8_t*) expectedData;
+    int payloadLength = sizeof(BareKeyboardKey[controller.normalKeyCount * 2]);
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(keymap1);
+    controller.customKeyMaps.Add(keymap2);
+    
+    controller.SaveKeyMapsToMemory(controller.customKeyMaps);
+
+    bool success = true;
+    for(int i = 0; i < payloadLength; i ++)
+    {
+        if(EEPROMClass_update_param_val_v[i] != expectedDataPtr[i])
+        {
+            success = false;
+        }
+    }
+
+    ASSERT_TEST(success);
+    DestroyController();
+    delete[] expectedData;
+}
+
+void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController() 
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey keymap1[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 1),
+        BareKeyboardKey(4, 2),
+        BareKeyboardKey(5, 3),
+    };
+    BareKeyboardKey keymap2[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 4),
+        BareKeyboardKey(3, 5),
+        BareKeyboardKey(4, 6),
+        BareKeyboardKey(5, 7),
+    };
+    BareKeyboardKey *expectedData = new BareKeyboardKey[controller.normalKeyCount * 2] {
+        keymap1[0], keymap1[1], keymap1[2], keymap1[3],
+        keymap2[0], keymap2[1], keymap2[2], keymap2[3]
+    };
+    uint8_t *expectedDataPtr = (uint8_t*) expectedData;
+    int payloadLength = sizeof(BareKeyboardKey[controller.normalKeyCount * 2]);
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(keymap1);
+    controller.customKeyMaps.Add(keymap2);
+    controller.eepromAdress = 0;
+    controller.nextFreeEepromAdress = 0;
+    // Setup mocked packet to return so that the function succeeds.
+    DataPacket packet;
+    packet.payloadLength = payloadLength;
+    packet.payload = expectedDataPtr;
+    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    int packetSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + payloadLength + sizeof(packet.etx);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    
+    controller.SaveKeyMapsToMemory(controller.customKeyMaps);
+
+    // Check that the keys were properly saved.
+    bool success = true;
+    for(int i = 0; i < payloadLength; i ++)
+    {
+        if(EEPROMClass_update_param_val_v[i] != expectedDataPtr[i])
+        {
+            success = false;
+        }
+    }
+
+    ASSERT_TEST(
+        success == true &&
+        controller.nextFreeEepromAdress == controller.eepromAdress + packetSize
+    );
+    // delete[](expectedData); // TODO: This line makes the test fail SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEepromAdressOfControllerWithCorrectValue.
+    DestroyController();
+}
+
+void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEepromAdressOfControllerWithCorrectValue() 
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey keymap1[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 1),
+        BareKeyboardKey(4, 2),
+        BareKeyboardKey(5, 3),
+    };
+    BareKeyboardKey keymap2[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 4),
+        BareKeyboardKey(3, 5),
+        BareKeyboardKey(4, 6),
+        BareKeyboardKey(5, 7),
+    };
+    BareKeyboardKey *expectedData = new BareKeyboardKey[controller.normalKeyCount * 2] {
+        keymap1[0], keymap1[1], keymap1[2], keymap1[3],
+        keymap2[0], keymap2[1], keymap2[2], keymap2[3]
+    };
+    uint8_t *expectedDataPtr = (uint8_t*) expectedData;
+    int payloadLength = sizeof(BareKeyboardKey[controller.normalKeyCount * 2]);
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(keymap1);
+    controller.customKeyMaps.Add(keymap2);
+    controller.eepromAdress = 0;
+    controller.nextFreeEepromAdress = 1337;
+    // Setup mocked packet to return so that the function succeeds.
+    DataPacket packet;
+    packet.payloadLength = payloadLength;
+    packet.payload = expectedDataPtr;
+    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    int packetSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + payloadLength + sizeof(packet.etx);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    
+    controller.SaveKeyMapsToMemory(controller.customKeyMaps);
+
+    // Check that the keys were properly saved.
+    bool success = true;
+    for(int i = 0; i < payloadLength; i ++)
+    {
+        if(EEPROMClass_update_param_val_v[i] != expectedDataPtr[i])
+        {
+            success = false;
+        }
+    }
+
+    ASSERT_TEST(
+        success == true &&
+        controller.nextFreeEepromAdress == controller.eepromAdress + packetSize
+    );
+    // delete[](expectedData); // This line makes the test fail SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController.
+    DestroyController();
+}
+

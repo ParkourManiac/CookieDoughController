@@ -65,7 +65,7 @@ void Controller::Update()
     }
 }
 
-void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList) // TODO: Needs to be tested. // TODO: Refactored to BareKeyboardKey. Check if code is necessary.
+void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList) // TODO: Refactored to BareKeyboardKey. Check if code is necessary.
 {
     unsigned int serializedSize = sizeof(BareKeyboardKey[keymapList.length * normalKeyCount]);
     // Key *serializedKeyMaps = new Key[keymapList.length * normalKeyCount];
@@ -101,7 +101,7 @@ void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList) /
         DEBUG_PRINTLN("Settings saved!"); // DEBUG
         delay(100); // DEBUG
     }
-    nextFreeEepromAdress += packetSize;
+    nextFreeEepromAdress = eepromAdress + packetSize;
 
     delay(500);
     delete (serializedKeyMaps);
