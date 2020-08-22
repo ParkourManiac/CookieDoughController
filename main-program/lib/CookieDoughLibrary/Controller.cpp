@@ -300,8 +300,7 @@ void Controller::CycleKeyMap() // TODO: Check if working. // Refactored for Bare
 
     // If we are using the default. Switch back to the
     // previous keymap. Otherwise move to the next.
-    bool isDefault = IsUsingDefaultKeymap(); // TODO: Refactor this to use a function called IsUsingDefaultKeymap. // Old code: (currentKeyMap == defaultKeyMap);
-    int nextIndex = (isDefault) ? customKeyMapIndex : customKeyMapIndex + 1;
+    int nextIndex = (isUsingDefaultKeymap) ? customKeyMapIndex : customKeyMapIndex + 1;
 
     customKeyMapIndex = nextIndex % customKeyMaps.length;
     BareKeyboardKey **nextKeyMapPtr = customKeyMaps[customKeyMapIndex];
@@ -326,13 +325,16 @@ void Controller::ChangeKeyMap(BareKeyboardKey *keyMap) // Refactored for BareKey
     WipeKeyboardEventBuffer();
     SendKeyboardEvent();
 
+    // Keep track if we are using the default keymap.
+    isUsingDefaultKeymap = keyMap == defaultKeyMap;
+
     // Configure pins
     ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
 }
 
 void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys
 {
-    bool toggleToDefault = !IsUsingDefaultKeymap();
+    bool toggleToDefault = !isUsingDefaultKeymap;
     if (toggleToDefault)
     {
         ChangeKeyMap(defaultKeyMap);
@@ -473,7 +475,7 @@ void Controller::ExecuteSpecialCommands()
                 {
                     if (editmode.enabled)
                     {
-                        if (!IsUsingDefaultKeymap())
+                        if (!isUsingDefaultKeymap)
                         {
                             editmode.RestoreKeyMapFromTemporaryCopy(currentKeyMap);
                         }
@@ -540,7 +542,7 @@ void Controller::ToggleEditMode()
     bool enteringEditMode = !editmode.enabled;
 
     // If we are trying to start editing the default keymap...
-    if (IsUsingDefaultKeymap() && enteringEditMode)
+    if (isUsingDefaultKeymap && enteringEditMode)
     {
         // If we are trying to go into
         // editmode when we have no keymaps...
@@ -605,7 +607,7 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys
         return;
     if (customKeyMaps.IsEmpty())
         return;
-    if (IsUsingDefaultKeymap())
+    if (isUsingDefaultKeymap)
         return;
     // If we did not return above:
     // We are in editmode, we have atleast one keymap

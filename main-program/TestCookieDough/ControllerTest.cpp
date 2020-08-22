@@ -12,17 +12,20 @@ extern std::vector<int> EEPROMClass_read_param_idx_v;
 
 extern std::vector<uint16_t> EEPROMClass_length_return_v;
 
-Key *defaultKeymap;
+extern uint8_t * Serial__write_param_buffer;
+extern size_t Serial__write_param_size;
+
+BareKeyboardKey *defaultKeymap;
 SpecialKey *specialKeys;
 Controller SetUpController()
 {
     const int normalKeyCount = 4;
-    defaultKeymap = new Key[normalKeyCount]{
+    defaultKeymap = new BareKeyboardKey[normalKeyCount]{
         // Key map Arrow keys
-        Key(2, 80),
-        Key(3, 82),
-        Key(4, 81),
-        Key(5, 79),
+        BareKeyboardKey(2, 80),
+        BareKeyboardKey(3, 82),
+        BareKeyboardKey(4, 81),
+        BareKeyboardKey(5, 79),
     };
 
     const int specialKeyCount = 3;
@@ -276,11 +279,11 @@ void ParseBareKeyboardKeysIntoKeymapList_PopulatesTheListWithTheGivenKeys()
     key8.keyCode = 16;
     BareKeyboardKey keys[amountOfKeys] = {key1, key2, key3, key4, key5, key6, key7, key8};
 
-    LinkedList<Key *> result = LinkedList<Key *>();
+    LinkedList<BareKeyboardKey *> result = LinkedList<BareKeyboardKey *>();
     controller.ParseBareKeyboardKeysIntoKeymapList(keys, amountOfKeys, result);
 
     bool isEmpty = result[0] == nullptr || result[1] == nullptr;
-    Key *resultKeymap1, *resultKeymap2;
+    BareKeyboardKey *resultKeymap1, *resultKeymap2;
     if (!isEmpty)
     {
         resultKeymap1 = *(result[0]);
@@ -303,12 +306,12 @@ void ParseBareKeyboardKeysIntoKeymapList_PopulatesTheListWithTheGivenKeys()
 void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue()
 {
     const int normalKeyCount = 4;
-    Key defaultKeymap[normalKeyCount] = {
+    BareKeyboardKey defaultKeymap[normalKeyCount] = {
         // Key map Arrow keys
-        Key(2, 0),
-        Key(3, 0),
-        Key(4, 0),
-        Key(5, 0),
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 0),
+        BareKeyboardKey(4, 0),
+        BareKeyboardKey(5, 0),
     };
     SpecialKey specialKeys[0];
     Controller controller(defaultKeymap, normalKeyCount, specialKeys, 0);
@@ -324,12 +327,12 @@ void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue()
 void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
 {
     const int normalKeyCount = 4;
-    Key defaultKeymapConfiguration[normalKeyCount] = {
+    BareKeyboardKey defaultKeymapConfiguration[normalKeyCount] = {
         // Key map Arrow keys
-        Key(2, 0),
-        Key(3, 0),
-        Key(4, 0),
-        Key(5, 0),
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 0),
+        BareKeyboardKey(4, 0),
+        BareKeyboardKey(5, 0),
     };
     SpecialKey specialKeysConfiguration[0];
     Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
@@ -367,9 +370,9 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
-    LinkedList<Key *> resultingKeymaps = LinkedList<Key *>();
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
     controller.LoadKeymapsFromMemoryIntoList(resultingKeymaps);
-    Key *result;
+    BareKeyboardKey *result;
     if (!resultingKeymaps.IsEmpty())
         result = *(resultingKeymaps[0]);
 
@@ -384,11 +387,11 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
 void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
 {
     const int normalKeyCount = 4;
-    Key defaultKeymapConfiguration[normalKeyCount] = {
-        Key(2, 0),
-        Key(3, 0),
-        Key(4, 0),
-        Key(5, 0),
+    BareKeyboardKey defaultKeymapConfiguration[normalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 0),
+        BareKeyboardKey(4, 0),
+        BareKeyboardKey(5, 0),
     };
     SpecialKey specialKeysConfiguration[0];
     Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
@@ -414,7 +417,7 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
-    LinkedList<Key *> resultingKeymaps = LinkedList<Key *>();
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
     controller.LoadKeymapsFromMemoryIntoList(resultingKeymaps);
 
     ASSERT_TEST(resultingKeymaps.IsEmpty());
@@ -422,11 +425,11 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
 
 void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_LoadsTheValidKeymaps() {
     const int normalKeyCount = 4;
-    Key defaultKeymapConfiguration[normalKeyCount] = {
-        Key(2, 0),
-        Key(3, 0),
-        Key(4, 0),
-        Key(5, 0),
+    BareKeyboardKey defaultKeymapConfiguration[normalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 0),
+        BareKeyboardKey(4, 0),
+        BareKeyboardKey(5, 0),
     };
     SpecialKey specialKeysConfiguration[0];
     Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
@@ -474,9 +477,9 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(defectPacket);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(validPacket);
 
-    LinkedList<Key *> resultingKeymaps = LinkedList<Key*>();
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey*>();
     controller.LoadKeymapsFromMemoryIntoList(resultingKeymaps);
-    Key *result;
+    BareKeyboardKey *result;
     if(!resultingKeymaps.IsEmpty()) result = *(resultingKeymaps[0]);
 
     ASSERT_TEST(resultingKeymaps.IsEmpty() == false &&
@@ -486,22 +489,111 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
                 result[3].pin == validData[3].pin);
 }
 
-void WipeKeyboardEventBuffer_BufferOnlyContainsZeroes() 
+void WipeKeyboardEventBuffer_BufferOnlyContainsZeroes()
 {
-    ASSERT_TEST(false);
+    Controller controller = SetUpController();
+    controller.buf[0] = 1;
+    controller.buf[3] = 5;
+    controller.buf[6] = 7;
+
+    controller.WipeKeyboardEventBuffer();
+
+    ASSERT_TEST(
+        controller.buf[0] == 0 &&
+        controller.buf[1] == 0 &&
+        controller.buf[2] == 0 &&
+        controller.buf[3] == 0 &&
+        controller.buf[4] == 0 &&
+        controller.buf[5] == 0 &&
+        controller.buf[6] == 0 &&
+        controller.buf[7] == 0
+    );
+    DestroyController();
+}
+
+void SendKeyboardEvent_CallsSerialWriteWithTheCorrectBufferSize()
+{
+    Controller controller = SetUpController();
+
+    controller.SendKeyboardEvent();
+
+    ASSERT_TEST(Serial__write_param_size == 8);
+    DestroyController();
 }
 
 void SendKeyboardEvent_CallsSerialWriteWithTheCorrectBuffer()
 {
-    ASSERT_TEST(false);
+    Controller controller = SetUpController();
+    uint8_t expectedBuffer[8];
+    controller.buf[0] = expectedBuffer[0] = 1;
+    controller.buf[1] = expectedBuffer[1] = 5;
+    controller.buf[2] = expectedBuffer[2] = 8;
+    controller.buf[3] = expectedBuffer[3] = 9;
+    controller.buf[4] = expectedBuffer[4] = 8;
+    controller.buf[5] = expectedBuffer[5] = 2;
+    controller.buf[6] = expectedBuffer[6] = 8;
+    controller.buf[7] = expectedBuffer[7] = 6;
+
+    controller.SendKeyboardEvent();
+
+    ASSERT_TEST(
+        Serial__write_param_buffer[0] == expectedBuffer[0] &&
+        Serial__write_param_buffer[1] == expectedBuffer[1] &&
+        Serial__write_param_buffer[2] == expectedBuffer[2] &&
+        Serial__write_param_buffer[3] == expectedBuffer[3] &&
+        Serial__write_param_buffer[4] == expectedBuffer[4] &&
+        Serial__write_param_buffer[5] == expectedBuffer[5] &&
+        Serial__write_param_buffer[6] == expectedBuffer[6] &&
+        Serial__write_param_buffer[7] == expectedBuffer[7]
+    );
+    DestroyController();
 }
 
-void IsUsingDefaultKeymap_DefaultKeymapIsInUse_ReturnsTrue() 
+void ChangeKeyMap_TheDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedToTrue() 
 {
-    ASSERT_TEST(false); // TODO: Write this test
+    Controller controller = SetUpController();
+
+    controller.ChangeKeyMap(controller.defaultKeyMap);
+
+    ASSERT_TEST(controller.isUsingDefaultKeymap == true);
+    DestroyController();
 }
 
-void IsUsingDefaultKeymap_CustomKeymapIsInUse_ReturnsFalse() 
+void ChangeKeyMap_ACustomKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse() 
 {
-    ASSERT_TEST(false); // TODO: Write this test
+    Controller controller = SetUpController();
+    BareKeyboardKey customKeymap[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 1),
+        BareKeyboardKey(3, 2),
+        BareKeyboardKey(4, 3),
+        BareKeyboardKey(5, 4),
+    };
+
+    controller.ChangeKeyMap(customKeymap);
+
+    ASSERT_TEST(controller.isUsingDefaultKeymap == false);
+    DestroyController();
+}
+
+void ChangeKeyMap_ACustomKeymapWithSimilarButNotTheSameSettingsAsDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse() 
+{
+    const int normalKeyCount = 4;
+    BareKeyboardKey defaultKeymapConfiguration[normalKeyCount] = {
+        BareKeyboardKey(2, 1),
+        BareKeyboardKey(3, 2),
+        BareKeyboardKey(4, 0),
+        BareKeyboardKey(5, 0),
+    };
+    SpecialKey specialKeysConfiguration[0];
+    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
+    BareKeyboardKey customKeymap[controller.normalKeyCount] = {
+        defaultKeymapConfiguration[0],
+        defaultKeymapConfiguration[1],
+        defaultKeymapConfiguration[2],
+        BareKeyboardKey(5, 44),
+    };
+
+    controller.ChangeKeyMap(customKeymap);
+
+    ASSERT_TEST(controller.isUsingDefaultKeymap == false);
 }

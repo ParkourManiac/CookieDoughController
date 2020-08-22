@@ -258,7 +258,7 @@ void DebounceRead_DebounceTimeExceededAndValueIsOutdated_UpdateStateValue()
     millis_return = state.lastDebounceTime + 100000;
     digitalRead_return = true; // true = Button is released.
     state.oldPinState = true;
-    state.value = true; // Button was previously pressed.
+    state.value = true;    // Button was previously pressed.
     bool expected = false; // We expect the button to be released.
 
     DebounceRead(state);
@@ -302,7 +302,7 @@ void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_D
     digitalRead_return = currentPinState;
     IPinState state;
     state.oldPinState = !currentPinState;
-    state.value = true;                   // Button was previously released.
+    state.value = true; // Button was previously released.
     millis_return = state.lastDebounceTime + 100000;
     unsigned long expectedTimeOfActivation = 1337;
     state.timeOfActivation = expectedTimeOfActivation;
@@ -315,7 +315,7 @@ void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_D
 void DebounceRead_OldPinStateIsUpdated()
 {
     IPinState state;
-    digitalRead_return = false;        // Button is pressed.
+    digitalRead_return = false;       // Button is pressed.
     state.oldPinState = true;         // Button was released.
     bool expectedOldPinState = false; // We expect it to become released.
 
@@ -362,4 +362,34 @@ void ReadPinValuesForKeyMap_UpdatesStateForAllPins()
     ReadPinValuesForKeyMap(keymap, length);
 
     ASSERT_TEST(keymap[0].oldPinState == true && keymap[1].oldPinState == true);
+}
+
+void KeyConstructor_IntializesPinAndKeycodeCorrectly()
+{
+    uint8_t expectedPin = 7;
+    int expectedKeycode = 19;
+
+    Key key = Key(expectedPin, expectedKeycode);
+
+    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode);
+}
+
+void SpecialKeyConstructor_IntializesPinAndFunctionCorrectly()
+{
+    uint8_t expectedPin = 7;
+    SpecialFunction expectedFunction = cycleKeyMap;
+
+    SpecialKey key = SpecialKey(expectedPin, expectedFunction);
+
+    ASSERT_TEST(key.pin == expectedPin && key.function == expectedFunction);
+}
+
+void BareKeyboardKeyConstructor_IntializesPinAndKeycodeCorrectly()
+{
+    uint8_t expectedPin = 7;
+    int expectedKeycode = 19;
+
+    BareKeyboardKey key = BareKeyboardKey(expectedPin, expectedKeycode);
+
+    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode);
 }

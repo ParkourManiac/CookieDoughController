@@ -18,6 +18,11 @@ private:
     SpecialKey *specialKeys;
     int specialKeyCount;
 
+    /**
+     * @brief Is true when the default keymap is equipped.
+     */
+    bool isUsingDefaultKeymap = false;
+
     Key *currentKeyMap = new Key[normalKeyCount];
     unsigned int customKeyMapIndex = 0;
 
@@ -137,10 +142,9 @@ public:
     void CycleKeyMap();
 
     /**
-     * @brief Changes the current keymap to the keymap specified at
-     * the given index (in the available keyMaps).
-     *
-     * @param index The index of the keymap to be switched to.
+     * @brief Equips the current keymap with the provided keymaps configuration.
+     * 
+     * @param keyMap A pointer to the keymap we want to equip.
      */
     void ChangeKeyMap(BareKeyboardKey *keyMap);
     
