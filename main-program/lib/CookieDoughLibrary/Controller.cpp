@@ -310,7 +310,7 @@ void Controller::CycleKeyMap() // TODO: Check if working. // Refactored for Bare
     }
 }
 
-void Controller::ChangeKeyMap(BareKeyboardKey *keyMap) // Refactored for BareKeyboardKeys.
+void Controller::ChangeKeyMap(BareKeyboardKey *keyMap) // Refactored for BareKeyboardKeys. // TODO: Needs to be tested.
 {
     DEBUG_PRINTLN("Changing keymap"); // DEBUG
     // Overwrite currentKeyMap with the keys we want to equip.
@@ -324,13 +324,13 @@ void Controller::ChangeKeyMap(BareKeyboardKey *keyMap) // Refactored for BareKey
     SendKeyboardEvent();
 
     // Keep track if we are using the default keymap.
-    isUsingDefaultKeymap = keyMap == defaultKeyMap;
+    isUsingDefaultKeymap = keyMap == defaultKeyMap; // NOTE: This line is already tested.
 
     // Configure pins
     ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
 }
 
-void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys
+void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys // TODO: Needs to be tested.
 {
     bool toggleToDefault = !isUsingDefaultKeymap;
     if (toggleToDefault)
@@ -353,7 +353,7 @@ void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys
     }
 }
 
-void Controller::SendKeyInfo()
+void Controller::SendKeyInfo() // TODO: Needs to be tested
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -432,7 +432,7 @@ void Controller::SendKeyboardEvent()
     Serial.write(buf, 8);
 }
 
-void Controller::ExecuteSpecialCommands()
+void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested.
 {
     for (int i = 0; i < specialKeyCount; i++)
     {
@@ -535,7 +535,7 @@ void Controller::ExecuteSpecialCommands()
     }
 }
 
-void Controller::ToggleEditMode()
+void Controller::ToggleEditMode() // TODO: Needs to be tested.
 {
     bool enteringEditMode = !editmode.enabled;
 
@@ -569,7 +569,7 @@ void Controller::ToggleEditMode()
     }
 }
 
-void Controller::SaveControllerSettings()
+void Controller::SaveControllerSettings() // TODO: Needs to be tested.
 {
     SaveKeyMapsToMemory(customKeyMaps);
 
@@ -599,7 +599,7 @@ void Controller::SaveControllerSettings()
     digitalWrite(LED_BUILTIN, LOW);
 }
 
-void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys
+void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. // TODO: Needs to be tested.
 {
     if (!editmode.enabled)
         return;
@@ -715,7 +715,7 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys
     // DEBUG
 }
 
-bool Controller::CreateNewKeyMap()
+bool Controller::CreateNewKeyMap() // TODO: Needs to be tested.
 {
     bool successful = false;
     // TODO: Implement real check to see if the arduino can
@@ -776,7 +776,7 @@ bool Controller::CreateNewKeyMap()
     return successful;
 }
 
-void Controller::SignalErrorToUser()
+void Controller::SignalErrorToUser() // TODO: Needs to be tested?
 {
     // We can't cycle through 0 keymaps...
     // Signal that something is wrong.
