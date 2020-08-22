@@ -107,7 +107,7 @@ void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList) /
     delete (serializedKeyMaps);
 }
 
-void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> &keymapList) // Refactored to BareKeyboardKey. Check if working.
+void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> &keymapList) // Refactored to BareKeyboardKey.
 {
     unsigned int packetAdress;
     unsigned int packetSize;
@@ -121,7 +121,7 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> &ke
         return;
     }
 
-    ParseBareKeyboardKeysIntoKeymapList(payloadAsBareKeys, amountOfKeys, keymapList);
+    ParseBareKeyboardKeyArrayIntoKeymapList(payloadAsBareKeys, amountOfKeys, keymapList);
     delete[](payloadAsBareKeys);
 
     // DEBUG
@@ -245,7 +245,7 @@ void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyb
     }
 }
 
-void Controller::ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> &keymapList) // NOTE: Refactored to BareKeyboardKeys. View unnessesary code.
+void Controller::ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> &keymapList) // NOTE: Refactored to BareKeyboardKeys.
 {
     // Convert bare keys to keys with pin state
     unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
@@ -254,9 +254,7 @@ void Controller::ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsi
         BareKeyboardKey *keyMap = new BareKeyboardKey[normalKeyCount];
         for (int j = 0; j < normalKeyCount; j++) // For each key in a keymap
         {
-            BareKeyboardKey currentKey = keys[i * normalKeyCount + j];
-            keyMap[j].pin = currentKey.pin; // TODO: Refactored to BareKeyboardKeys... Is this step neccessary when working with BareKeyboardKeys?
-            keyMap[j].keyCode = currentKey.keyCode;
+            keyMap[j] = keys[i * normalKeyCount + j];
 
             // // DEBUG
             // DEBUG_PRINTLN("BareKey:");

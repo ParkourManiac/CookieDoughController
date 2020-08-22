@@ -24,8 +24,8 @@ private:
     bool isUsingDefaultKeymap = false;
 
     Key *currentKeyMap = new Key[normalKeyCount];
-    unsigned int customKeyMapIndex = 0;
 
+    unsigned int customKeyMapIndex = 0;
     LinkedList<BareKeyboardKey *> *customKeyMapsPtr = new LinkedList<BareKeyboardKey *>();
     LinkedList<BareKeyboardKey *> customKeyMaps = *customKeyMapsPtr;
 
@@ -114,13 +114,13 @@ public:
     void ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result);
 
     /**
-     * @brief Populates the provided keymap list using the BareKeyboardKeys.
+     * @brief Populates the provided keymap list using the BareKeyboardKey array.
      * 
-     * @param keys The keys to be inserted into the list.
-     * @param amountOfKeys The amount of keys to be inserted.
+     * @param keys The array of keys to be inserted into the list.
+     * @param amountOfKeys The amount of keys in the "keys" array.
      * @param keymapList The list in which the keys will be inserted.
      */
-    void ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> &keymapList);
+    void ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> &keymapList);
 
     /**
      * @brief Determines whether a key is valid (i.e can be used) or not.
