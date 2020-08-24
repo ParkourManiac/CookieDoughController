@@ -147,6 +147,11 @@ public:
      * @param keyMap A pointer to the keymap we want to equip.
      */
     void ChangeKeyMap(BareKeyboardKey *keyMap);
+
+    /**
+     * @brief Updates the equipped custom keymap with the pin and keycode from the currentKeyMap.
+     */
+    void UpdateCurrentCustomKeymap();
     
     /**
      * @brief Switches to the built in default keyMap.

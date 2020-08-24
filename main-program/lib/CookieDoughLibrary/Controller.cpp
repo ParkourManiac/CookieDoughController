@@ -331,6 +331,16 @@ void Controller::ChangeKeyMap(BareKeyboardKey *keyMap) // Refactored for BareKey
     ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
 }
 
+void Controller::UpdateCurrentCustomKeymap()
+{
+    BareKeyboardKey *currentCustomKeymap = *(customKeyMaps[customKeyMapIndex]);
+
+    for(int i = 0; i < normalKeyCount; i++) 
+    {
+        currentCustomKeymap[i] = BareKeyboardKey(currentKeyMap[i].pin, currentKeyMap[i].keyCode);
+    }
+}
+
 void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys // TODO: Needs to be tested.
 {
     bool toggleToDefault = !isUsingDefaultKeymap;
@@ -568,10 +578,13 @@ void Controller::ToggleEditMode() // TODO: Needs to be tested.
     {
         editmode.CopyKeyMapToTemporary(currentKeyMap);
     }
+
+    UpdateCurrentCustomKeymap();
 }
 
 void Controller::SaveControllerSettings() // TODO: Needs to be tested.
 {
+    UpdateCurrentCustomKeymap();
     SaveKeyMapsToMemory(customKeyMaps);
 
     unsigned long timeNeeded = customKeyMaps.length * normalKeyCount * sizeof(BareKeyboardKey) * 5;

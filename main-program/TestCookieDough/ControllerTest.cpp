@@ -379,10 +379,11 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
         result = *(resultingKeymaps[0]);
 
     ASSERT_TEST(resultingKeymaps.IsEmpty() == false &&
-                result[0].pin == data[0].pin &&
-                result[1].pin == data[1].pin &&
-                result[2].pin == data[2].pin &&
-                result[3].pin == data[3].pin);
+                result[0].pin == data[0].pin && result[0].keyCode == data[0].keyCode &&
+                result[1].pin == data[1].pin && result[1].keyCode == data[1].keyCode &&
+                result[2].pin == data[2].pin && result[2].keyCode == data[2].keyCode &&
+                result[3].pin == data[3].pin && result[3].keyCode == data[3].keyCode
+    );
     DestroyController();
 }
 
@@ -484,11 +485,13 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
     BareKeyboardKey *result;
     if(!resultingKeymaps.IsEmpty()) result = *(resultingKeymaps[0]);
 
-    ASSERT_TEST(resultingKeymaps.IsEmpty() == false &&
-                result[0].pin == validData[0].pin &&
-                result[1].pin == validData[1].pin &&
-                result[2].pin == validData[2].pin &&
-                result[3].pin == validData[3].pin);
+    ASSERT_TEST(
+                resultingKeymaps.IsEmpty() == false &&
+                result[0].pin == validData[0].pin && result[0].keyCode == validData[0].keyCode &&
+                result[1].pin == validData[1].pin && result[1].keyCode == validData[1].keyCode &&
+                result[2].pin == validData[2].pin && result[2].keyCode == validData[2].keyCode &&
+                result[3].pin == validData[3].pin && result[3].keyCode == validData[3].keyCode
+    );
 }
 
 void WipeKeyboardEventBuffer_BufferOnlyContainsZeroes()
@@ -845,3 +848,208 @@ void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEe
     DestroyController();
 }
 
+void ToggleEditMode_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWithTheValuesPresentInCurrentKeymap()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey customKeymap[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 0),
+        BareKeyboardKey(4, 0),
+        BareKeyboardKey(5, 0),
+    };
+    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 11),
+        BareKeyboardKey(3, 22),
+        BareKeyboardKey(4, 33),
+        BareKeyboardKey(5, 44),
+    };
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(customKeymap);
+    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.CycleKeyMap(); // Selects the first custom keymap.
+    controller.currentKeyMap[0] = Key(expectedKeymap[0].pin, expectedKeymap[0].keyCode);
+    controller.currentKeyMap[1] = Key(expectedKeymap[1].pin, expectedKeymap[1].keyCode);
+    controller.currentKeyMap[2] = Key(expectedKeymap[2].pin, expectedKeymap[2].keyCode);
+    controller.currentKeyMap[3] = Key(expectedKeymap[3].pin, expectedKeymap[3].keyCode);
+
+    controller.ToggleEditMode();
+    BareKeyboardKey *resultingCustomKeymap = (*controller.customKeyMaps[0]);
+
+    ASSERT_TEST(
+        resultingCustomKeymap[0].pin == expectedKeymap[0].pin && resultingCustomKeymap[0].keyCode == expectedKeymap[0].keyCode &&
+        resultingCustomKeymap[1].pin == expectedKeymap[1].pin && resultingCustomKeymap[1].keyCode == expectedKeymap[1].keyCode &&
+        resultingCustomKeymap[2].pin == expectedKeymap[2].pin && resultingCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
+        resultingCustomKeymap[3].pin == expectedKeymap[3].pin && resultingCustomKeymap[3].keyCode == expectedKeymap[3].keyCode
+    );
+    DestroyController();
+}
+
+void SaveControllerSettings_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWithTheValuesPresentInCurrentKeymap()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey customKeymap[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 0),
+        BareKeyboardKey(4, 0),
+        BareKeyboardKey(5, 0),
+    };
+    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 11),
+        BareKeyboardKey(3, 22),
+        BareKeyboardKey(4, 33),
+        BareKeyboardKey(5, 44),
+    };
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(customKeymap);
+    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.CycleKeyMap(); // Selects the first custom keymap.
+    controller.currentKeyMap[0] = Key(expectedKeymap[0].pin, expectedKeymap[0].keyCode);
+    controller.currentKeyMap[1] = Key(expectedKeymap[1].pin, expectedKeymap[1].keyCode);
+    controller.currentKeyMap[2] = Key(expectedKeymap[2].pin, expectedKeymap[2].keyCode);
+    controller.currentKeyMap[3] = Key(expectedKeymap[3].pin, expectedKeymap[3].keyCode);
+
+    controller.SaveControllerSettings();
+    BareKeyboardKey *resultingCustomKeymap = (*controller.customKeyMaps[0]);
+
+    ASSERT_TEST(
+        resultingCustomKeymap[0].pin == expectedKeymap[0].pin && resultingCustomKeymap[0].keyCode == expectedKeymap[0].keyCode &&
+        resultingCustomKeymap[1].pin == expectedKeymap[1].pin && resultingCustomKeymap[1].keyCode == expectedKeymap[1].keyCode &&
+        resultingCustomKeymap[2].pin == expectedKeymap[2].pin && resultingCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
+        resultingCustomKeymap[3].pin == expectedKeymap[3].pin && resultingCustomKeymap[3].keyCode == expectedKeymap[3].keyCode
+    );
+    DestroyController();
+}
+
+void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWithTheValuesPresentInCurrentKeymap()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey customKeymap[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 0),
+        BareKeyboardKey(4, 0),
+        BareKeyboardKey(5, 0),
+    };
+    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 11),
+        BareKeyboardKey(3, 22),
+        BareKeyboardKey(4, 33),
+        BareKeyboardKey(5, 44),
+    };
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(customKeymap);
+    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.CycleKeyMap(); // Selects the first custom keymap.
+    controller.currentKeyMap[0] = Key(expectedKeymap[0].pin, expectedKeymap[0].keyCode);
+    controller.currentKeyMap[1] = Key(expectedKeymap[1].pin, expectedKeymap[1].keyCode);
+    controller.currentKeyMap[2] = Key(expectedKeymap[2].pin, expectedKeymap[2].keyCode);
+    controller.currentKeyMap[3] = Key(expectedKeymap[3].pin, expectedKeymap[3].keyCode);
+
+    controller.UpdateCurrentCustomKeymap();
+    BareKeyboardKey *resultingCustomKeymap = (*controller.customKeyMaps[0]);
+
+    ASSERT_TEST(
+        resultingCustomKeymap[0].pin == expectedKeymap[0].pin && resultingCustomKeymap[0].keyCode == expectedKeymap[0].keyCode &&
+        resultingCustomKeymap[1].pin == expectedKeymap[1].pin && resultingCustomKeymap[1].keyCode == expectedKeymap[1].keyCode &&
+        resultingCustomKeymap[2].pin == expectedKeymap[2].pin && resultingCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
+        resultingCustomKeymap[3].pin == expectedKeymap[3].pin && resultingCustomKeymap[3].keyCode == expectedKeymap[3].keyCode
+    );
+    DestroyController();
+}
+
+void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_UpdatesTheSelectedCustomKeymap()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey customKeymap1[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 1),
+        BareKeyboardKey(3, 1),
+        BareKeyboardKey(4, 1),
+        BareKeyboardKey(5, 1),
+    };
+    BareKeyboardKey customKeymap2[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 2),
+        BareKeyboardKey(3, 2),
+        BareKeyboardKey(4, 2),
+        BareKeyboardKey(5, 2),
+    };
+    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 11),
+        BareKeyboardKey(3, 22),
+        BareKeyboardKey(4, 33),
+        BareKeyboardKey(5, 44),
+    };
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(customKeymap1);
+    controller.customKeyMaps.Add(customKeymap2);
+    controller.ChangeKeyMap(controller.defaultKeyMap);
+    // Selects the second keymap.
+    controller.CycleKeyMap();
+    controller.CycleKeyMap();
+    // Updates the currentKeymap with the new values.
+    controller.currentKeyMap[0] = Key(expectedKeymap[0].pin, expectedKeymap[0].keyCode);
+    controller.currentKeyMap[1] = Key(expectedKeymap[1].pin, expectedKeymap[1].keyCode);
+    controller.currentKeyMap[2] = Key(expectedKeymap[2].pin, expectedKeymap[2].keyCode);
+    controller.currentKeyMap[3] = Key(expectedKeymap[3].pin, expectedKeymap[3].keyCode);
+
+    controller.UpdateCurrentCustomKeymap();
+    BareKeyboardKey *resultingSecondCustomKeymap = (*controller.customKeyMaps[1]);
+
+    ASSERT_TEST(
+        resultingSecondCustomKeymap[0].pin == expectedKeymap[0].pin && resultingSecondCustomKeymap[0].keyCode == expectedKeymap[0].keyCode &&
+        resultingSecondCustomKeymap[1].pin == expectedKeymap[1].pin && resultingSecondCustomKeymap[1].keyCode == expectedKeymap[1].keyCode &&
+        resultingSecondCustomKeymap[2].pin == expectedKeymap[2].pin && resultingSecondCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
+        resultingSecondCustomKeymap[3].pin == expectedKeymap[3].pin && resultingSecondCustomKeymap[3].keyCode == expectedKeymap[3].keyCode
+    );
+    DestroyController();
+}
+
+void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_DoesNotChangeTheOtherKeymaps()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey customKeymap1[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 123),
+        BareKeyboardKey(3, 123),
+        BareKeyboardKey(4, 123),
+        BareKeyboardKey(5, 123),
+    };
+    BareKeyboardKey customKeymap2[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 2),
+        BareKeyboardKey(3, 2),
+        BareKeyboardKey(4, 2),
+        BareKeyboardKey(5, 2),
+    };    
+    BareKeyboardKey editedCurrentKeymap[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 0),
+        BareKeyboardKey(4, 0),
+        BareKeyboardKey(5, 0),
+    };
+    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+        BareKeyboardKey(2, 123),
+        BareKeyboardKey(3, 123),
+        BareKeyboardKey(4, 123),
+        BareKeyboardKey(5, 123),
+    };
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(customKeymap1);
+    controller.customKeyMaps.Add(customKeymap2);
+    controller.ChangeKeyMap(controller.defaultKeyMap);
+    // Selects the second keymap.
+    controller.CycleKeyMap();
+    controller.CycleKeyMap();
+    // Updates the currentKeymap with the new values.
+    controller.currentKeyMap[0] = Key(editedCurrentKeymap[0].pin, editedCurrentKeymap[0].keyCode);
+    controller.currentKeyMap[1] = Key(editedCurrentKeymap[1].pin, editedCurrentKeymap[1].keyCode);
+    controller.currentKeyMap[2] = Key(editedCurrentKeymap[2].pin, editedCurrentKeymap[2].keyCode);
+    controller.currentKeyMap[3] = Key(editedCurrentKeymap[3].pin, editedCurrentKeymap[3].keyCode);
+
+    controller.UpdateCurrentCustomKeymap();
+    BareKeyboardKey *resultingFirstCustomKeymap = (*controller.customKeyMaps[0]);
+
+    ASSERT_TEST(
+        resultingFirstCustomKeymap[0].pin == expectedKeymap[0].pin && resultingFirstCustomKeymap[0].keyCode == expectedKeymap[0].keyCode &&
+        resultingFirstCustomKeymap[1].pin == expectedKeymap[1].pin && resultingFirstCustomKeymap[1].keyCode == expectedKeymap[1].keyCode &&
+        resultingFirstCustomKeymap[2].pin == expectedKeymap[2].pin && resultingFirstCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
+        resultingFirstCustomKeymap[3].pin == expectedKeymap[3].pin && resultingFirstCustomKeymap[3].keyCode == expectedKeymap[3].keyCode
+    );
+    DestroyController();
+}
