@@ -18,6 +18,7 @@ void Controller::Setup()
     // nextFreeEepromAdress = 50;
     // customKeyMaps.Add(keys); // NOTE: HAS BEEN REFACTORED TO BARE KEYBOARD KEYS. PLEASE CHANGE THIS.
     // SaveKeyMapsToMemory(customKeyMaps); // NOTE: HAS BEEN REFACTORED TO BARE KEYBOARD KEYS.
+    DEBUG_PRINTLN("Changing to default keymap.");
     ChangeKeyMap(defaultKeyMap);
     LoadKeymapsFromMemoryIntoList(customKeyMaps); // SRAM: -162 (When loading one keymap of 4 keys).
     ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount); //SRAM: -0
