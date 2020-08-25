@@ -22,25 +22,25 @@ void EditMode::CopyKeyMapToTemporary(Key *keyMap)
 
 void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
 {
-    // DEBUG
-    DEBUG_PRINTLN();
-    DEBUG_PRINTLN("Applying temp to current keymap...");
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        DEBUG_PRINT("Temp .pin ");
-        DEBUG_PRINT(tempCopy[i].pin);
-        DEBUG_PRINT(", .keyCode ");
-        DEBUG_PRINT(tempCopy[i].keyCode);
-        DEBUG_PRINT(" -> ");
+    DEBUG(
+        DEBUG_PRINTLN();
+        DEBUG_PRINTLN("Applying temp to current keymap...");
+        for (int i = 0; i < normalKeyCount; i++)
+        {
+            DEBUG_PRINT("Temp .pin ");
+            DEBUG_PRINT(tempCopy[i].pin);
+            DEBUG_PRINT(", .keyCode ");
+            DEBUG_PRINT(tempCopy[i].keyCode);
+            DEBUG_PRINT(" -> ");
 
-        DEBUG_PRINT("Current .pin ");
-        DEBUG_PRINT(keyMapToRestore[i].pin);
-        DEBUG_PRINT(", .keyCode ");
-        DEBUG_PRINT(keyMapToRestore[i].keyCode);
-        DEBUG_PRINTLN(".");
-    }
-    delay(100);
-    // DEBUG
+            DEBUG_PRINT("Current .pin ");
+            DEBUG_PRINT(keyMapToRestore[i].pin);
+            DEBUG_PRINT(", .keyCode ");
+            DEBUG_PRINT(keyMapToRestore[i].keyCode);
+            DEBUG_PRINTLN(".");
+        }
+        DEBUG(delay(100));
+    );
 
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -48,17 +48,17 @@ void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
     }
     Reset();
 
-    // DEBUG
-    DEBUG_PRINTLN("Current keymap reset to:");
-    for (int i = 0; i < normalKeyCount; i++)
-    {
-        DEBUG_PRINT("Current .pin = ");
-        DEBUG_PRINT(keyMapToRestore[i].pin);
-        DEBUG_PRINT(", .keyCode = ");
-        DEBUG_PRINTLN(keyMapToRestore[i].keyCode);
-    }
-    delay(100);
-    // DEBUG
+    DEBUG(
+        DEBUG_PRINTLN("Current keymap reset to:");
+        for (int i = 0; i < normalKeyCount; i++)
+        {
+            DEBUG_PRINT("Current .pin = ");
+            DEBUG_PRINT(keyMapToRestore[i].pin);
+            DEBUG_PRINT(", .keyCode = ");
+            DEBUG_PRINTLN(keyMapToRestore[i].keyCode);
+        }
+        DEBUG(delay(100));
+    );
 }
 
 // TODO: Check if working... Changed to OnKeyPress and refactored. Might not work? Tests go through. If working in play testing then remove this TODO.

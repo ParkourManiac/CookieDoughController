@@ -50,7 +50,7 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
     //     DEBUG_PRINT(packet.payload[i], HEX);
     // }
     // DEBUG_PRINTLN();
-    // delay(100);
+    // DEBUG(delay(100));
     // // DEBUG
 
     // If the crc of the payload is not equal to the crc of the packet...
@@ -96,7 +96,7 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     //     DEBUG_PRINT(packet.payload[i], HEX);
     // }
     // DEBUG_PRINTLN();
-    // delay(100);
+    // DEBUG(delay(100));
     // // DEBUG
 
     // Verify that package can be read from memory correctly.
@@ -113,7 +113,7 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     packetSize = currentAdress - adress;
     DEBUG_PRINT("Size of packet: "); // DEBUG
     DEBUG_PRINTLN(packetSize); // DEBUG
-    delay(100); // DEBUG
+    DEBUG(delay(100)); // DEBUG
     delete(dataPtr);
     return true; // Package saved successfully.
 }

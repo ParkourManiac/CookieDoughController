@@ -8,8 +8,9 @@ upload: # Builds and uploads the project to the targeted arduino.
 compileTests: TestCookieDough
 	python $^/generateTestSuite.py TestCookieDough && \
 	g++ -ITestCookieDough/Fakes -std=c++11 -g -D "private=public" \
-		-D "DEBUG_PRINT(VALUE)=Serial.print(VALUE)" \
-    	-D "DEBUG_PRINTLN(VALUE)=Serial.println(VALUE)" \
+		-D "DEBUG(VALUE)= " \
+		-D "DEBUG_PRINT(VALUE)= " \
+    	-D "DEBUG_PRINTLN(VALUE)= " \
 		-o $^/Testrun/latestTestRun $^/*.cpp $^/TestHelper/*.cpp \
 		./lib/CookieDoughLibrary/LinkedList.cpp \
 		./lib/CookieDoughLibrary/Key.cpp \
