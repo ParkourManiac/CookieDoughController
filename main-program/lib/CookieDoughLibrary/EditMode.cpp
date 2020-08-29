@@ -23,8 +23,8 @@ void EditMode::CopyKeyMapToTemporary(Key *keyMap)
 void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
 {
     DEBUG(
-        DEBUG_PRINTLN();
-        DEBUG_PRINTLN("Applying temp to current keymap...");
+        DEBUG_PRINT("\n");
+        DEBUG_PRINT("Applying temp to current keymap...\n");
         for (int i = 0; i < normalKeyCount; i++)
         {
             DEBUG_PRINT("Temp .pin ");
@@ -37,7 +37,7 @@ void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
             DEBUG_PRINT(keyMapToRestore[i].pin);
             DEBUG_PRINT(", .keyCode ");
             DEBUG_PRINT(keyMapToRestore[i].keyCode);
-            DEBUG_PRINTLN(".");
+            DEBUG_PRINT(".\n");
         }
         DEBUG(delay(100));
     );
@@ -49,13 +49,14 @@ void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
     Reset();
 
     DEBUG(
-        DEBUG_PRINTLN("Current keymap reset to:");
+        DEBUG_PRINT("Current keymap reset to:\n");
         for (int i = 0; i < normalKeyCount; i++)
         {
             DEBUG_PRINT("Current .pin = ");
             DEBUG_PRINT(keyMapToRestore[i].pin);
             DEBUG_PRINT(", .keyCode = ");
-            DEBUG_PRINTLN(keyMapToRestore[i].keyCode);
+            DEBUG_PRINT(keyMapToRestore[i].keyCode);
+            DEBUG_PRINT("\n");
         }
         DEBUG(delay(100));
     );
@@ -75,7 +76,7 @@ void EditMode::EditModeLoop(Key *keyMapBeingEdited)
         }
         else if (OnKeyRelease(key))
         {
-            DEBUG_PRINTLN("Keyrelease."); // DEBUG
+            DEBUG_PRINT("Keyrelease.\n"); // DEBUG
             digitalWrite(LED_BUILTIN, LOW);
 
             RegisterKeyRelease();
@@ -93,16 +94,18 @@ void EditMode::RegisterKeyPress(Key &pressedKey)
 {
     keysPressed += 1;
 
-    DEBUG_PRINTLN("Keypress.");    // DEBUG
+    DEBUG_PRINT("Keypress.\n");    // DEBUG
     DEBUG_PRINT("Keys pressed: "); // DEBUG
-    DEBUG_PRINTLN(keysPressed);    // DEBUG
+    DEBUG_PRINT(keysPressed);    // DEBUG
+    DEBUG_PRINT("\n");
 
     if (selectedKey == nullptr)
     {
         selectedKey = &pressedKey;
 
         DEBUG_PRINT("Selected key: ");   // DEBUG
-        DEBUG_PRINTLN(selectedKey->pin); // DEBUG
+        DEBUG_PRINT(selectedKey->pin); // DEBUG
+        DEBUG_PRINT("\n");
     }
 
     if (keysPressed > 1)
@@ -134,10 +137,10 @@ void EditMode::RegisterKeyRelease()
             DEBUG_PRINT(selectedKey->pin);
             DEBUG_PRINT(", keycode: ");
             DEBUG_PRINT(selectedKey->keyCode);
-            DEBUG_PRINTLN(")");
+            DEBUG_PRINT(")\n");
         }
         else
-            DEBUG_PRINTLN("Selected is nullptr!");
+            DEBUG_PRINT("Selected is nullptr!\n");
         // DEBUG
     }
 
@@ -150,14 +153,16 @@ void EditMode::RegisterKeyRelease()
         DEBUG_PRINT("Updated key: .pin = ");
         DEBUG_PRINT(selectedKey->pin);
         DEBUG_PRINT(", .keyCode = ");
-        DEBUG_PRINTLN(selectedKey->keyCode);
+        DEBUG_PRINT(selectedKey->keyCode);
+        DEBUG_PRINT("\n");
         // DEBUG
 
         Reset();
     }
 
     DEBUG_PRINT("Amount of keys pressed: "); // DEBUG
-    DEBUG_PRINTLN(keysPressed);              // DEBUG
+    DEBUG_PRINT(keysPressed);              // DEBUG
+    DEBUG_PRINT("\n");
 }
 
 void EditMode::SignalLedEditMode() // Not tested. 

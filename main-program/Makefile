@@ -10,7 +10,6 @@ compileTests: TestCookieDough
 	g++ -ITestCookieDough/Fakes -std=c++11 -g -D "private=public" \
 		-D "DEBUG(VALUE)= " \
 		-D "DEBUG_PRINT(VALUE)= " \
-    	-D "DEBUG_PRINTLN(VALUE)= " \
 		-o $^/Testrun/latestTestRun $^/*.cpp $^/TestHelper/*.cpp \
 		./lib/CookieDoughLibrary/LinkedList.cpp \
 		./lib/CookieDoughLibrary/Key.cpp \

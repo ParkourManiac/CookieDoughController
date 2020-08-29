@@ -44,7 +44,7 @@ void DebounceRead(IPinState &key) // NOTE: This causes a slight input delay. Con
             // if(key.value) {
             //     DEBUG_PRINT(" hej");
             // } else {DEBUG_PRINT(" hå");}
-            // DEBUG_PRINTLN();
+            // DEBUG_PRINT("\n");
         }
     }
 

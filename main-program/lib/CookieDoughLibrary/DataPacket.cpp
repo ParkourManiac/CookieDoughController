@@ -49,7 +49,7 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
     // for(int i = 0; i < packet.payloadLength; i++) {
     //     DEBUG_PRINT(packet.payload[i], HEX);
     // }
-    // DEBUG_PRINTLN();
+    // DEBUG_PRINT("\n");
     // DEBUG(delay(100));
     // // DEBUG
 
@@ -95,7 +95,7 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     // for(int i = 0; i < packet.payloadLength; i++) {
     //     DEBUG_PRINT(packet.payload[i], HEX);
     // }
-    // DEBUG_PRINTLN();
+    // DEBUG_PRINT("\n");
     // DEBUG(delay(100));
     // // DEBUG
 
@@ -112,7 +112,8 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
 
     packetSize = currentAdress - adress;
     DEBUG_PRINT("Size of packet: "); // DEBUG
-    DEBUG_PRINTLN(packetSize); // DEBUG
+    DEBUG_PRINT(packetSize); // DEBUG
+    DEBUG_PRINT("\n");
     DEBUG(delay(100)); // DEBUG
     delete(dataPtr);
     return true; // Package saved successfully.
