@@ -208,7 +208,7 @@ void DebounceRead_UpdatesOldValueOfStateWithPreviousStateValue()
     state.oldValue = false;
     state.value = true;
 
-    DebounceRead(state);
+    DebounceRead(&state);
 
     ASSERT_TEST(state.oldValue == true);
 }
@@ -218,7 +218,7 @@ void DebounceRead_ReadsStateOfPin()
     IPinState state;
     state.pin = 3;
 
-    DebounceRead(state);
+    DebounceRead(&state);
 
     ASSERT_TEST(digitalRead_param_pin == 3 && digitalRead_invocations == 1);
 }
@@ -232,7 +232,7 @@ void DebounceRead_PinStateHasChanged_UpdatesLastDebounceTime()
     state.oldPinState = true;
     digitalRead_return = false;
 
-    DebounceRead(state);
+    DebounceRead(&state);
 
     ASSERT_TEST(state.lastDebounceTime == expectedDebounceTime);
 }
@@ -246,7 +246,7 @@ void DebounceRead_PinStateHasNotChanged_DoesNotUpdateLastDebounceTime()
     state.oldPinState = true;
     digitalRead_return = true;
 
-    DebounceRead(state);
+    DebounceRead(&state);
 
     ASSERT_TEST(state.lastDebounceTime == expectedDebounceTime);
 }
@@ -261,7 +261,7 @@ void DebounceRead_DebounceTimeExceededAndValueIsOutdated_UpdateStateValue()
     state.value = true;    // Button was previously pressed.
     bool expected = false; // We expect the button to be released.
 
-    DebounceRead(state);
+    DebounceRead(&state);
 
     ASSERT_TEST(state.value == expected);
 }
@@ -277,7 +277,7 @@ void DebounceRead_DebounceTimeExceededAndValueIsOutdatedAndTheNewValueIsActive_U
     state.oldPinState = currentPinState;
     state.value = false; // Button was previously released.
 
-    DebounceRead(state);
+    DebounceRead(&state);
 
     ASSERT_TEST(state.timeOfActivation == expectedTimeOfActivation);
 }
@@ -291,7 +291,7 @@ void DebounceRead_ValueIsOutdatedButDebounceTimeIsNotExceeded_DoesNotUpdateState
     bool expected = true;   // We expect the button to still be pressed.
     state.value = expected; // Button was previously pressed.
 
-    DebounceRead(state);
+    DebounceRead(&state);
 
     ASSERT_TEST(state.value == expected);
 }
@@ -307,7 +307,7 @@ void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_D
     unsigned long expectedTimeOfActivation = 1337;
     state.timeOfActivation = expectedTimeOfActivation;
 
-    DebounceRead(state);
+    DebounceRead(&state);
 
     ASSERT_TEST(state.timeOfActivation == expectedTimeOfActivation);
 }
@@ -319,7 +319,7 @@ void DebounceRead_OldPinStateIsUpdated()
     state.oldPinState = true;         // Button was released.
     bool expectedOldPinState = false; // We expect it to become released.
 
-    DebounceRead(state);
+    DebounceRead(&state);
 
     ASSERT_TEST(state.oldPinState == expectedOldPinState);
 }
@@ -363,6 +363,9 @@ void ReadPinValuesForKeyMap_UpdatesStateForAllPins()
 
     ASSERT_TEST(keymap[0].oldPinState == true && keymap[1].oldPinState == true);
 }
+
+// TODO: ReadPinValuesForKeyMap_Works with Key
+// TODO: ReadPinValuesForKeyMap_Works with SpecialKey
 
 void KeyConstructor_IntializesPinAndKeycodeCorrectly()
 {

@@ -162,7 +162,7 @@ void RegisterKeyPress_AddsOneToKeysPressed()
     em.keysPressed = 0;
     int expectedKeysPressed = 1;
 
-    em.RegisterKeyPress(key);
+    em.RegisterKeyPress(&key);
 
     ASSERT_TEST(em.keysPressed == expectedKeysPressed);
 }
@@ -172,7 +172,7 @@ void RegisterKeyPress_IfNoKeyIsSelected_SelectProvidedKey()
     EditMode em = EditMode(true);
     Key expectedSelectedKey = Key(1, 2);
 
-    em.RegisterKeyPress(expectedSelectedKey);
+    em.RegisterKeyPress(&expectedSelectedKey);
 
     ASSERT_TEST(em.selectedKey == &expectedSelectedKey);
 }
@@ -184,7 +184,7 @@ void RegisterKeyPress_IfKeyHasAlreadyBeenSelected_DoNotUpdateSelectedKey()
     Key anotherKey = Key(23, 32);
     em.selectedKey = &expectedSelectedKey;
 
-    em.RegisterKeyPress(anotherKey);
+    em.RegisterKeyPress(&anotherKey);
 
     ASSERT_TEST(em.selectedKey == &expectedSelectedKey);
 }
@@ -196,7 +196,7 @@ void RegisterKeyPress_TheFirstKeyIsBeingPressed_ShouldNotPrepareToAddValueToKey(
     em.shouldAddValue = false;
     em.keysPressed = 0;
 
-    em.RegisterKeyPress(key);
+    em.RegisterKeyPress(&key);
 
     ASSERT_TEST(em.shouldAddValue == false);
 }
@@ -208,7 +208,7 @@ void RegisterKeyPress_FirstKeyHasAlreadyBeenRegistered_PrepareToAddValueToTheKey
     em.shouldAddValue = false;
     em.keysPressed = 1;
 
-    em.RegisterKeyPress(key);
+    em.RegisterKeyPress(&key);
 
     ASSERT_TEST(em.shouldAddValue == true);
 }

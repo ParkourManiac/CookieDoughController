@@ -13,7 +13,7 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuc
     DataPacket *resultPtr = new DataPacket(); 
     DataPacket result = *resultPtr;
     unsigned int packetSize;
-    bool resultBool = ParsePacketFromEEPROM(0, result, packetSize);
+    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
 
     ASSERT_TEST(resultBool == true &&
                 packet.stx == result.stx &&

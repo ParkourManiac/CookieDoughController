@@ -19,8 +19,8 @@ struct IPinState : virtual IKey
 {
     bool value = false;                 /** The value of the pin. true = active, false = inactive. */
     bool oldValue = false;              /** The previous value of the pin. */
-    unsigned long timeOfActivation = 0; /** The time of the last activation. */
-    unsigned long lastDebounceTime = 0; /** The time, in milliseconds, of the latest change in pin state. */
+    uint32_t timeOfActivation = 0;      /** The time of the last activation. */
+    uint32_t lastDebounceTime = 0;      /** The time, in milliseconds, of the latest change in pin state. */
     bool oldPinState = false;           /** The previous pin state. */
 };
 
@@ -85,7 +85,7 @@ struct SpecialKey : virtual IPinState
  * to act as an input pin with internal pullup.
  * 
  */
-void ConfigurePinForKey(IKey &key);
+void ConfigurePinForKey(const IKey &key);
 
 /**
  * @brief Will try to convert the given type into IKey and 
@@ -112,7 +112,7 @@ void ConfigurePinsForKeyMap(T *keyMap, unsigned int keyMapLength)
  * 
  * @param key The key to be updated.
  */
-void DebounceRead(IPinState &key);
+void DebounceRead(IPinState *key);
 
 /**
  * @brief Reads and updates the pin state of
@@ -123,7 +123,7 @@ void ReadPinValuesForKeyMap(T *keyMap, unsigned int keyMapLength)
 {
     for (unsigned int i = 0; i < keyMapLength; i++)
     {
-        DebounceRead((IPinState &)keyMap[i]);
+        DebounceRead(dynamic_cast<IPinState *>(&(keyMap[i])));
     }
 }
 
@@ -134,7 +134,7 @@ void ReadPinValuesForKeyMap(T *keyMap, unsigned int keyMapLength)
  * @return true If the key was pressed.
  * @return false If the key wasn't pressed.
  */
-bool OnKeyPress(IPinState &key);
+bool OnKeyPress(const IPinState &key);
 
 /**
  * @brief Checks if the key was just released.
@@ -143,7 +143,7 @@ bool OnKeyPress(IPinState &key);
  * @return true If the key was released.
  * @return false If the key wasn't released.
  */
-bool OnKeyRelease(IPinState &key);
+bool OnKeyRelease(const IPinState &key);
 
 /**
  * @brief Checks if the time since the keys activation is greater than a long press duration.
@@ -154,6 +154,6 @@ bool OnKeyRelease(IPinState &key);
  * @return true If the key was activated more than longPressDuration ago, it will return true.
  * @return false If the key was activated less than longPressDuration ago, it will return false.
  */
-bool OnLongPress(IPinState key, unsigned int longPressDuration);
+bool OnLongPress(const IPinState &key, unsigned int longPressDuration);
 
 #endif

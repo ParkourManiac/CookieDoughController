@@ -68,7 +68,7 @@ void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeys
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     unsigned int amountOfKeys, packetAdress, packetSize;
-    bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(result, amountOfKeys, packetAdress, packetSize);
+    bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
 
     ASSERT_TEST(resultBool == true &&
                 packetSize == 32 &&
@@ -103,7 +103,7 @@ void RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse()
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     unsigned int amountOfKeys, packetAdress, packetSize;
-    bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(result, amountOfKeys, packetAdress, packetSize);
+    bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
 
     ASSERT_TEST(resultBool == false);
     DestroyController();
@@ -149,7 +149,7 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     unsigned int amountOfKeys, packetAdress, packetSize;
-    bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(result, amountOfKeys, packetAdress, packetSize);
+    bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
 
     ASSERT_TEST(resultBool == true &&
                 packetSize == 32 &&
@@ -185,7 +185,7 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
     DataPacket result = *resultPtr;
     unsigned int packetSize;
     unsigned int packetAdress;
-    bool resultBool = controller.RetrieveDataPacketFromMemory(result, packetSize, packetAdress);
+    bool resultBool = controller.RetrieveDataPacketFromMemory(&result, &packetSize, &packetAdress);
 
     ASSERT_TEST(
         resultBool == true &&
@@ -209,7 +209,7 @@ void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse()
     DataPacket result = *resultPtr;
     unsigned int packetSize;
     unsigned int packetAdress;
-    bool resultBool = controller.RetrieveDataPacketFromMemory(result, packetSize, packetAdress);
+    bool resultBool = controller.RetrieveDataPacketFromMemory(&result, &packetSize, &packetAdress);
 
     ASSERT_TEST(resultBool == false);
     delete (resultPtr);
@@ -224,7 +224,7 @@ void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtSta
     DataPacket result = *resultPtr;
     unsigned int packetSize;
     unsigned int packetAdress;
-    controller.RetrieveDataPacketFromMemory(result, packetSize, packetAdress, expectedStartAdress);
+    controller.RetrieveDataPacketFromMemory(&result, &packetSize, &packetAdress, expectedStartAdress);
 
     ASSERT_TEST(EEPROMClass_read_param_idx_v[0] == expectedStartAdress);
     delete (resultPtr);
@@ -282,7 +282,7 @@ void ParseBareKeyboardKeyArrayIntoKeymapList_PopulatesTheListWithTheGivenKeys()
     BareKeyboardKey keys[amountOfKeys] = {key1, key2, key3, key4, key5, key6, key7, key8};
 
     LinkedList<BareKeyboardKey *> result = LinkedList<BareKeyboardKey *>();
-    controller.ParseBareKeyboardKeyArrayIntoKeymapList(keys, amountOfKeys, result);
+    controller.ParseBareKeyboardKeyArrayIntoKeymapList(keys, amountOfKeys, &result);
 
     bool isEmpty = result[0] == nullptr || result[1] == nullptr;
     BareKeyboardKey *resultKeymap1, *resultKeymap2;
@@ -373,7 +373,7 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    controller.LoadKeymapsFromMemoryIntoList(resultingKeymaps);
+    controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
     BareKeyboardKey *result;
     if (!resultingKeymaps.IsEmpty())
         result = *(resultingKeymaps[0]);
@@ -421,7 +421,7 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    controller.LoadKeymapsFromMemoryIntoList(resultingKeymaps);
+    controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
 
     ASSERT_TEST(resultingKeymaps.IsEmpty());
 }
@@ -481,7 +481,7 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(validPacket);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey*>();
-    controller.LoadKeymapsFromMemoryIntoList(resultingKeymaps);
+    controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
     BareKeyboardKey *result;
     if(!resultingKeymaps.IsEmpty()) result = *(resultingKeymaps[0]);
 

@@ -27,12 +27,12 @@ private:
 
     const int blinksPerSignal = 3;
     bool ledIsOn = false;
-    unsigned long nextBlinkCycle = 0;
-    unsigned long nextBlinkCycleOff = 0;
+    uint32_t nextBlinkCycle = 0;
+    uint32_t nextBlinkCycleOff = 0;
     int currentBlink = 0;
 
 public:
-    EditMode(bool _useEditModeLedSignal);
+    explicit EditMode(bool _useEditModeLedSignal);
 
     /**
      * @brief Toggles and resets EditMode.
@@ -62,6 +62,7 @@ public:
      * @param keyMapBeingEdited The keyMap to edit.
      */
     void EditModeLoop(Key* keyMapBeingEdited);
+
 private:
     /**
      * @brief Handles selecting which key to edit and
@@ -69,7 +70,7 @@ private:
      * 
      * @param pressedKey The key that was pressed.
      */
-    void RegisterKeyPress(Key &currentKey);
+    void RegisterKeyPress(Key *pressedKey);
 
     /**
      * @brief Handles calculating and updating the

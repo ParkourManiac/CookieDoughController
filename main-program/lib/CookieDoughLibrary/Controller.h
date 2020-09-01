@@ -5,7 +5,7 @@
 
 #include "Key.h"
 #include "LinkedList.h"
-#include "LinkedList.cpp"
+#include "LinkedList.cpp" // NOLINT(build/include)
 #include "EditMode.h"
 #include "DataPacket.h"
 
@@ -79,7 +79,7 @@ public:
      *
      * @param keyMapList The keyMap list to store the result.
      */
-    void LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> &keyMapList); // NOTE: Refactored to BareKeyboardKeys
+    void LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keyMapList); // NOTE: Refactored to BareKeyboardKeys
 
     /**
      * @brief Retrieves the saved BareKeyboardKeys stored in the EEPROM.
@@ -92,7 +92,7 @@ public:
      * @return true If we succesfully retrieved the array of keys.
      * @return false If we were unable to find any valid packet.
      */
-    bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *&payloadAsBareKeys, unsigned int &amountOfKeys, unsigned int &packetAdress, unsigned int &packetSize);
+    bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, unsigned int *amountOfKeys, unsigned int *packetAdress, unsigned int *packetSize);
 
     /**
      * @brief Finds and retrieves a DataPacket stored on the EEPROM.
@@ -103,7 +103,7 @@ public:
      * @return true The DataPacket was succesfully found and retrieved.
      * @return false The DataPacket was not found or the DataPackets found were corrupt.
      */
-    bool RetrieveDataPacketFromMemory(DataPacket &packet, unsigned int &packetSize, unsigned int &packetAdress, unsigned int startAdress = 0);
+    bool RetrieveDataPacketFromMemory(DataPacket *packet, unsigned int *packetSize, unsigned int *packetAdress, unsigned int startAdress = 0);
 
     /**
      * @brief Converts a DataPacket payload into an array of BareKeyboardKeys.
@@ -120,7 +120,7 @@ public:
      * @param amountOfKeys The amount of keys in the "keys" array.
      * @param keymapList The list in which the keys will be inserted.
      */
-    void ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> &keymapList);
+    void ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> *keymapList);
 
     /**
      * @brief Determines whether a key is valid (i.e can be used) or not.

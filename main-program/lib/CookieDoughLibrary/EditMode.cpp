@@ -72,7 +72,7 @@ void EditMode::EditModeLoop(Key *keyMapBeingEdited)
         if (OnKeyPress(key))
         {
             digitalWrite(LED_BUILTIN, HIGH);
-            RegisterKeyPress(key);
+            RegisterKeyPress(&key);
         }
         else if (OnKeyRelease(key))
         {
@@ -90,7 +90,7 @@ void EditMode::EditModeLoop(Key *keyMapBeingEdited)
     }
 }
 
-void EditMode::RegisterKeyPress(Key &pressedKey)
+void EditMode::RegisterKeyPress(Key *pressedKey)
 {
     keysPressed += 1;
 
@@ -101,7 +101,7 @@ void EditMode::RegisterKeyPress(Key &pressedKey)
 
     if (selectedKey == nullptr)
     {
-        selectedKey = &pressedKey;
+        selectedKey = pressedKey;
 
         DEBUG_PRINT("Selected key: ");   // DEBUG
         DEBUG_PRINT(selectedKey->pin); // DEBUG
@@ -167,7 +167,7 @@ void EditMode::RegisterKeyRelease()
 
 void EditMode::SignalLedEditMode() // Not tested. 
 {
-    unsigned long currentTime = millis();
+    uint32_t currentTime = millis();
 
     // if its time to turn off led...
     if (ledIsOn)
