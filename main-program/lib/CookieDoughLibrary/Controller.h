@@ -129,7 +129,7 @@ public:
      * @return true The key is valid.
      * @return false The key is invalid or corrupt.
      */
-    bool IsKeyValid(IKey key);
+    bool IsKeyValid(const IKey &key);
 
     /**
      * @brief Switches to the next keyMap configuration in the list

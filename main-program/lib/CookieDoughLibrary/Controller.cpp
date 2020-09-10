@@ -166,6 +166,7 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *ke
     nextFreeEepromAdress = packetAdress + packetSize;
 }
 
+#include <iostream> // DEBUG
 bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, unsigned int *amountOfKeys, unsigned int *packetAdress, unsigned int *packetSize)
 {
     *amountOfKeys = *packetAdress = *packetSize = 0;
@@ -186,12 +187,15 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsB
         *amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
         delete[](*payloadAsBareKeys);
         *payloadAsBareKeys = new BareKeyboardKey[*amountOfKeys];
+
         ConvertDataPacketToBareKeyboardKeys(packet, *payloadAsBareKeys);
 
         foundValidPacket = true;
         for (unsigned int i = 0; i < *amountOfKeys; i++)
         {
-            bool isValid = IsKeyValid((*payloadAsBareKeys)[i]);
+            std::cout << "Before\n"; // DEBUG
+            bool isValid = IsKeyValid((*payloadAsBareKeys)[i]); // TODO: FIX ERROR HERE -(make test)- !!! <-----------------------
+            std::cout << "After\n"; // DEBUG
 
             DEBUG(
                 DEBUG_PRINT("IsValid?: "); 
@@ -243,11 +247,10 @@ bool Controller::RetrieveDataPacketFromMemory(DataPacket *packet, unsigned int *
 
 void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result)
 {
-    unsigned int amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
-    BareKeyboardKey* bareKeyboardKeyPayload = reinterpret_cast<BareKeyboardKey *>(packet.payload); // TODO: Does this work?
-    for (unsigned int i = 0; i < amountOfKeys; i++)
+    uint8_t* resultAsBytes = reinterpret_cast<uint8_t*>(result);
+    for (unsigned int i = 0; i < packet.payloadLength; i++)
     {
-        result[i] = bareKeyboardKeyPayload[i];
+        resultAsBytes[i] = packet.payload[i];
     }
 }
 
@@ -282,7 +285,7 @@ void Controller::ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, 
     }
 }
 
-bool Controller::IsKeyValid(IKey key)
+bool Controller::IsKeyValid(const IKey &key)
 {
     for (int i = 0; i < normalKeyCount; i++)
     {

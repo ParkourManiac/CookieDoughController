@@ -46,6 +46,32 @@ void DestroyController()
     delete[](specialKeys);
 }
 
+// void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse() // TODO: Finish writing this test!
+// {
+//     Controller controller = SetUpController();
+//     // Set up packet
+//     BareKeyboardKey templateData[2];
+//     const int templateDataSize = sizeof(templateData);
+
+//     DataPacket packet;
+//     uint8_t *dataPtr = new uint8_t[templateDataSize] {0};
+//     packet.payloadLength = templateDataSize;
+//     packet.payload = dataPtr;
+//     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+//     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+
+//     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
+//     unsigned int amountOfKeys, packetAdress, packetSize;
+//     bool doesNotCrash = false;
+//     bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
+//     doesNotCrash = true;
+
+//     ASSERT_TEST(resultBool == false && doesNotCrash == true);
+//     DestroyController();
+//     delete[](result);
+//     delete[](dataPtr);
+// }
+
 void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeysInside()
 {
     Controller controller = SetUpController();
@@ -229,6 +255,29 @@ void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtSta
     ASSERT_TEST(EEPROMClass_read_param_idx_v[0] == expectedStartAdress);
     delete (resultPtr);
     DestroyController();
+}
+
+void ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload_DoesNotCrash() // TODO: Finish this test!
+{
+    Controller controller = SetUpController();
+    // Set up packet
+    BareKeyboardKey templateData[2];
+    const int templateDataSize = sizeof(templateData);
+
+    DataPacket packet;
+    uint8_t *dataPtr = new uint8_t[templateDataSize] {0};
+    packet.payloadLength = templateDataSize;
+    packet.payload = dataPtr;
+    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+
+    BareKeyboardKey result[2];
+    bool didNotCrash = false;
+    controller.ConvertDataPacketToBareKeyboardKeys(packet, result);
+    didNotCrash = true;
+
+    ASSERT_TEST(didNotCrash == true);
+    DestroyController();
+    delete[](dataPtr);
 }
 
 void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys()
