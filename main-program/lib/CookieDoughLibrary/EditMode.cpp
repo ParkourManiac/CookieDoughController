@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 EditMode::EditMode(int _normalKeyCount, bool _useEditModeLedSignal)
-    : normalKeyCount(_normalKeyCount), useEditModeLedSignal(_useEditModeLedSignal)
+    : useEditModeLedSignal(_useEditModeLedSignal), normalKeyCount(_normalKeyCount)
 {
     tempCopy = new Key[normalKeyCount];
 }

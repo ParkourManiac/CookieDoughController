@@ -14,7 +14,7 @@ public:
      * on the BUILTIN_LED as long as editmode is turned on (and
      * no keys are currently being pressed).
      */
-    bool useEditModeLedSignal = false;
+    bool useEditModeLedSignal;
 
 private:
     const int normalKeyCount;
