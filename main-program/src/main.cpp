@@ -42,7 +42,6 @@ void loop()
 
 // "If you run out of SRAM..." - https://www.arduino.cc/en/tutorial/memory
 
-// TODO: Remove virtual inheritance. Use "has a" relation.
 // TODO: When in doubt: Use assert().
 // TODO: __attribute__((packed)) on the structs that need to be saved to eeprom.
 // TODO: Research POD type. Plain-Old-datatype. (Serialization for c++).

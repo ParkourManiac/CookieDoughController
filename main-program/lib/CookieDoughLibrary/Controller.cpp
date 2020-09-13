@@ -194,14 +194,14 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsB
             bool isValid = IsKeyValid((*payloadAsBareKeys)[i].pin);
 
             DEBUG(
-                DEBUG_PRINT("IsValid?: "); 
+                DEBUG_PRINT("\nIsValid?: "); 
                 DEBUG_PRINT(isValid); 
                 DEBUG_PRINT("  {");
                 DEBUG_PRINT(" .pin: ");
                 DEBUG_PRINT((*payloadAsBareKeys)[i].pin);
                 DEBUG_PRINT(", .keyCode: ");
                 DEBUG_PRINT((*payloadAsBareKeys)[i].keyCode);
-                DEBUG_PRINT(" }\n");
+                DEBUG_PRINT(" }");
                 DEBUG(delay(100));
             );
             if (!isValid)
@@ -211,6 +211,7 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsB
                 break;
             }
         }
+        DEBUG_PRINT("\n");
     }
 
     delete (dataPtr);
