@@ -55,8 +55,8 @@ void Controller::Setup()
 
 void Controller::Update()
 {
-    ReadPinValuesForKeyMap(currentKeyMap, normalKeyCount); // SRAM: -6
-    ReadPinValuesForKeyMap(specialKeys, specialKeyCount); // SRAM: -6
+    UpdatePinStatesForKeyMap(currentKeyMap, normalKeyCount); // SRAM: -6
+    UpdatePinStatesForKeyMap(specialKeys, specialKeyCount); // SRAM: -6
 
     ExecuteSpecialCommands(); // SRAM: -105
     if (editmode.enabled)
@@ -72,7 +72,6 @@ void Controller::Update()
 void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList) // TODO: Refactored to BareKeyboardKey. Check if code is necessary.
 {
     unsigned int serializedSize = sizeof(BareKeyboardKey[keymapList.length * normalKeyCount]);
-    // Key *serializedKeyMaps = new Key[keymapList.length * normalKeyCount];
     BareKeyboardKey *serializedKeyMaps = new BareKeyboardKey[keymapList.length * normalKeyCount];
     for (unsigned int i = 0; i < keymapList.length; i++)
     {
@@ -166,7 +165,6 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *ke
     nextFreeEepromAdress = packetAdress + packetSize;
 }
 
-#include <iostream> // DEBUG
 bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, unsigned int *amountOfKeys, unsigned int *packetAdress, unsigned int *packetSize)
 {
     *amountOfKeys = *packetAdress = *packetSize = 0;
@@ -193,9 +191,7 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsB
         foundValidPacket = true;
         for (unsigned int i = 0; i < *amountOfKeys; i++)
         {
-            std::cout << "Before\n"; // DEBUG
-            bool isValid = IsKeyValid((*payloadAsBareKeys)[i]); // TODO: FIX ERROR HERE -(make test)- !!! <-----------------------
-            std::cout << "After\n"; // DEBUG
+            bool isValid = IsKeyValid((*payloadAsBareKeys)[i].pin);
 
             DEBUG(
                 DEBUG_PRINT("IsValid?: "); 
@@ -285,11 +281,11 @@ void Controller::ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, 
     }
 }
 
-bool Controller::IsKeyValid(const IKey &key)
+bool Controller::IsKeyValid(const IKey &pin)
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
-        if (key.pin == defaultKeyMap[i].pin)
+        if (pin == defaultKeyMap[i].pin)
             return true;
     }
 
@@ -379,7 +375,7 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
     {
         Key &key = currentKeyMap[i];
 
-        if (OnKeyPress(key))
+        if (OnKeyPress(key.state))
         {
             digitalWrite(LED_BUILTIN, HIGH);
 
@@ -400,7 +396,7 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
                 SendKeyboardEvent();
             }
         }
-        else if (OnKeyRelease(key))
+        else if (OnKeyRelease(key.state))
         {
             digitalWrite(LED_BUILTIN, LOW);
 
@@ -452,15 +448,15 @@ void Controller::SendKeyboardEvent()
     Serial.write(buf, 8);
 }
 
-void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested.
+void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested. Refactor to use OnKeyPress and etc.
 {
     for (int i = 0; i < specialKeyCount; i++)
     {
         SpecialKey &specialKey = specialKeys[i];
 
-        if (specialKey.oldValue != specialKey.value)
+        if (specialKey.state.oldValue != specialKey.state.value)
         {
-            if (specialKey.value)
+            if (specialKey.state.value)
             {
                 digitalWrite(LED_BUILTIN, HIGH);
 
@@ -521,7 +517,7 @@ void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested.
                     if (editmode.enabled)
                     {
                         // if we did a long press in editmode....
-                        if (OnLongPress(specialKey, longPressDuration))
+                        if (OnLongPress(specialKey.state, longPressDuration))
                         {
                             // DEBUG_PRINT("Long press, released. Save to memory...\n"); // DEBUG
                             SaveControllerSettings();
@@ -539,7 +535,7 @@ void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested.
                 {
                     if (editmode.enabled)
                     {
-                        if (OnLongPress(specialKey, longPressDuration))
+                        if (OnLongPress(specialKey.state, longPressDuration))
                         {
                             // DEBUG_PRINT("Long press, released. Delete keymap...\n"); // DEBUG
                             DeleteCurrentKeyMap();

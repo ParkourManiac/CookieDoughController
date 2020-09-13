@@ -69,12 +69,12 @@ void EditMode::EditModeLoop(Key *keyMapBeingEdited)
     {
         Key &key = keyMapBeingEdited[i];
 
-        if (OnKeyPress(key))
+        if (OnKeyPress(key.state))
         {
             digitalWrite(LED_BUILTIN, HIGH);
             RegisterKeyPress(&key);
         }
-        else if (OnKeyRelease(key))
+        else if (OnKeyRelease(key.state))
         {
             DEBUG_PRINT("Keyrelease.\n"); // DEBUG
             digitalWrite(LED_BUILTIN, LOW);

@@ -4,18 +4,20 @@
 #include <stdint.h>
 
 /**
- * @brief Used to marks a pin as a key.
- * Contains the pin number.
+ * @brief An alias for the type of a pin number.
  */
-struct IKey
-{
-    uint8_t pin; /** The pin number. */
-};
+using IKey = uint8_t;
 
 /**
- * @brief Contains the pin, pin state and debounce values of the pin.
+ * @brief An alias for the type of a keycode.
+ * 
  */
-struct IPinState : virtual IKey
+using IKeycode = int;
+
+/**
+ * @brief Used to store information about a pins state and debounce values.
+ */
+struct IPinState
 {
     bool value = false;                 /** The value of the pin. true = active, false = inactive. */
     bool oldValue = false;              /** The previous value of the pin. */
@@ -28,11 +30,12 @@ struct IPinState : virtual IKey
  * @brief The bare minimum to define a pin as a keyboard key.
  * Note: Contains no state.
  */
-struct BareKeyboardKey : virtual IKey
+struct /*__attribute__((packed))*/ BareKeyboardKey // TODO: Refactor to not use constructor (or use compact constructor)? Consider using packed.
 {
-    int keyCode; /** The keyboard keycode. */
+    IKey pin; /** The pin connected to the key. */
+    IKeycode keyCode; /** The keyboard keycode. */
     BareKeyboardKey() {}
-    BareKeyboardKey(uint8_t _pin, int _keyCode) // TODO: Test if working.
+    BareKeyboardKey(IKey _pin, IKeycode _keyCode) // TODO: Test if working.
     {
         pin = _pin;
         keyCode = _keyCode;
@@ -44,10 +47,13 @@ struct BareKeyboardKey : virtual IKey
  * Contains both the definition of the keyboard key and 
  * the state of the corresponding pin.
  */
-struct Key : virtual BareKeyboardKey, virtual IPinState
+struct Key // TODO: Refactor to not use constructor (or use compact constructor)?
 {
+    IKey pin; /** The pin connected to the key. */
+    IKeycode keyCode; /** The keyboard keycode. */
+    IPinState state; /** Contains information about the state of the button. */
     Key() {}
-    Key(uint8_t _pin, int _keyCode)
+    Key(IKey _pin, IKeycode _keyCode)
     {
         pin = _pin;
         keyCode = _keyCode;
@@ -69,11 +75,13 @@ enum SpecialFunction
  * Contains both the definition of the special function and 
  * the state of the corresponding pin.
  */
-struct SpecialKey : virtual IPinState
+struct SpecialKey // TODO: Refactor to not use constructor (or use compact constructor)?
 {
-    SpecialFunction function; /**< The special function tied to the key. */
+    IKey pin; /** The pin connected to the key. */
+    SpecialFunction function; /** The special function tied to the key. */
+    IPinState state; /** Contains information about the state of the button. */
 
-    SpecialKey(uint8_t _pin, SpecialFunction _function)
+    SpecialKey(IKey _pin, SpecialFunction _function)
     {
         pin = _pin;
         function = _function;
@@ -81,79 +89,97 @@ struct SpecialKey : virtual IPinState
 };
 
 /**
- * @brief Configures the pin of the provided key
+ * @brief Configures a pin
  * to act as an input pin with internal pullup.
  * 
+ * @param pin The number of the pin to be configured.
  */
-void ConfigurePinForKey(const IKey &key);
+void ConfigurePinForKey(const IKey &pin);
+
+// /**
+//  * @brief Will try to convert the given type into IKey and 
+//  * configures the pins of the provided keymap
+//  * to act as input pins with internal pullups.
+//  * 
+//  * @tparam T The type of key to be used. 
+//  * NOTE: Must inherit from the base class IKey.
+//  * @param keyMap The keymap to be configured.
+//  * @param keyMapLength The length of the keyMap.
+//  */
+// template <class T>
+// void ConfigurePinsForKeyMap(T *keyMap, unsigned int keyMapLength) // TODO: Remove? Is not compatible with refactored IKey.
+// {
+//     for (unsigned int i = 0; i < keyMapLength; i++)
+//     {
+//         ConfigurePinForKey((IKey &)keyMap[i]);
+//     }
+// }
 
 /**
- * @brief Will try to convert the given type into IKey and 
- * configures the pins of the provided keymap
+ * @brief Will configure all the pins of the provided keymap
  * to act as input pins with internal pullups.
  * 
- * @tparam T The type of key to be used. 
- * NOTE: Must inherit from the base class IKey.
- * @param keyMap The keymap to be configured.
- * @param keyMapLength The length of the keyMap.
+ * @param keymap The keymap to be configured.
+ * @param keymapLength The length of the keymap.
  */
 template <class T>
-void ConfigurePinsForKeyMap(T *keyMap, unsigned int keyMapLength)
+void ConfigurePinsForKeyMap(const T *keymap, unsigned int keymapLength) 
 {
-    for (unsigned int i = 0; i < keyMapLength; i++)
+    for (unsigned int i = 0; i < keymapLength; i++)
     {
-        ConfigurePinForKey((IKey &)keyMap[i]);
+        ConfigurePinForKey(keymap[i].pin);
     }
 }
 
 /**
- * @brief Reads and updates the pin state of a
- * key using a debounced input.
+ * @brief Reads and updates the given state of a
+ * pin using a debounced input.
  * 
- * @param key The key to be updated.
+ * @param pin The pin of the key
+ * @param state The state to be updated.
  */
-void DebounceRead(IPinState *key);
+void DebounceRead(IKey pin, IPinState *state); // TODO: Refactor name to "DebounceReadPin"? 
 
 /**
  * @brief Reads and updates the pin state of
  * the provided keyMap.
  */
 template <class T>
-void ReadPinValuesForKeyMap(T *keyMap, unsigned int keyMapLength)
+void UpdatePinStatesForKeyMap(T *keymap, unsigned int keymapLength) // TODO: Remove? Is not compatible with refactored IKey.
 {
-    for (unsigned int i = 0; i < keyMapLength; i++)
+    for (unsigned int i = 0; i < keymapLength; i++)
     {
-        DebounceRead(dynamic_cast<IPinState *>(&(keyMap[i])));
+        DebounceRead(keymap[i].pin, &(keymap[i].state));
     }
 }
 
 /**
- * @brief Checks if the key was just pressed.
+ * @brief Validates if the state of a key is a key press event.
  * 
- * @param key The key to be analysed.
- * @return true If the key was pressed.
- * @return false If the key wasn't pressed.
+ * @param state The state to be analysed.
+ * @return true If the state indicates a key press.
+ * @return false If the state does not indicate a key press.
  */
-bool OnKeyPress(const IPinState &key);
+bool OnKeyPress(const IPinState &state);
 
 /**
- * @brief Checks if the key was just released.
+ * @brief Validates if the state of a key is a key release event.
  * 
- * @param key The key to be analysed.
- * @return true If the key was released.
- * @return false If the key wasn't released.
+ * @param state The state to be analysed.
+ * @return true If the state indicates a key release.
+ * @return false If the state does not indicates a key release.
  */
-bool OnKeyRelease(const IPinState &key);
+bool OnKeyRelease(const IPinState &state);
 
 /**
- * @brief Checks if the time since the keys activation is greater than a long press duration.
- * NOTE: This does not take into account that the button may be released.
+ * @brief Validates that the key has been held down for a time greater than a long press duration.
+ * NOTE: This does not take into account that the button may currently be released.
  * 
- * @param key The key to be analysed.
+ * @param state The state to be analysed.
  * @param longPressDuration The duration for a long press.
- * @return true If the key was activated more than longPressDuration ago, it will return true.
- * @return false If the key was activated less than longPressDuration ago, it will return false.
+ * @return true If the state has been active for longer than a longPressDuration, it will return true.
+ * @return false If the state has been active for less than a longPressDuration, it will return false.
  */
-bool OnLongPress(const IPinState &key, unsigned int longPressDuration);
+bool OnLongPress(const IPinState &state, unsigned int longPressDuration);
 
 #endif

@@ -349,8 +349,8 @@ void EditModeLoop_KeyHasNotBeenChanged_DoesNotDoAnything()
 {
     EditMode em = EditMode(true);
     Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
-    keymap[0].value = keymap[0].oldValue = false;
-    keymap[1].value = keymap[1].oldValue = false;
+    keymap[0].state.value = keymap[0].state.oldValue = false;
+    keymap[1].state.value = keymap[1].state.oldValue = false;
     em.keysPressed = 0;
 
     em.EditModeLoop(keymap);
@@ -362,9 +362,9 @@ void EditModeLoop_KeyBecamePressed_RegistersKeyPress()
 {
     EditMode em = EditMode(true);
     Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
-    keymap[0].value = keymap[0].oldValue = false;
-    keymap[1].value = keymap[1].oldValue = false;
-    keymap[0].value = true;
+    keymap[0].state.value = keymap[0].state.oldValue = false;
+    keymap[1].state.value = keymap[1].state.oldValue = false;
+    keymap[0].state.value = true;
     em.keysPressed = 0;
 
     em.EditModeLoop(keymap);
@@ -376,10 +376,10 @@ void EditModeLoop_TwoKeysBecamePressed_RegistersTwoKeyPresses()
 {
     EditMode em = EditMode(true);
     Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
-    keymap[0].value = keymap[0].oldValue = false;
-    keymap[1].value = keymap[1].oldValue = false;
-    keymap[0].value = true;
-    keymap[1].value = true;
+    keymap[0].state.value = keymap[0].state.oldValue = false;
+    keymap[1].state.value = keymap[1].state.oldValue = false;
+    keymap[0].state.value = true;
+    keymap[1].state.value = true;
     em.keysPressed = 0;
 
     em.EditModeLoop(keymap);
@@ -391,9 +391,9 @@ void EditModeLoop_KeyBecameReleased_RegistersKeyRelease()
 {
     EditMode em = EditMode(true);
     Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
-    keymap[0].value = keymap[0].oldValue = false;
-    keymap[1].value = keymap[1].oldValue = false;
-    keymap[0].oldValue = true;
+    keymap[0].state.value = keymap[0].state.oldValue = false;
+    keymap[1].state.value = keymap[1].state.oldValue = false;
+    keymap[0].state.oldValue = true;
     em.keysPressed = 1;
 
     em.EditModeLoop(keymap);
@@ -405,10 +405,10 @@ void EditModeLoop_TwoKeysBecameReleased_RegistersTwoKeyReleases()
 {
     EditMode em = EditMode(true);
     Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
-    keymap[0].value = keymap[0].oldValue = false;
-    keymap[1].value = keymap[1].oldValue = false;
-    keymap[0].oldValue = true;
-    keymap[1].oldValue = true;
+    keymap[0].state.value = keymap[0].state.oldValue = false;
+    keymap[1].state.value = keymap[1].state.oldValue = false;
+    keymap[0].state.oldValue = true;
+    keymap[1].state.oldValue = true;
     em.keysPressed = 2;
 
     em.EditModeLoop(keymap);
@@ -420,8 +420,8 @@ void EditModeLoop_WhenIdle_SignalEditMode()
 {
     EditMode em = EditMode(true);
     Key keymap[normalKeyCount] = {Key(1, 2), Key(3, 4)};
-    keymap[0].value = keymap[0].oldValue = false;
-    keymap[1].value = keymap[1].oldValue = false;
+    keymap[0].state.value = keymap[0].state.oldValue = false;
+    keymap[1].state.value = keymap[1].state.oldValue = false;
     em.keysPressed = 0;
     em.useEditModeLedSignal = true;
     

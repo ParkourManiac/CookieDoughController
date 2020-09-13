@@ -46,31 +46,31 @@ void DestroyController()
     delete[](specialKeys);
 }
 
-// void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse() // TODO: Finish writing this test!
-// {
-//     Controller controller = SetUpController();
-//     // Set up packet
-//     BareKeyboardKey templateData[2];
-//     const int templateDataSize = sizeof(templateData);
+void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse()
+{
+    Controller controller = SetUpController();
+    // Set up packet
+    BareKeyboardKey templateData[2];
+    const int templateDataSize = sizeof(templateData);
 
-//     DataPacket packet;
-//     uint8_t *dataPtr = new uint8_t[templateDataSize] {0};
-//     packet.payloadLength = templateDataSize;
-//     packet.payload = dataPtr;
-//     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-//     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    DataPacket packet;
+    uint8_t *dataPtr = new uint8_t[templateDataSize] {0};
+    packet.payloadLength = templateDataSize;
+    packet.payload = dataPtr;
+    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
-//     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
-//     unsigned int amountOfKeys, packetAdress, packetSize;
-//     bool doesNotCrash = false;
-//     bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
-//     doesNotCrash = true;
+    BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
+    unsigned int amountOfKeys, packetAdress, packetSize;
+    bool doesNotCrash = false;
+    bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
+    doesNotCrash = true;
 
-//     ASSERT_TEST(resultBool == false && doesNotCrash == true);
-//     DestroyController();
-//     delete[](result);
-//     delete[](dataPtr);
-// }
+    ASSERT_TEST(resultBool == false && doesNotCrash == true);
+    DestroyController();
+    delete[](result);
+    delete[](dataPtr);
+}
 
 void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeysInside()
 {
@@ -91,13 +91,14 @@ void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeys
     packet.payload = dataPtr;
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    int expectedPacketSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(packet.payload[0]) * packet.payloadLength + sizeof(packet.etx);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     unsigned int amountOfKeys, packetAdress, packetSize;
     bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
 
     ASSERT_TEST(resultBool == true &&
-                packetSize == 32 &&
+                packetSize == expectedPacketSize &&
                 packetAdress == 0 &&
                 amountOfKeys == 2 &&
                 result[0].pin == key1.pin && result[0].keyCode == key1.keyCode &&
@@ -172,14 +173,17 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
     // Prepare packets to be returned.
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(defectPacket);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(validPacket);
+    int expectedDefectPacketSize = sizeof(defectPacket.stx) + sizeof(defectPacket.payloadLength) + sizeof(defectPacket.crc) + sizeof(defectPacket.payload[0]) * defectPacket.payloadLength + sizeof(defectPacket.etx);
+    int expectedValidPacketSize = sizeof(validPacket.stx) + sizeof(validPacket.payloadLength) + sizeof(validPacket.crc) + sizeof(validPacket.payload[0]) * validPacket.payloadLength + sizeof(validPacket.etx);
+
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     unsigned int amountOfKeys, packetAdress, packetSize;
     bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
 
     ASSERT_TEST(resultBool == true &&
-                packetSize == 32 &&
-                packetAdress == 32 &&
+                packetAdress == expectedDefectPacketSize &&
+                packetSize == expectedValidPacketSize &&
                 amountOfKeys == 2 &&
                 result[0].pin == validKey1.pin && result[0].keyCode == validKey1.keyCode &&
                 result[1].pin == validKey2.pin && result[1].keyCode == validKey2.keyCode);
@@ -257,7 +261,7 @@ void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtSta
     DestroyController();
 }
 
-void ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload_DoesNotCrash() // TODO: Finish this test!
+void ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload_DoesNotCrash() // TODO: Assert result can be used without a crash.
 {
     Controller controller = SetUpController();
     // Set up packet
@@ -273,6 +277,7 @@ void ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload
     BareKeyboardKey result[2];
     bool didNotCrash = false;
     controller.ConvertDataPacketToBareKeyboardKeys(packet, result);
+    uint8_t pinAsInt = result[0].pin;
     didNotCrash = true;
 
     ASSERT_TEST(didNotCrash == true);
@@ -293,7 +298,7 @@ void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBar
         key1,
         key2,
     };
-    uint8_t *dataPtr = (uint8_t *)&data;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet;
     packet.payloadLength = sizeof(data);
     packet.payload = dataPtr;
@@ -370,7 +375,7 @@ void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue()
     key.pin = 2;
     key.keyCode = 1337;
 
-    bool result = controller.IsKeyValid(key);
+    bool result = controller.IsKeyValid(key.pin);
 
     ASSERT_TEST(result == true);
 }
@@ -391,7 +396,7 @@ void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
     key.pin = 52;
     key.keyCode = 1337;
 
-    bool result = controller.IsKeyValid(key);
+    bool result = controller.IsKeyValid(key.pin);
 
     ASSERT_TEST(result == false);
 }

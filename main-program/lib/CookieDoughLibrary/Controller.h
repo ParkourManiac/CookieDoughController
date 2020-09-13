@@ -123,13 +123,13 @@ public:
     void ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> *keymapList);
 
     /**
-     * @brief Determines whether a key is valid (i.e can be used) or not.
+     * @brief Determines whether a pin is valid (i.e can be used) or not.
      * 
-     * @param key The key to be validated.
-     * @return true The key is valid.
-     * @return false The key is invalid or corrupt.
+     * @param pin The pin to be validated.
+     * @return true The pin is valid.
+     * @return false The pin is invalid or corrupt.
      */
-    bool IsKeyValid(const IKey &key);
+    bool IsKeyValid(const IKey &pin);
 
     /**
      * @brief Switches to the next keyMap configuration in the list

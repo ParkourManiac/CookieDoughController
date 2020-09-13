@@ -12,12 +12,11 @@ extern int digitalRead_return;
 extern uint8_t digitalRead_param_pin;
 extern unsigned int digitalRead_invocations;
 
-void ConfigurePinForKey_IKeysPinIsPassedToPinMode()
+void ConfigurePinForKey_IKeyIsPassedToPinMode()
 {
-    uint8_t expectedPin = 2;
-    IKey key = IKey{.pin = expectedPin};
+    IKey expectedPin = 2;
 
-    ConfigurePinForKey(key);
+    ConfigurePinForKey(expectedPin);
 
     ASSERT_TEST(expectedPin == pinMode_param_pin);
 }
@@ -27,7 +26,7 @@ void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey()
     uint8_t expectedPin = 2;
     Key key = Key(expectedPin, 1337);
 
-    ConfigurePinForKey(key);
+    ConfigurePinForKey(key.pin);
 
     ASSERT_TEST(expectedPin == pinMode_param_pin);
 }
@@ -37,14 +36,14 @@ void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey()
     uint8_t expectedPin = 2;
     SpecialKey key = SpecialKey(expectedPin, toggleDefaultKeyMap);
 
-    ConfigurePinForKey(key);
+    ConfigurePinForKey(key.pin);
 
     ASSERT_TEST(expectedPin == pinMode_param_pin);
 }
 
 void ConfigurePinForKey_ConfiguresPinAsInputPullup()
 {
-    IKey key = IKey{.pin = 2};
+    IKey key = 2;
 
     ConfigurePinForKey(key);
 
@@ -55,7 +54,7 @@ void ConfigurePinForKey_CallsPinModeOnce()
 {
     SpecialKey key = SpecialKey(2, toggleDefaultKeyMap);
 
-    ConfigurePinForKey(key);
+    ConfigurePinForKey(key.pin);
 
     ASSERT_TEST(1 == pinMode_invocations);
 }
@@ -208,7 +207,7 @@ void DebounceRead_UpdatesOldValueOfStateWithPreviousStateValue()
     state.oldValue = false;
     state.value = true;
 
-    DebounceRead(&state);
+    DebounceRead(0, &state);
 
     ASSERT_TEST(state.oldValue == true);
 }
@@ -216,11 +215,11 @@ void DebounceRead_UpdatesOldValueOfStateWithPreviousStateValue()
 void DebounceRead_ReadsStateOfPin()
 {
     IPinState state;
-    state.pin = 3;
+    IKey pin = 3;
 
-    DebounceRead(&state);
+    DebounceRead(pin, &state);
 
-    ASSERT_TEST(digitalRead_param_pin == 3 && digitalRead_invocations == 1);
+    ASSERT_TEST(digitalRead_param_pin == pin && digitalRead_invocations == 1);
 }
 
 void DebounceRead_PinStateHasChanged_UpdatesLastDebounceTime()
@@ -232,7 +231,7 @@ void DebounceRead_PinStateHasChanged_UpdatesLastDebounceTime()
     state.oldPinState = true;
     digitalRead_return = false;
 
-    DebounceRead(&state);
+    DebounceRead(0, &state);
 
     ASSERT_TEST(state.lastDebounceTime == expectedDebounceTime);
 }
@@ -246,7 +245,7 @@ void DebounceRead_PinStateHasNotChanged_DoesNotUpdateLastDebounceTime()
     state.oldPinState = true;
     digitalRead_return = true;
 
-    DebounceRead(&state);
+    DebounceRead(0, &state);
 
     ASSERT_TEST(state.lastDebounceTime == expectedDebounceTime);
 }
@@ -261,7 +260,7 @@ void DebounceRead_DebounceTimeExceededAndValueIsOutdated_UpdateStateValue()
     state.value = true;    // Button was previously pressed.
     bool expected = false; // We expect the button to be released.
 
-    DebounceRead(&state);
+    DebounceRead(0, &state);
 
     ASSERT_TEST(state.value == expected);
 }
@@ -277,7 +276,7 @@ void DebounceRead_DebounceTimeExceededAndValueIsOutdatedAndTheNewValueIsActive_U
     state.oldPinState = currentPinState;
     state.value = false; // Button was previously released.
 
-    DebounceRead(&state);
+    DebounceRead(0, &state);
 
     ASSERT_TEST(state.timeOfActivation == expectedTimeOfActivation);
 }
@@ -291,7 +290,7 @@ void DebounceRead_ValueIsOutdatedButDebounceTimeIsNotExceeded_DoesNotUpdateState
     bool expected = true;   // We expect the button to still be pressed.
     state.value = expected; // Button was previously pressed.
 
-    DebounceRead(&state);
+    DebounceRead(0, &state);
 
     ASSERT_TEST(state.value == expected);
 }
@@ -307,7 +306,7 @@ void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_D
     unsigned long expectedTimeOfActivation = 1337;
     state.timeOfActivation = expectedTimeOfActivation;
 
-    DebounceRead(&state);
+    DebounceRead(0, &state);
 
     ASSERT_TEST(state.timeOfActivation == expectedTimeOfActivation);
 }
@@ -319,12 +318,12 @@ void DebounceRead_OldPinStateIsUpdated()
     state.oldPinState = true;         // Button was released.
     bool expectedOldPinState = false; // We expect it to become released.
 
-    DebounceRead(&state);
+    DebounceRead(0, &state);
 
     ASSERT_TEST(state.oldPinState == expectedOldPinState);
 }
 
-void ReadPinValuesForKeyMap_CallsDigitalReadForEachItem()
+void UpdatePinStatesForKeyMap_CallsDigitalReadForEachItem()
 {
     int length = 2;
     Key keymap[length] = {
@@ -332,12 +331,12 @@ void ReadPinValuesForKeyMap_CallsDigitalReadForEachItem()
         Key(3, 1337),
     };
 
-    ReadPinValuesForKeyMap(keymap, length);
+    UpdatePinStatesForKeyMap(keymap, length);
 
     ASSERT_TEST(digitalRead_invocations == length);
 }
 
-void ReadPinValuesForKeyMap_CorrectlyParsesKeyPin()
+void UpdatePinStatesForKeyMap_CorrectlyParsesKeyPin()
 {
     int length = 1;
     Key keymap[length] = {
@@ -345,12 +344,12 @@ void ReadPinValuesForKeyMap_CorrectlyParsesKeyPin()
     };
     uint8_t expectedPin = 3;
 
-    ReadPinValuesForKeyMap(keymap, length);
+    UpdatePinStatesForKeyMap(keymap, length);
 
     ASSERT_TEST(digitalRead_param_pin == expectedPin);
 }
 
-void ReadPinValuesForKeyMap_UpdatesStateForAllPins()
+void UpdatePinStatesForKeyMap_UpdatesStateForAllPins()
 {
     digitalRead_return = true;
     int length = 2;
@@ -359,13 +358,13 @@ void ReadPinValuesForKeyMap_UpdatesStateForAllPins()
         Key(3, 1337),
     };
 
-    ReadPinValuesForKeyMap(keymap, length);
+    UpdatePinStatesForKeyMap(keymap, length);
 
-    ASSERT_TEST(keymap[0].oldPinState == true && keymap[1].oldPinState == true);
+    ASSERT_TEST(keymap[0].state.oldPinState == true && keymap[1].state.oldPinState == true);
 }
 
-// TODO: ReadPinValuesForKeyMap_Works with Key
-// TODO: ReadPinValuesForKeyMap_Works with SpecialKey
+// TODO: UpdatePinStatesForKeyMap_Works with Key
+// TODO: UpdatePinStatesForKeyMap_Works with SpecialKey
 
 void KeyConstructor_IntializesPinAndKeycodeCorrectly()
 {
@@ -389,8 +388,8 @@ void SpecialKeyConstructor_IntializesPinAndFunctionCorrectly()
 
 void BareKeyboardKeyConstructor_IntializesPinAndKeycodeCorrectly()
 {
-    uint8_t expectedPin = 7;
-    int expectedKeycode = 19;
+    IKey expectedPin = 7;
+    IKeycode expectedKeycode = 19;
 
     BareKeyboardKey key = BareKeyboardKey(expectedPin, expectedKeycode);
 
