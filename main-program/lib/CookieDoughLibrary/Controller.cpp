@@ -6,51 +6,18 @@
 
 void Controller::Setup()
 {
+    // // DEBUG CLEAN EEPROM
     // for(unsigned int i = 0; i < EEPROM.length(); i++) {
     //     EEPROM.write(i, 0);
     // }
-    // Key keys[normalKeyCount] = { 
-    //     Key(2, 4),
-    //     Key(3, 26),
-    //     Key(4, 22),
-    //     Key(5, 7),
-    // };
-    // nextFreeEepromAdress = 50;
-    // customKeyMaps.Add(keys); // NOTE: HAS BEEN REFACTORED TO BARE KEYBOARD KEYS. PLEASE CHANGE THIS.
-    // SaveKeyMapsToMemory(customKeyMaps); // NOTE: HAS BEEN REFACTORED TO BARE KEYBOARD KEYS.
-    DEBUG_PRINT("Changing to default keymap.\n");
+    // // DEBUG
+
+    DEBUG_PRINT("\nChanging to default keymap.\n");
     DEBUG(delay(100));
     ChangeKeyMap(defaultKeyMap);
     LoadKeymapsFromMemoryIntoList(&customKeyMaps); // SRAM: -162 (When loading one keymap of 4 keys).
     ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount); //SRAM: -0
     ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount); //SRAM: -0
-
-    // // DEBUG
-    // DEBUG_PRINT(\n);
-    // DEBUG_PRINT("New current keymap:\n");
-    // for(int i = 0; i < normalKeyCount; i++) {
-    //     DEBUG_PRINT("Current .pin = ");
-    //     DEBUG_PRINT(currentKeyMap[i].pin);
-    //     DEBUG_PRINT(", .keyCode = ");
-    //     DEBUG_PRINT(currentKeyMap[i].keyCode);
-    //     DEBUG_PRINT("\n");
-    // }
-    // DEBUG(delay(100));
-
-    // for (unsigned int i = 0; i < customKeyMaps.length; i++)
-    // {
-    //     DEBUG_PRINT("{\n");
-    //     for (unsigned int j = 0; j < normalKeyCount; j++)
-    //     {
-    //         DEBUG_PRINT("    .pin: ");
-    //         DEBUG_PRINT((*customKeyMaps[i])[j].pin);
-    //         DEBUG_PRINT("\n    .keyCode: ");
-    //         DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
-    //         DEBUG_PRINT("\n"); 
-    //     }
-    //     DEBUG_PRINT("}\n");
-    // }
-    // // DEBUG
 }
 
 void Controller::Update()
@@ -800,6 +767,7 @@ bool Controller::CreateNewKeyMap() // TODO: Needs to be tested.
     else
     {
         DEBUG_PRINT("We don't have enought space to create another keymap (Max size hardcoded to 10)...\n"); // DEBUG
+        SignalErrorToUser(); // TODO: prevent getting thrown out of memory when we fail to add a new keymap.
         // TODO: Error we don't have space to create another keyMap.
     }
 

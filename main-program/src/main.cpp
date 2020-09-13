@@ -35,9 +35,13 @@ void setup()
 void loop()
 {
     controller.Update(); // SRAM: -327
-    // delay(1000); // DEBUG
-    // Serial.print(freeMemory()); // DEBUG
-    // Serial.print("\n"); // DEBUG
+
+    // DEBUG
+    if(millis() % 1000 == 0) {
+        Serial.print(freeMemory());
+        Serial.print("\n");
+    } 
+    // DEBUG
 }
 
 // "If you run out of SRAM..." - https://www.arduino.cc/en/tutorial/memory

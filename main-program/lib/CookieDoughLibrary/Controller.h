@@ -37,7 +37,7 @@ private:
 
     EditMode editmode = EditMode(normalKeyCount, true);
 
-    const float longPressDuration = 4000;
+    const float longPressDuration = 2000;
 
 public:
     /**
