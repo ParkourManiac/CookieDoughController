@@ -7,7 +7,6 @@
 
 // IMPORTANT: To run a test please run your function in the file
 // testSuite.cpp RunTests() function using the macro RUN_TEST(functionName).
-#include <stdio.h>
 #include <vector>
 #include <iostream>
 
