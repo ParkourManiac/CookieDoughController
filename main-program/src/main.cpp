@@ -1,10 +1,10 @@
 #include <Arduino.h>
 
 #include <Controller.h>
-#include <SRAM.cpp>  // DEBUG
+#include <SRAM.cpp>  // DEBUG // NOLINT(build/include)
 
+// #define DEBUG(VALUE) VALUE
 // #define DEBUG_PRINT(VALUE) Serial.print(VALUE)
-// #define DEBUG_PRINTLN(VALUE) Serial.println(VALUE)
 
 /**
  * @brief A pre-defined controller object, set up with the prefered keymap settings.
@@ -36,7 +36,13 @@ void loop()
 {
     controller.Update(); // SRAM: -327
     // delay(1000); // DEBUG
-    // Serial.println(freeMemory()); // DEBUG
+    // Serial.print(freeMemory()); // DEBUG
+    // Serial.print("\n"); // DEBUG
 }
 
 // "If you run out of SRAM..." - https://www.arduino.cc/en/tutorial/memory
+
+// TODO: When in doubt: Use assert().
+// TODO: __attribute__((packed)) on the structs that need to be saved to eeprom.
+// TODO: Research POD type. Plain-Old-datatype. (Serialization for c++).
+// TODO: Look into using GDB for debugging. b <num> = sets breakpoint. r = run code. c = Continue to next breakpoint. p <expression> = Prints the result of the given expression.

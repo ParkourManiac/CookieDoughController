@@ -81,7 +81,7 @@ void CalculateCRC_UsesAlgorithCRC32()
     uint8_t data = 0xF;
     uint8_t *dataPtr = &data;
 
-    unsigned long result = CalculateCRC(dataPtr, sizeof(data));
+    uint32_t result = CalculateCRC(dataPtr, sizeof(data));
     ASSERT_TEST(result == 1119744540);
 }
 
@@ -171,7 +171,7 @@ void SavePacketToEEPROM_SavesStxToFirstGivenAdress()
     unsigned int adress = 20;
     unsigned int packetSize;
 
-    SavePacketToEEPROM(adress, &data, sizeof(data), packetSize);
+    SavePacketToEEPROM(adress, &data, sizeof(data), &packetSize);
 
     ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[0] == adress);
 }
@@ -183,7 +183,7 @@ void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
     unsigned int adress = 20;
     unsigned int packetSize;
 
-    SavePacketToEEPROM(adress, &data, sizeof(data), packetSize);
+    SavePacketToEEPROM(adress, &data, sizeof(data), &packetSize);
     unsigned int expectedEtxPosition = adress + sizeof(packet.etx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
 
     ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[1] == expectedEtxPosition && EEPROMClass_put_param_t_o1_v[1] == packet.etx);
@@ -212,7 +212,7 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
     EEPROMClass_read_return_v.push_back(dataPtr[1]);
 
     unsigned int packetSize;
-    bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), packetSize);
+    bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(resultBool == true && 
                 EEPROMClass_put_param_idx_o1_v[0] == adress && EEPROMClass_put_param_t_o1_v[0] == packet.stx &&
@@ -246,7 +246,7 @@ void SavePacketToEEPROM_EepromFailedToWriteDownCorrectData_PacketIsCorrectlyPutD
     EEPROMClass_read_return_v.push_back(dataPtr[1]);
 
     unsigned int packetSize;
-    bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), packetSize);
+    bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(resultBool == false);
 }
@@ -260,13 +260,13 @@ void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
 
     unsigned int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
 
-    SavePacketToEEPROM(adress, (uint8_t *)&data, sizeof(data), packetSize);
+    SavePacketToEEPROM(adress, (uint8_t *)&data, sizeof(data), &packetSize);
 
     ASSERT_TEST(EEPROMClass_update_param_idx_v[0] == expectedPayloadAdress && EEPROMClass_update_param_val_v[0] == ((uint8_t *)&data)[0] &&
                 EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == ((uint8_t *)&data)[1]);
 }
 
-void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite.
+void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
 {
     unsigned int adress = 13;
     uint16_t data = 421;
@@ -286,7 +286,7 @@ void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the 
     DataPacket *resultPtr = new DataPacket(); 
     DataPacket result = *resultPtr;
     unsigned int packetSize;
-    bool resultBool = ParsePacketFromEEPROM(adress, result, packetSize);
+    bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSize);
 
     ASSERT_TEST(resultBool == true &&
                 expectedPacket.stx == result.stx &&
@@ -299,7 +299,7 @@ void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the 
     delete(resultPtr);
 }
 
-void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite.
+void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
 {
     unsigned int adress = 13;
     uint16_t data = 421;
@@ -319,7 +319,7 @@ void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad t
     DataPacket *resultPtr = new DataPacket(); 
     DataPacket result = *resultPtr;
     unsigned int packetSize;
-    bool resultBool = ParsePacketFromEEPROM(adress, result, packetSize);
+    bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSize);
 
     ASSERT_TEST(resultBool == false);
     delete(resultPtr);

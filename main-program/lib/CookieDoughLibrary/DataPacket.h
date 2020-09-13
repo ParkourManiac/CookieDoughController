@@ -26,7 +26,7 @@ struct DataPacket
  * @return true When we successfully parsed the DataPacket from the eeprom.
  * @return false When the adress couldn't be parsed as a DataPacket.
  */
-bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int &packetSize);
+bool ParsePacketFromEEPROM(unsigned int adress, DataPacket *packet, unsigned int *packetSize);
 
 /**
  * @brief Saves the given data as a DataPacket on the eeprom.
@@ -39,7 +39,7 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket &packet, unsigned int
  * @return true When we successfully saved the DataPacket to the eeprom.
  * @return false When we were unsuccessful in saving the DataPacket to the eeprom.
  */
-bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSize, unsigned int &packetSize);
+bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSize, unsigned int *packetSize);
 
 /**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
@@ -49,7 +49,7 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
  * (The length of the array of bytes).
  * @return unsigned long Returns the CRC checksum calculated from the data.
  */
-unsigned long CalculateCRC(uint8_t *data, unsigned int length);
+uint32_t CalculateCRC(uint8_t *data, unsigned int length);
 
 
 #endif

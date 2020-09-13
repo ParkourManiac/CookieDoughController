@@ -18,43 +18,45 @@ void Controller::Setup()
     // nextFreeEepromAdress = 50;
     // customKeyMaps.Add(keys); // NOTE: HAS BEEN REFACTORED TO BARE KEYBOARD KEYS. PLEASE CHANGE THIS.
     // SaveKeyMapsToMemory(customKeyMaps); // NOTE: HAS BEEN REFACTORED TO BARE KEYBOARD KEYS.
-    DEBUG_PRINTLN("Changing to default keymap.");
+    DEBUG_PRINT("Changing to default keymap.\n");
     DEBUG(delay(100));
     ChangeKeyMap(defaultKeyMap);
-    LoadKeymapsFromMemoryIntoList(customKeyMaps); // SRAM: -162 (When loading one keymap of 4 keys).
+    LoadKeymapsFromMemoryIntoList(&customKeyMaps); // SRAM: -162 (When loading one keymap of 4 keys).
     ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount); //SRAM: -0
     ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount); //SRAM: -0
 
     // // DEBUG
-    // DEBUG_PRINTLN();
-    // DEBUG_PRINTLN("New current keymap:");
+    // DEBUG_PRINT(\n);
+    // DEBUG_PRINT("New current keymap:\n");
     // for(int i = 0; i < normalKeyCount; i++) {
     //     DEBUG_PRINT("Current .pin = ");
     //     DEBUG_PRINT(currentKeyMap[i].pin);
     //     DEBUG_PRINT(", .keyCode = ");
-    //     DEBUG_PRINTLN(currentKeyMap[i].keyCode);
+    //     DEBUG_PRINT(currentKeyMap[i].keyCode);
+    //     DEBUG_PRINT("\n");
     // }
     // DEBUG(delay(100));
 
     // for (unsigned int i = 0; i < customKeyMaps.length; i++)
     // {
-    //     DEBUG_PRINTLN("{");
+    //     DEBUG_PRINT("{\n");
     //     for (unsigned int j = 0; j < normalKeyCount; j++)
     //     {
     //         DEBUG_PRINT("    .pin: ");
-    //         DEBUG_PRINTLN((*customKeyMaps[i])[j].pin);
-    //         DEBUG_PRINT("    .keyCode: ");
-    //         DEBUG_PRINTLN((*customKeyMaps[i])[j].keyCode);
+    //         DEBUG_PRINT((*customKeyMaps[i])[j].pin);
+    //         DEBUG_PRINT("\n    .keyCode: ");
+    //         DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
+    //         DEBUG_PRINT("\n"); 
     //     }
-    //     DEBUG_PRINTLN("}");
+    //     DEBUG_PRINT("}\n");
     // }
     // // DEBUG
 }
 
 void Controller::Update()
 {
-    ReadPinValuesForKeyMap(currentKeyMap, normalKeyCount); // SRAM: -6
-    ReadPinValuesForKeyMap(specialKeys, specialKeyCount); // SRAM: -6
+    UpdatePinStatesForKeyMap(currentKeyMap, normalKeyCount); // SRAM: -6
+    UpdatePinStatesForKeyMap(specialKeys, specialKeyCount); // SRAM: -6
 
     ExecuteSpecialCommands(); // SRAM: -105
     if (editmode.enabled)
@@ -67,55 +69,56 @@ void Controller::Update()
     }
 }
 
-void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList) // TODO: Refactored to BareKeyboardKey. Check if code is necessary.
+void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList)
 {
-    unsigned int serializedSize = sizeof(BareKeyboardKey[keymapList.length * normalKeyCount]);
-    // Key *serializedKeyMaps = new Key[keymapList.length * normalKeyCount];
-    BareKeyboardKey *serializedKeyMaps = new BareKeyboardKey[keymapList.length * normalKeyCount];
+    const int keyCount = keymapList.length * normalKeyCount;
+    BareKeyboardKey *serializedKeyMaps = new BareKeyboardKey[keyCount];
+    unsigned int serializedSize = sizeof(serializedKeyMaps[0]) * keyCount;
     for (unsigned int i = 0; i < keymapList.length; i++)
     {
         for (int j = 0; j < normalKeyCount; j++)
         {
             unsigned int pos = i * normalKeyCount + j;
-            serializedKeyMaps[pos] = (BareKeyboardKey)(*keymapList[i])[j];
+            serializedKeyMaps[pos] = (*keymapList[i])[j];
         }
     }
 
-    uint8_t *dataPtr = (uint8_t *)serializedKeyMaps;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t *>(serializedKeyMaps);
     // // DEBUG
     // DEBUG_PRINT("Passed in: ");
     // for(int i = 0; i < serializedSize; i++) {
     //     DEBUG_PRINT(dataPtr[i], HEX);
     // }
-    // DEBUG_PRINTLN();
+    // DEBUG_PRINT("\n");
     // DEBUG(delay(100));
     // // DEBUG
     unsigned int packetSize;
     // TODO: Change this to write to nextFreeEepromAdress and invalidate the old one at eepromAdress.
-    bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, packetSize);
-    if (!success)
+    bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, &packetSize);
+    if (success)
     {
-        DEBUG_PRINTLN("Failed to write data to memory!"); // DEBUG
+        DEBUG_PRINT("Settings saved!\n"); // DEBUG
+        DEBUG(delay(100)); // DEBUG
+        nextFreeEepromAdress = eepromAdress + packetSize;
+    } else 
+    {
+        DEBUG_PRINT("Failed to write data to memory!\n"); // DEBUG
         DEBUG(delay(100)); // DEBUG
 
         // TODO: Implement error code.
-    } else {
-        DEBUG_PRINTLN("Settings saved!"); // DEBUG
-        DEBUG(delay(100)); // DEBUG
     }
-    nextFreeEepromAdress = eepromAdress + packetSize;
 
     delete (serializedKeyMaps);
 }
 
-void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> &keymapList) // Refactored to BareKeyboardKey.
+void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keymapList) // Refactored to BareKeyboardKey.
 {
     unsigned int packetAdress;
     unsigned int packetSize;
 
     unsigned int amountOfKeys;
     BareKeyboardKey *payloadAsBareKeys = new BareKeyboardKey[1];
-    bool success = RetrieveBareKeyboardKeysFromMemory(payloadAsBareKeys, amountOfKeys, packetAdress, packetSize);
+    bool success = RetrieveBareKeyboardKeysFromMemory(&payloadAsBareKeys, &amountOfKeys, &packetAdress, &packetSize);
     if (!success) 
     {
         delete[](payloadAsBareKeys);
@@ -126,35 +129,37 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> &ke
     delete[](payloadAsBareKeys);
 
     DEBUG(
-        for (unsigned int i = 0; i < keymapList.length; i++)
+        for (unsigned int i = 0; i < keymapList->length; i++)
         {
             DEBUG_PRINT("Data ");
             DEBUG_PRINT(i);
-            DEBUG_PRINTLN(":");
+            DEBUG_PRINT(":\n");
             for (int j = 0; j < normalKeyCount; j++)
             {
                 DEBUG_PRINT("    ( pin: ");
-                DEBUG_PRINT((*keymapList[i])[j].pin);
+                DEBUG_PRINT((*(*keymapList)[i])[j].pin);
                 DEBUG_PRINT(", keyCode: ");
-                DEBUG_PRINT((*keymapList[i])[j].keyCode);
-                DEBUG_PRINTLN(" )");
+                DEBUG_PRINT((*(*keymapList)[i])[j].keyCode);
+                DEBUG_PRINT(" )\n");
             }
         }
         DEBUG(delay(100));
     );
 
     // DEBUG
-    // DEBUG_PRINTLN("DATA:::::");
+    // DEBUG_PRINT("DATA:::::\n");
     // for(int i = 0; i < packet.payloadLength; i++) {
-    //     DEBUG_PRINTLN(packet.payload[i], HEX);
+    //     DEBUG_PRINT(packet.payload[i], HEX);
+    //     DEBUG_PRINT("\n");
     // }
-    // DEBUG_PRINTLN(":::::");
+    // DEBUG_PRINT(":::::\n");
 
-    // DEBUG_PRINTLN("Finished loading.");
+    // DEBUG_PRINT("Finished loading.\n");
 
-    // DEBUG_PRINTLN();
+    // DEBUG_PRINT("\n");
     // DEBUG_PRINT("Packet size: ");
-    // DEBUG_PRINTLN(packetSize);
+    // DEBUG_PRINT(packetSize);
+    // DEBUG_PRINT("\n");
     // DEBUG(delay(100));
     // DEBUG
 
@@ -162,91 +167,93 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> &ke
     nextFreeEepromAdress = packetAdress + packetSize;
 }
 
-bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *&payloadAsBareKeys, unsigned int &amountOfKeys, unsigned int &packetAdress, unsigned int &packetSize)
+bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, unsigned int *amountOfKeys, unsigned int *packetAdress, unsigned int *packetSize)
 {
-    amountOfKeys = packetAdress = packetSize = 0;
+    *amountOfKeys = *packetAdress = *packetSize = 0;
     DataPacket *dataPtr = new DataPacket();
     DataPacket packet = *dataPtr;
 
     bool foundValidPacket = false;
     while (!foundValidPacket)
     {
-        unsigned int startAdress = packetAdress;
-        bool foundPacket = RetrieveDataPacketFromMemory(packet, packetSize, packetAdress, startAdress);
+        unsigned int startAdress = *packetAdress;
+        bool foundPacket = RetrieveDataPacketFromMemory(&packet, packetSize, packetAdress, startAdress);
         if (!foundPacket)
             return false;
 
-        // DEBUG_PRINTLN("Began Converting DataPacket to Keymaps..."); // DEBUG
+        // DEBUG_PRINT("Began Converting DataPacket to Keymaps...\n"); // DEBUG
         // DEBUG(delay(100));                                                  // DEBUG
 
-        amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
-        delete[](payloadAsBareKeys);
-        payloadAsBareKeys = new BareKeyboardKey[amountOfKeys];
-        ConvertDataPacketToBareKeyboardKeys(packet, payloadAsBareKeys);
+        *amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
+        delete[](*payloadAsBareKeys);
+        *payloadAsBareKeys = new BareKeyboardKey[*amountOfKeys];
+
+        ConvertDataPacketToBareKeyboardKeys(packet, *payloadAsBareKeys);
 
         foundValidPacket = true;
-        for (unsigned int i = 0; i < amountOfKeys; i++)
+        for (unsigned int i = 0; i < *amountOfKeys; i++)
         {
-            bool isValid = IsKeyValid(payloadAsBareKeys[i]);
+            bool isValid = IsKeyValid((*payloadAsBareKeys)[i].pin);
 
             DEBUG(
-                DEBUG_PRINT("IsValid?: "); 
+                DEBUG_PRINT("\nIsValid?: "); 
                 DEBUG_PRINT(isValid); 
                 DEBUG_PRINT("  {");
                 DEBUG_PRINT(" .pin: ");
-                DEBUG_PRINT(payloadAsBareKeys[i].pin);
+                DEBUG_PRINT((*payloadAsBareKeys)[i].pin);
                 DEBUG_PRINT(", .keyCode: ");
-                DEBUG_PRINT(payloadAsBareKeys[i].keyCode);
-                DEBUG_PRINTLN(" }");
+                DEBUG_PRINT((*payloadAsBareKeys)[i].keyCode);
+                DEBUG_PRINT(" }");
                 DEBUG(delay(100));
             );
             if (!isValid)
             {
                 foundValidPacket = false;
-                packetAdress += packetSize;
+                *packetAdress += *packetSize;
                 break;
             }
         }
+        DEBUG_PRINT("\n");
     }
 
     delete (dataPtr);
     return true;
 }
 
-bool Controller::RetrieveDataPacketFromMemory(DataPacket &packet, unsigned int &packetSize, unsigned int &packetAdress, unsigned int startAdress)
+bool Controller::RetrieveDataPacketFromMemory(DataPacket *packet, unsigned int *packetSize, unsigned int *packetAdress, unsigned int startAdress)
 {
-    packetAdress = startAdress;
-    packetSize = 0;
+    *packetAdress = startAdress;
+    *packetSize = 0;
     bool foundPacket = false;
     do
     {
-        foundPacket = ParsePacketFromEEPROM(packetAdress, packet, packetSize);
+        foundPacket = ParsePacketFromEEPROM(*packetAdress, packet, packetSize);
         if (!foundPacket)
         {
-            packetAdress++;
-            if (packetAdress >= EEPROM.length())
+            *packetAdress += 1;
+            if (*packetAdress >= EEPROM.length())
             {
-                DEBUG_PRINTLN("Failed to read data from memory!"); // DEBUG
+                DEBUG_PRINT("Failed to read data from memory!\n"); // DEBUG
                 DEBUG(delay(100));                                         // DEBUG
 
                 return false;
             }
         }
-    } while (!foundPacket && packetAdress < EEPROM.length());
+    } while (!foundPacket && *packetAdress < EEPROM.length());
 
     return foundPacket;
 }
 
 void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result)
 {
-    unsigned int amountOfKeys = packet.payloadLength / sizeof(BareKeyboardKey);
-    for (unsigned int i = 0; i < amountOfKeys; i++)
+    uint8_t* resultAsBytes = reinterpret_cast<uint8_t*>(result);
+    for (unsigned int i = 0; i < packet.payloadLength; i++)
     {
-        result[i] = ((BareKeyboardKey *)packet.payload)[i];
+        resultAsBytes[i] = packet.payload[i];
     }
 }
 
-void Controller::ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> &keymapList) // NOTE: Refactored to BareKeyboardKeys.
+void Controller::ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> *keymapList) // NOTE: Refactored to BareKeyboardKeys.
 {
     // Convert bare keys to keys with pin state
     unsigned int amountOfKeymaps = amountOfKeys / normalKeyCount;
@@ -258,41 +265,42 @@ void Controller::ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, 
             keyMap[j] = keys[i * normalKeyCount + j];
 
             // // DEBUG
-            // DEBUG_PRINTLN("BareKey:");
+            // DEBUG_PRINT("BareKey:\n");
             // DEBUG_PRINT("    .pin: ");
-            // DEBUG_PRINTLN(currentKey.pin);
-            // DEBUG_PRINT("    .keyCode: ");
-            // DEBUG_PRINTLN(currentKey.keyCode);
+            // DEBUG_PRINT(currentKey.pin);
+            // DEBUG_PRINT("\n    .keyCode: ");
+            // DEBUG_PRINT(currentKey.keyCode);
 
-            // DEBUG_PRINTLN("ConvertedKey:");
+            // DEBUG_PRINT("\nConvertedKey:\n");
             // DEBUG_PRINT("    .pin: ");
-            // DEBUG_PRINTLN(keyMap[j].pin);
-            // DEBUG_PRINT("    .keyCode: ");
-            // DEBUG_PRINTLN(keyMap[j].keyCode);
+            // DEBUG_PRINT(keyMap[j].pin);
+            // DEBUG_PRINT("\n    .keyCode: ");
+            // DEBUG_PRINT(keyMap[j].keyCode);
+            // DEBUG_PRINT("\n");
             // DEBUG(delay(100));
             // // DEBUG
         }
-        keymapList.Add(keyMap);
+        keymapList->Add(keyMap);
     }
 }
 
-bool Controller::IsKeyValid(IKey key)
+bool Controller::IsKeyValid(const IKey &pin)
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
-        if (key.pin == defaultKeyMap[i].pin)
+        if (pin == defaultKeyMap[i].pin)
             return true;
     }
 
     return false;
 }
 
-void Controller::CycleKeyMap() // TODO: Check if working. // Refactored for BareKeyboardKeys.
+void Controller::CycleKeyMap()
 {
     if (customKeyMaps.IsEmpty())
     {
         // We can't cycle through an empty list of keymaps...
-        DEBUG_PRINTLN("Empty"); // DEBUG
+        DEBUG_PRINT("Empty\n"); // DEBUG
         SignalErrorToUser();
         return;
     }
@@ -311,9 +319,9 @@ void Controller::CycleKeyMap() // TODO: Check if working. // Refactored for Bare
     }
 }
 
-void Controller::ChangeKeyMap(BareKeyboardKey *keyMap) // Refactored for BareKeyboardKeys. // TODO: Needs to be tested.
+void Controller::ChangeKeyMap(BareKeyboardKey *keyMap)
 {
-    DEBUG_PRINTLN("Changing keymap"); // DEBUG
+    DEBUG_PRINT("Changing keymap\n"); // DEBUG
     // Overwrite currentKeyMap with the keys we want to equip.
     for(int i = 0; i < normalKeyCount; i++) 
     {
@@ -325,7 +333,7 @@ void Controller::ChangeKeyMap(BareKeyboardKey *keyMap) // Refactored for BareKey
     SendKeyboardEvent();
 
     // Keep track if we are using the default keymap.
-    isUsingDefaultKeymap = keyMap == defaultKeyMap; // NOTE: This line is already tested.
+    isUsingDefaultKeymap = keyMap == defaultKeyMap;
 
     // Configure pins
     ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
@@ -370,14 +378,14 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
     {
         Key &key = currentKeyMap[i];
 
-        if (OnKeyPress(key))
+        if (OnKeyPress(key.state))
         {
             digitalWrite(LED_BUILTIN, HIGH);
 
             // Find empty slot
             int index = 2; // 2 = Start position for keys.
             bool foundEmpty = false;
-            for (int i = 2; i < 8 && !foundEmpty; i++) // TODO: FORLOOP MIGHT NOT BE EFFICIENT.
+            for (int i = 2; i < bufferSize && !foundEmpty; i++) // TODO: Running through the forloop every keypress might not be efficient. Push pop list of empty positions? Construct a Dictionary?
             {
                 foundEmpty = buf[i] == 0;
                 if (foundEmpty)
@@ -391,14 +399,14 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
                 SendKeyboardEvent();
             }
         }
-        else if (OnKeyRelease(key))
+        else if (OnKeyRelease(key.state))
         {
             digitalWrite(LED_BUILTIN, LOW);
 
             // Find empty slot
             int index = 2; // 2 = Start position for keys.
             bool foundKeyCode = false;
-            for (int i = 2; i < 8 && !foundKeyCode; i++) // TODO: FORLOOP MIGHT NOT BE EFFICIENT.
+            for (int i = 2; i < bufferSize && !foundKeyCode; i++) // TODO: Running through the forloop every keypress might not be efficient. Push pop list of empty positions? Construct a Dictionary?
             {
                 foundKeyCode = buf[i] == key.keyCode;
                 if (foundKeyCode)
@@ -411,7 +419,7 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
                 buf[index] = 0;
 
                 bool bufIsEmpty = true;
-                for (int i = 2; i < 8; i++) // TODO: FORLOOP MIGHT NOT BE EFFICIENT.
+                for (int i = 2; i < bufferSize; i++) // TODO: Running through the forloop every keypress might not be efficient. Push pop list of empty positions? Construct a Dictionary?
                 {
                     if (buf[i] != 0)
                     {
@@ -432,7 +440,7 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
 
 void Controller::WipeKeyboardEventBuffer() 
 {
-    for(int i = 0; i < 8; i++) 
+    for(int i = 0; i < bufferSize; i++) 
     {
         buf[i] = 0;
     }
@@ -440,18 +448,18 @@ void Controller::WipeKeyboardEventBuffer()
 
 void Controller::SendKeyboardEvent() 
 {
-    Serial.write(buf, 8);
+    Serial.write(buf, bufferSize);
 }
 
-void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested.
+void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested. Refactor to use OnKeyPress and etc.
 {
     for (int i = 0; i < specialKeyCount; i++)
     {
         SpecialKey &specialKey = specialKeys[i];
 
-        if (specialKey.oldValue != specialKey.value)
+        if (specialKey.state.oldValue != specialKey.state.value)
         {
-            if (specialKey.value)
+            if (specialKey.state.value)
             {
                 digitalWrite(LED_BUILTIN, HIGH);
 
@@ -512,9 +520,9 @@ void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested.
                     if (editmode.enabled)
                     {
                         // if we did a long press in editmode....
-                        if (OnLongPress(specialKey, longPressDuration))
+                        if (OnLongPress(specialKey.state, longPressDuration))
                         {
-                            // DEBUG_PRINTLN("Long press, released. Save to memory..."); // DEBUG
+                            // DEBUG_PRINT("Long press, released. Save to memory...\n"); // DEBUG
                             SaveControllerSettings();
                         }
                     }
@@ -530,9 +538,9 @@ void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested.
                 {
                     if (editmode.enabled)
                     {
-                        if (OnLongPress(specialKey, longPressDuration))
+                        if (OnLongPress(specialKey.state, longPressDuration))
                         {
-                            // DEBUG_PRINTLN("Long press, released. Delete keymap..."); // DEBUG
+                            // DEBUG_PRINT("Long press, released. Delete keymap...\n"); // DEBUG
                             DeleteCurrentKeyMap();
                         }
                     }
@@ -540,7 +548,8 @@ void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested.
                 }
                 }
 
-                //DEBUG_PRINTLN((millis() - specialKey.timeOfActivation)); // DEBUG
+                //DEBUG_PRINT((millis() - specialKey.timeOfActivation)); // DEBUG
+                //DEBUG_PRINT("\n");
             }
         }
     }
@@ -587,11 +596,12 @@ void Controller::SaveControllerSettings() // TODO: Needs to be tested.
     UpdateCurrentCustomKeymap();
     SaveKeyMapsToMemory(customKeyMaps);
 
-    unsigned long timeNeeded = customKeyMaps.length * normalKeyCount * sizeof(BareKeyboardKey) * 5;
+    uint32_t timeNeeded = customKeyMaps.length * normalKeyCount * sizeof(BareKeyboardKey) * 5;
 
     // // DEBUG
     // DEBUG_PRINT("Time needed to save: ");
-    // DEBUG_PRINTLN(timeNeeded);
+    // DEBUG_PRINT(timeNeeded);
+    // DEBUG_PRINT("\n");
     // // DEBUG
 
     // Signal that we are saving. Loop will wait for 800ms total.
@@ -631,14 +641,14 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
         {
             DEBUG_PRINT("Before deleting ");
             DEBUG_PRINT(i);
-            DEBUG_PRINTLN(":");
+            DEBUG_PRINT(":\n");
             for (int j = 0; j < normalKeyCount; j++)
             {
                 DEBUG_PRINT("    ( pin: ");
                 DEBUG_PRINT((*customKeyMaps[i])[j].pin);
                 DEBUG_PRINT(", keyCode: ");
                 DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
-                DEBUG_PRINTLN(" )");
+                DEBUG_PRINT(" )\n");
             }
         }
         DEBUG(delay(100));
@@ -655,7 +665,7 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
         // If we deleted the last object in the list...
         if (customKeyMaps.IsEmpty())
         {
-            DEBUG_PRINTLN("Switched to default keymap"); // DEBUG
+            DEBUG_PRINT("Switched to default keymap\n"); // DEBUG
             ChangeKeyMap(defaultKeyMap);
             customKeyMapIndex = 0;
         }
@@ -671,20 +681,22 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
             if (nextKeyMapPtr != nullptr)
             {
                 DEBUG_PRINT("Switched to keymap "); // DEBUG
-                DEBUG_PRINTLN(customKeyMapIndex);   // DEBUG
+                DEBUG_PRINT(customKeyMapIndex);   // DEBUG
+                DEBUG_PRINT("\n");
                 ChangeKeyMap(*nextKeyMapPtr);
             }
             else
             {
                 DEBUG_PRINT("Failed to delete keymap at "); // DEBUG
-                DEBUG_PRINTLN(customKeyMapIndex);           // DEBUG
+                DEBUG_PRINT(customKeyMapIndex);           // DEBUG
+                DEBUG_PRINT("\n");
                 // TODO: Throw error. We failed to retrieve the keymap at position customKeyMapIndex.
             }
         }
 
         if (*removedKeyMapPtr != nullptr) // TODO: Is this needed?
         {
-            DEBUG_PRINTLN("Deleted pointer... *removedKeyMapPtr"); // DEBUG
+            DEBUG_PRINT("Deleted pointer... *removedKeyMapPtr\n"); // DEBUG
             delete (*removedKeyMapPtr);
         }
     }
@@ -692,18 +704,20 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
     {
         // TODO: Throw error. We failed to delete the keyMap.
         DEBUG_PRINT("Something went really wrong..."); // DEBUG
-        DEBUG_PRINTLN(customKeyMapIndex);              // DEBUG
+        DEBUG_PRINT(customKeyMapIndex);              // DEBUG
+        DEBUG_PRINT("\n");
     }
 
     delete (removedKeyMapPtr);                             // TODO: Check if this is correct or not.
-    DEBUG_PRINTLN("Deleted pointer... removedKeyMapPtr"); // DEBUG
+    DEBUG_PRINT("Deleted pointer... removedKeyMapPtr\n"); // DEBUG
     ToggleEditMode();
 
     // DEBUG
     DEBUG_PRINT("Amount of keymaps left: ");
-    DEBUG_PRINTLN(customKeyMaps.length);
-    DEBUG_PRINT("Current position: ");
-    DEBUG_PRINTLN(customKeyMapIndex);
+    DEBUG_PRINT(customKeyMaps.length);
+    DEBUG_PRINT("\nCurrent position: ");
+    DEBUG_PRINT(customKeyMapIndex);
+    DEBUG_PRINT("\n");
     // DEBUG
 
     DEBUG(
@@ -711,19 +725,19 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
         {
             DEBUG_PRINT("After deleting ");
             DEBUG_PRINT(i);
-            DEBUG_PRINTLN(":");
+            DEBUG_PRINT(":\n");
             for (int j = 0; j < normalKeyCount; j++)
             {
                 DEBUG_PRINT("    ( pin: ");
                 DEBUG_PRINT((*customKeyMaps[i])[j].pin);
                 DEBUG_PRINT(", keyCode: ");
                 DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
-                DEBUG_PRINTLN(" )");
+                DEBUG_PRINT(" )\n");
             }
         }
         if (customKeyMaps.length == 0)
         {
-            DEBUG_PRINTLN("avaiableKeyMaps is Empty");
+            DEBUG_PRINT("avaiableKeyMaps is Empty\n");
         }
         DEBUG(delay(100));
     );
@@ -757,33 +771,35 @@ bool Controller::CreateNewKeyMap() // TODO: Needs to be tested.
 
             successful = true;
 
-            //DEBUG_PRINTLN("Created new keymap!"); // DEBUG
+            //DEBUG_PRINT("Created new keymap!\n"); // DEBUG
             //DEBUG(delay(100)); // DEBUG
 
             // DEBUG(
-            //     DEBUG_PRINTLN();
-            //     DEBUG_PRINTLN("New current keymap:");
+            //     DEBUG_PRINT("\n");
+            //     DEBUG_PRINT("New current keymap:\n");
             //     for (int i = 0; i < normalKeyCount; i++)
             //     {
             //         DEBUG_PRINT("Current .pin = ");
             //         DEBUG_PRINT(currentKeyMap[i].pin);
             //         DEBUG_PRINT(", .keyCode = ");
-            //         DEBUG_PRINTLN(currentKeyMap[i].keyCode);
+            //         DEBUG_PRINT(currentKeyMap[i].keyCode);
+            //         DEBUG_PRINT("\n");
             //     }
             //     DEBUG_PRINT("Amount of keymaps: ");
-            //     DEBUG_PRINTLN(customKeyMaps.length);
+            //     DEBUG_PRINT(customKeyMaps.length);
+            //     DEBUG_PRINT("\n");
             //     DEBUG(delay(100));
             // );
         }
         else
         {
-            // DEBUG_PRINTLN("Something messed up"); // DEBUG
+            // DEBUG_PRINT("Something messed up\n"); // DEBUG
             // TODO: Error we failed to retrieve the newly added keymap.
         }
     }
     else
     {
-        // DEBUG_PRINTLN("We don't have enought space to create another keymap..."); // DEBUG
+        DEBUG_PRINT("We don't have enought space to create another keymap (Max size hardcoded to 10)...\n"); // DEBUG
         // TODO: Error we don't have space to create another keyMap.
     }
 
@@ -792,8 +808,6 @@ bool Controller::CreateNewKeyMap() // TODO: Needs to be tested.
 
 void Controller::SignalErrorToUser() // TODO: Needs to be tested?
 {
-    // We can't cycle through 0 keymaps...
-    // Signal that something is wrong.
     for (int i = 0; i < 5; i++)
     {
         digitalWrite(LED_BUILTIN, HIGH);

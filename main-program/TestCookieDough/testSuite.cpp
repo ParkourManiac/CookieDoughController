@@ -6,12 +6,14 @@
 #include "Fakes/EEPROM.h"
 
 void DestroyController();
+void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse();
 void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeysInside();
 void RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse();
 void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPacket_ReturnsKeysFromValidPacket();
 void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue();
 void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse();
 void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtStartAdress();
+void ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload_DoesNotCrash();
 void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys();
 void ParseBareKeyboardKeyArrayIntoKeymapList_PopulatesTheListWithTheGivenKeys();
 void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue();
@@ -25,6 +27,9 @@ void SendKeyboardEvent_CallsSerialWriteWithTheCorrectBuffer();
 void ChangeKeyMap_TheDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedToTrue();
 void ChangeKeyMap_ACustomKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse();
 void ChangeKeyMap_ACustomKeymapWithSimilarButNotTheSameSettingsAsDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse();
+void ChangeKeyMap_DefaultKeymapIsSelectedAndWeAreEquippingACustomKeymap_CurrentKeymapNowContainsKeysOfCustomKeymap();
+void ChangeKeyMap_EmptiesBufferAndSendsItAsAKeyReleaseEventForAllKeys();
+void ChangeKeyMap_ConfiguresThePinsOfTheProvidedKeymap();
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquipped_EquipsTheFirstKeymapInTheList();
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeCycleTwice_EquipsTheSecondKeymapInTheList();
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeOnlyhaveTwoCustomKeymapsAndWeCycleThreeTimes_WhenWeCycleOffTheLastCustomKeymapItLoopsBackToTheFirstKeymapInTheList();
@@ -87,7 +92,7 @@ void EditModeLoop_TwoKeysBecamePressed_RegistersTwoKeyPresses();
 void EditModeLoop_KeyBecameReleased_RegistersKeyRelease();
 void EditModeLoop_TwoKeysBecameReleased_RegistersTwoKeyReleases();
 void EditModeLoop_WhenIdle_SignalEditMode();
-void ConfigurePinForKey_IKeysPinIsPassedToPinMode();
+void ConfigurePinForKey_IKeyIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKey_ConfiguresPinAsInputPullup();
@@ -113,9 +118,11 @@ void DebounceRead_DebounceTimeExceededAndValueIsOutdatedAndTheNewValueIsActive_U
 void DebounceRead_ValueIsOutdatedButDebounceTimeIsNotExceeded_DoesNotUpdateStateValue();
 void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_DoesNotUpdateTheTimeOfActivation();
 void DebounceRead_OldPinStateIsUpdated();
-void ReadPinValuesForKeyMap_CallsDigitalReadForEachItem();
-void ReadPinValuesForKeyMap_CorrectlyParsesKeyPin();
-void ReadPinValuesForKeyMap_UpdatesStateForAllPins();
+void UpdatePinStatesForKeyMap_CallsDigitalReadForEachItem();
+void UpdatePinStatesForKeyMap_CorrectlyParsesKeyPin();
+void UpdatePinStatesForKeyMap_UpdatesStateForAllPins();
+void UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works();
+void UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works();
 void KeyConstructor_IntializesPinAndKeycodeCorrectly();
 void SpecialKeyConstructor_IntializesPinAndFunctionCorrectly();
 void BareKeyboardKeyConstructor_IntializesPinAndKeycodeCorrectly();
@@ -180,12 +187,14 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 void RunTests() 
 {
 	RUN_TEST(DestroyController);
+	RUN_TEST(RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse);
 	RUN_TEST(RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeysInside);
 	RUN_TEST(RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse);
 	RUN_TEST(RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPacket_ReturnsKeysFromValidPacket);
 	RUN_TEST(RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue);
 	RUN_TEST(RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse);
 	RUN_TEST(RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtStartAdress);
+	RUN_TEST(ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload_DoesNotCrash);
 	RUN_TEST(ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys);
 	RUN_TEST(ParseBareKeyboardKeyArrayIntoKeymapList_PopulatesTheListWithTheGivenKeys);
 	RUN_TEST(IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue);
@@ -199,6 +208,9 @@ void RunTests()
 	RUN_TEST(ChangeKeyMap_TheDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedToTrue);
 	RUN_TEST(ChangeKeyMap_ACustomKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse);
 	RUN_TEST(ChangeKeyMap_ACustomKeymapWithSimilarButNotTheSameSettingsAsDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse);
+	RUN_TEST(ChangeKeyMap_DefaultKeymapIsSelectedAndWeAreEquippingACustomKeymap_CurrentKeymapNowContainsKeysOfCustomKeymap);
+	RUN_TEST(ChangeKeyMap_EmptiesBufferAndSendsItAsAKeyReleaseEventForAllKeys);
+	RUN_TEST(ChangeKeyMap_ConfiguresThePinsOfTheProvidedKeymap);
 	RUN_TEST(CycleKeyMap_TheDefaultKeymapIsCurrentlyEquipped_EquipsTheFirstKeymapInTheList);
 	RUN_TEST(CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeCycleTwice_EquipsTheSecondKeymapInTheList);
 	RUN_TEST(CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeOnlyhaveTwoCustomKeymapsAndWeCycleThreeTimes_WhenWeCycleOffTheLastCustomKeymapItLoopsBackToTheFirstKeymapInTheList);
@@ -261,7 +273,7 @@ void RunTests()
 	RUN_TEST(EditModeLoop_KeyBecameReleased_RegistersKeyRelease);
 	RUN_TEST(EditModeLoop_TwoKeysBecameReleased_RegistersTwoKeyReleases);
 	RUN_TEST(EditModeLoop_WhenIdle_SignalEditMode);
-	RUN_TEST(ConfigurePinForKey_IKeysPinIsPassedToPinMode);
+	RUN_TEST(ConfigurePinForKey_IKeyIsPassedToPinMode);
 	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKey_ConfiguresPinAsInputPullup);
@@ -287,9 +299,11 @@ void RunTests()
 	RUN_TEST(DebounceRead_ValueIsOutdatedButDebounceTimeIsNotExceeded_DoesNotUpdateStateValue);
 	RUN_TEST(DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_DoesNotUpdateTheTimeOfActivation);
 	RUN_TEST(DebounceRead_OldPinStateIsUpdated);
-	RUN_TEST(ReadPinValuesForKeyMap_CallsDigitalReadForEachItem);
-	RUN_TEST(ReadPinValuesForKeyMap_CorrectlyParsesKeyPin);
-	RUN_TEST(ReadPinValuesForKeyMap_UpdatesStateForAllPins);
+	RUN_TEST(UpdatePinStatesForKeyMap_CallsDigitalReadForEachItem);
+	RUN_TEST(UpdatePinStatesForKeyMap_CorrectlyParsesKeyPin);
+	RUN_TEST(UpdatePinStatesForKeyMap_UpdatesStateForAllPins);
+	RUN_TEST(UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works);
+	RUN_TEST(UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works);
 	RUN_TEST(KeyConstructor_IntializesPinAndKeycodeCorrectly);
 	RUN_TEST(SpecialKeyConstructor_IntializesPinAndFunctionCorrectly);
 	RUN_TEST(BareKeyboardKeyConstructor_IntializesPinAndKeycodeCorrectly);
@@ -365,12 +379,16 @@ int digitalRead(uint8_t pin)
 
 unsigned int pinMode_invocations = 0;
 uint8_t pinMode_param_pin;
+std::vector<uint8_t> pinMode_param_pin_v;
 uint8_t pinMode_param_mode;
+std::vector<uint8_t> pinMode_param_mode_v;
 void pinMode(uint8_t pin, uint8_t mode)
 {
 	pinMode_invocations++;
 	pinMode_param_pin = (uint8_t)pin;
+	pinMode_param_pin_v.push_back((uint8_t)pin);
 	pinMode_param_mode = (uint8_t)mode;
+	pinMode_param_mode_v.push_back((uint8_t)mode);
 
 }
 
@@ -844,7 +862,9 @@ void ResetMocks()
 	digitalRead_invocations = 0;
 	digitalRead_return = int();
 	pinMode_param_pin = uint8_t();
+	pinMode_param_pin_v.clear();
 	pinMode_param_mode = uint8_t();
+	pinMode_param_mode_v.clear();
 	pinMode_invocations = 0;
 	millis_invocations = 0;
 	millis_return = long();

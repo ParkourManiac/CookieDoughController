@@ -1,67 +1,67 @@
 #include "Key.h"
 #include <Arduino.h>
 
-void ConfigurePinForKey(IKey &key)
+void ConfigurePinForKey(const IKey &pin)
 {
-    pinMode(key.pin, INPUT_PULLUP);
+    pinMode(pin, INPUT_PULLUP);
 }
 
-void DebounceRead(IPinState &key) // NOTE: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
+void DebounceReadState(IKey pin, IPinState *state) // NOTE: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
 {
-    key.oldValue = key.value;
+    state->oldValue = state->value;
     unsigned int debounceDelay = 30; // TODO: This balance needs to be play tested.
-    unsigned long currentTime = millis();
+    uint32_t currentTime = millis();
 
-    bool pinState = digitalRead(key.pin);
+    bool pinState = digitalRead(pin);
 
     // If the pin state has changed...
-    if (pinState != key.oldPinState)
+    if (pinState != state->oldPinState)
     {
-        key.lastDebounceTime = currentTime;
+        state->lastDebounceTime = currentTime;
         // // Print debounce catches.
         // DEBUG_PRINT("he");
     }
 
-    unsigned long timePassedSinceDebounce = (currentTime - key.lastDebounceTime);
+    uint32_t timePassedSinceDebounce = (currentTime - state->lastDebounceTime);
     // If we've waited long enough since last debounce...
     if (timePassedSinceDebounce > debounceDelay)
     {
         // Invert key value to get pin state. Pullup is active low. 1 = off. 0 = on.
-        bool pinStateOfKey = !key.value; 
+        bool pinStateOfKey = !state->value; 
 
         // If the state is outdated...
         if (pinState != pinStateOfKey)
         {
             // Invert input signal. Pullup is active low. 1 = off. 0 = on.
-            key.value = !pinState;
+            state->value = !pinState;
 
-            if (key.value)
+            if (state->value)
             {
-                key.timeOfActivation = currentTime;
+                state->timeOfActivation = currentTime;
             }
 
             // // Print debounce catches.
-            // if(key.value) {
+            // if(state->value) {
             //     DEBUG_PRINT(" hej");
             // } else {DEBUG_PRINT(" hå");}
-            // DEBUG_PRINTLN();
+            // DEBUG_PRINT("\n");
         }
     }
 
-    key.oldPinState = pinState;
+    state->oldPinState = pinState;
 }
 
-bool OnKeyPress(IPinState &key)
+bool OnKeyPress(const IPinState &state)
 {
-    return (key.oldValue != key.value && key.value);
+    return (state.oldValue != state.value && state.value);
 }
 
-bool OnKeyRelease(IPinState &key)
+bool OnKeyRelease(const IPinState &state)
 {
-    return (key.oldValue != key.value && !key.value);
+    return (state.oldValue != state.value && !state.value);
 }
 
-bool OnLongPress(IPinState key, unsigned int longPressDuration)
+bool OnLongPress(const IPinState &state, unsigned int longPressDuration)
 {
-    return (millis() - key.timeOfActivation) >= longPressDuration;
+    return (millis() - state.timeOfActivation) >= longPressDuration;
 }
