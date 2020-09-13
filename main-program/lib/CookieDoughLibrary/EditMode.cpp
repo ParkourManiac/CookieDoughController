@@ -1,9 +1,16 @@
 #include "EditMode.h"
 #include <Arduino.h>
 
-EditMode::EditMode(bool _useEditModeLedSignal)
+EditMode::EditMode(int _normalKeyCount, bool _useEditModeLedSignal)
+    : normalKeyCount(_normalKeyCount)
 {
+    tempCopy = new Key[normalKeyCount];
     useEditModeLedSignal = _useEditModeLedSignal;
+}
+
+EditMode::~EditMode()
+{
+    delete[](tempCopy);
 }
 
 void EditMode::Toggle()
@@ -25,8 +32,7 @@ void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
     DEBUG(
         DEBUG_PRINT("\n");
         DEBUG_PRINT("Applying temp to current keymap...\n");
-        for (int i = 0; i < normalKeyCount; i++)
-        {
+        for (int i = 0; i < normalKeyCount; i++) {
             DEBUG_PRINT("Temp .pin ");
             DEBUG_PRINT(tempCopy[i].pin);
             DEBUG_PRINT(", .keyCode ");
@@ -38,9 +44,7 @@ void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
             DEBUG_PRINT(", .keyCode ");
             DEBUG_PRINT(keyMapToRestore[i].keyCode);
             DEBUG_PRINT(".\n");
-        }
-        DEBUG(delay(100));
-    );
+        } DEBUG(delay(100)););
 
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -50,20 +54,16 @@ void EditMode::RestoreKeyMapFromTemporaryCopy(Key *keyMapToRestore)
 
     DEBUG(
         DEBUG_PRINT("Current keymap reset to:\n");
-        for (int i = 0; i < normalKeyCount; i++)
-        {
+        for (int i = 0; i < normalKeyCount; i++) {
             DEBUG_PRINT("Current .pin = ");
             DEBUG_PRINT(keyMapToRestore[i].pin);
             DEBUG_PRINT(", .keyCode = ");
             DEBUG_PRINT(keyMapToRestore[i].keyCode);
             DEBUG_PRINT("\n");
-        }
-        DEBUG(delay(100));
-    );
+        } DEBUG(delay(100)););
 }
 
-// TODO: Check if working... Changed to OnKeyPress and refactored. Might not work? Tests go through. If working in play testing then remove this TODO.
-void EditMode::EditModeLoop(Key *keyMapBeingEdited) 
+void EditMode::EditModeLoop(Key *keyMapBeingEdited)
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
@@ -96,14 +96,14 @@ void EditMode::RegisterKeyPress(Key *pressedKey)
 
     DEBUG_PRINT("Keypress.\n");    // DEBUG
     DEBUG_PRINT("Keys pressed: "); // DEBUG
-    DEBUG_PRINT(keysPressed);    // DEBUG
+    DEBUG_PRINT(keysPressed);      // DEBUG
     DEBUG_PRINT("\n");
 
     if (selectedKey == nullptr)
     {
         selectedKey = pressedKey;
 
-        DEBUG_PRINT("Selected key: ");   // DEBUG
+        DEBUG_PRINT("Selected key: "); // DEBUG
         DEBUG_PRINT(selectedKey->pin); // DEBUG
         DEBUG_PRINT("\n");
     }
@@ -161,11 +161,11 @@ void EditMode::RegisterKeyRelease()
     }
 
     DEBUG_PRINT("Amount of keys pressed: "); // DEBUG
-    DEBUG_PRINT(keysPressed);              // DEBUG
+    DEBUG_PRINT(keysPressed);                // DEBUG
     DEBUG_PRINT("\n");
 }
 
-void EditMode::SignalLedEditMode() // Not tested. 
+void EditMode::SignalLedEditMode() // Not tested.
 {
     uint32_t currentTime = millis();
 

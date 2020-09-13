@@ -9,6 +9,7 @@
 // testSuite.cpp RunTests() function using the macro RUN_TEST(functionName).
 #include <stdio.h>
 #include <vector>
+#include <iostream>
 
 /**
  * @brief Stores useful information about a test result.
@@ -63,9 +64,9 @@ void SetupColors();
  * Example: 'RUN_TEST(MyFunction);'
  */
 #define RUN_TEST(functionName) \
-    printf("\033[1;33m");      \
-    printf(#functionName);     \
-    printf("\033[0m"           \
+    std::cout <<("\033[1;33m");      \
+    std::cout <<(#functionName);     \
+    std::cout <<("\033[0m"           \
            "\n");              \
     functionName();            \
     ResetMockData();

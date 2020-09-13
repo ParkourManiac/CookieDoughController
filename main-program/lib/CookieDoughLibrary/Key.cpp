@@ -6,7 +6,7 @@ void ConfigurePinForKey(const IKey &pin)
     pinMode(pin, INPUT_PULLUP);
 }
 
-void DebounceRead(IKey pin, IPinState *state) // NOTE: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
+void DebounceReadState(IKey pin, IPinState *state) // NOTE: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
 {
     state->oldValue = state->value;
     unsigned int debounceDelay = 30; // TODO: This balance needs to be play tested.

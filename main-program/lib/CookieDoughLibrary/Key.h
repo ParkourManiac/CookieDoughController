@@ -19,26 +19,25 @@ using IKeycode = int;
  */
 struct IPinState
 {
-    bool value = false;                 /** The value of the pin. true = active, false = inactive. */
-    bool oldValue = false;              /** The previous value of the pin. */
-    uint32_t timeOfActivation = 0;      /** The time of the last activation. */
-    uint32_t lastDebounceTime = 0;      /** The time, in milliseconds, of the latest change in pin state. */
-    bool oldPinState = false;           /** The previous pin state. */
+    bool value = false;            /** The value of the pin. true = active, false = inactive. */
+    bool oldValue = false;         /** The previous value of the pin. */
+    uint32_t timeOfActivation = 0; /** The time of the last activation. */
+    uint32_t lastDebounceTime = 0; /** The time, in milliseconds, of the latest change in pin state. */
+    bool oldPinState = false;      /** The previous pin state. */
 };
 
 /**
  * @brief The bare minimum to define a pin as a keyboard key.
  * Note: Contains no state.
  */
-struct /*__attribute__((packed))*/ BareKeyboardKey // TODO: Refactor to not use constructor (or use compact constructor)? Consider using packed.
+struct /*__attribute__((packed))*/ BareKeyboardKey // TODO: Consider using packed (Slower to read?). Note: Constructor might take space in memory.
 {
-    IKey pin; /** The pin connected to the key. */
+    IKey pin;         /** The pin connected to the key. */
     IKeycode keyCode; /** The keyboard keycode. */
     BareKeyboardKey() {}
-    BareKeyboardKey(IKey _pin, IKeycode _keyCode) // TODO: Test if working.
+    BareKeyboardKey(IKey _pin, IKeycode _keyCode)
+        : pin(_pin), keyCode(_keyCode)
     {
-        pin = _pin;
-        keyCode = _keyCode;
     }
 };
 
@@ -47,16 +46,15 @@ struct /*__attribute__((packed))*/ BareKeyboardKey // TODO: Refactor to not use 
  * Contains both the definition of the keyboard key and 
  * the state of the corresponding pin.
  */
-struct Key // TODO: Refactor to not use constructor (or use compact constructor)?
+struct Key
 {
-    IKey pin; /** The pin connected to the key. */
+    IKey pin;         /** The pin connected to the key. */
     IKeycode keyCode; /** The keyboard keycode. */
-    IPinState state; /** Contains information about the state of the button. */
+    IPinState state;  /** Contains information about the state of the button. */
     Key() {}
     Key(IKey _pin, IKeycode _keyCode)
+        : pin(_pin), keyCode(_keyCode)
     {
-        pin = _pin;
-        keyCode = _keyCode;
     }
 };
 
@@ -75,16 +73,16 @@ enum SpecialFunction
  * Contains both the definition of the special function and 
  * the state of the corresponding pin.
  */
-struct SpecialKey // TODO: Refactor to not use constructor (or use compact constructor)?
+struct SpecialKey
 {
-    IKey pin; /** The pin connected to the key. */
+    IKey pin;                 /** The pin connected to the key. */
     SpecialFunction function; /** The special function tied to the key. */
-    IPinState state; /** Contains information about the state of the button. */
+    IPinState state;          /** Contains information about the state of the button. */
 
+    SpecialKey() {}
     SpecialKey(IKey _pin, SpecialFunction _function)
+        : pin(_pin), function(_function)
     {
-        pin = _pin;
-        function = _function;
     }
 };
 
@@ -96,25 +94,6 @@ struct SpecialKey // TODO: Refactor to not use constructor (or use compact const
  */
 void ConfigurePinForKey(const IKey &pin);
 
-// /**
-//  * @brief Will try to convert the given type into IKey and 
-//  * configures the pins of the provided keymap
-//  * to act as input pins with internal pullups.
-//  * 
-//  * @tparam T The type of key to be used. 
-//  * NOTE: Must inherit from the base class IKey.
-//  * @param keyMap The keymap to be configured.
-//  * @param keyMapLength The length of the keyMap.
-//  */
-// template <class T>
-// void ConfigurePinsForKeyMap(T *keyMap, unsigned int keyMapLength) // TODO: Remove? Is not compatible with refactored IKey.
-// {
-//     for (unsigned int i = 0; i < keyMapLength; i++)
-//     {
-//         ConfigurePinForKey((IKey &)keyMap[i]);
-//     }
-// }
-
 /**
  * @brief Will configure all the pins of the provided keymap
  * to act as input pins with internal pullups.
@@ -123,7 +102,7 @@ void ConfigurePinForKey(const IKey &pin);
  * @param keymapLength The length of the keymap.
  */
 template <class T>
-void ConfigurePinsForKeyMap(const T *keymap, unsigned int keymapLength) 
+void ConfigurePinsForKeyMap(const T *keymap, unsigned int keymapLength)
 {
     for (unsigned int i = 0; i < keymapLength; i++)
     {
@@ -138,18 +117,18 @@ void ConfigurePinsForKeyMap(const T *keymap, unsigned int keymapLength)
  * @param pin The pin of the key
  * @param state The state to be updated.
  */
-void DebounceRead(IKey pin, IPinState *state); // TODO: Refactor name to "DebounceReadPin"? 
+void DebounceReadState(IKey pin, IPinState *state);
 
 /**
  * @brief Reads and updates the pin state of
  * the provided keyMap.
  */
 template <class T>
-void UpdatePinStatesForKeyMap(T *keymap, unsigned int keymapLength) // TODO: Remove? Is not compatible with refactored IKey.
+void UpdatePinStatesForKeyMap(T *keymap, unsigned int keymapLength)
 {
     for (unsigned int i = 0; i < keymapLength; i++)
     {
-        DebounceRead(keymap[i].pin, &(keymap[i].state));
+        DebounceReadState(keymap[i].pin, &(keymap[i].state));
     }
 }
 

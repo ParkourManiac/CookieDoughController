@@ -69,16 +69,17 @@ void Controller::Update()
     }
 }
 
-void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList) // TODO: Refactored to BareKeyboardKey. Check if code is necessary.
+void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList)
 {
-    unsigned int serializedSize = sizeof(BareKeyboardKey[keymapList.length * normalKeyCount]);
-    BareKeyboardKey *serializedKeyMaps = new BareKeyboardKey[keymapList.length * normalKeyCount];
+    const int keyCount = keymapList.length * normalKeyCount;
+    BareKeyboardKey *serializedKeyMaps = new BareKeyboardKey[keyCount];
+    unsigned int serializedSize = sizeof(serializedKeyMaps[0]) * keyCount;
     for (unsigned int i = 0; i < keymapList.length; i++)
     {
         for (int j = 0; j < normalKeyCount; j++)
         {
             unsigned int pos = i * normalKeyCount + j;
-            serializedKeyMaps[pos] = (BareKeyboardKey)(*keymapList[i])[j];
+            serializedKeyMaps[pos] = (*keymapList[i])[j];
         }
     }
 
@@ -94,17 +95,18 @@ void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList) /
     unsigned int packetSize;
     // TODO: Change this to write to nextFreeEepromAdress and invalidate the old one at eepromAdress.
     bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, &packetSize);
-    if (!success)
+    if (success)
+    {
+        DEBUG_PRINT("Settings saved!\n"); // DEBUG
+        DEBUG(delay(100)); // DEBUG
+        nextFreeEepromAdress = eepromAdress + packetSize;
+    } else 
     {
         DEBUG_PRINT("Failed to write data to memory!\n"); // DEBUG
         DEBUG(delay(100)); // DEBUG
 
         // TODO: Implement error code.
-    } else {
-        DEBUG_PRINT("Settings saved!\n"); // DEBUG
-        DEBUG(delay(100)); // DEBUG
     }
-    nextFreeEepromAdress = eepromAdress + packetSize;
 
     delete (serializedKeyMaps);
 }
@@ -293,7 +295,7 @@ bool Controller::IsKeyValid(const IKey &pin)
     return false;
 }
 
-void Controller::CycleKeyMap() // TODO: Check if working. // Refactored for BareKeyboardKeys.
+void Controller::CycleKeyMap()
 {
     if (customKeyMaps.IsEmpty())
     {
@@ -317,7 +319,7 @@ void Controller::CycleKeyMap() // TODO: Check if working. // Refactored for Bare
     }
 }
 
-void Controller::ChangeKeyMap(BareKeyboardKey *keyMap) // Refactored for BareKeyboardKeys. // TODO: Needs to be tested.
+void Controller::ChangeKeyMap(BareKeyboardKey *keyMap)
 {
     DEBUG_PRINT("Changing keymap\n"); // DEBUG
     // Overwrite currentKeyMap with the keys we want to equip.
@@ -331,7 +333,7 @@ void Controller::ChangeKeyMap(BareKeyboardKey *keyMap) // Refactored for BareKey
     SendKeyboardEvent();
 
     // Keep track if we are using the default keymap.
-    isUsingDefaultKeymap = keyMap == defaultKeyMap; // NOTE: This line is already tested.
+    isUsingDefaultKeymap = keyMap == defaultKeyMap;
 
     // Configure pins
     ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
@@ -383,7 +385,7 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
             // Find empty slot
             int index = 2; // 2 = Start position for keys.
             bool foundEmpty = false;
-            for (int i = 2; i < 8 && !foundEmpty; i++) // TODO: FORLOOP MIGHT NOT BE EFFICIENT.
+            for (int i = 2; i < bufferSize && !foundEmpty; i++) // TODO: Running through the forloop every keypress might not be efficient. Push pop list of empty positions? Construct a Dictionary?
             {
                 foundEmpty = buf[i] == 0;
                 if (foundEmpty)
@@ -404,7 +406,7 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
             // Find empty slot
             int index = 2; // 2 = Start position for keys.
             bool foundKeyCode = false;
-            for (int i = 2; i < 8 && !foundKeyCode; i++) // TODO: FORLOOP MIGHT NOT BE EFFICIENT.
+            for (int i = 2; i < bufferSize && !foundKeyCode; i++) // TODO: Running through the forloop every keypress might not be efficient. Push pop list of empty positions? Construct a Dictionary?
             {
                 foundKeyCode = buf[i] == key.keyCode;
                 if (foundKeyCode)
@@ -417,7 +419,7 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
                 buf[index] = 0;
 
                 bool bufIsEmpty = true;
-                for (int i = 2; i < 8; i++) // TODO: FORLOOP MIGHT NOT BE EFFICIENT.
+                for (int i = 2; i < bufferSize; i++) // TODO: Running through the forloop every keypress might not be efficient. Push pop list of empty positions? Construct a Dictionary?
                 {
                     if (buf[i] != 0)
                     {
@@ -438,7 +440,7 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
 
 void Controller::WipeKeyboardEventBuffer() 
 {
-    for(int i = 0; i < 8; i++) 
+    for(int i = 0; i < bufferSize; i++) 
     {
         buf[i] = 0;
     }
@@ -446,7 +448,7 @@ void Controller::WipeKeyboardEventBuffer()
 
 void Controller::SendKeyboardEvent() 
 {
-    Serial.write(buf, 8);
+    Serial.write(buf, bufferSize);
 }
 
 void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested. Refactor to use OnKeyPress and etc.
@@ -797,7 +799,7 @@ bool Controller::CreateNewKeyMap() // TODO: Needs to be tested.
     }
     else
     {
-        // DEBUG_PRINT("We don't have enought space to create another keymap...\n"); // DEBUG
+        DEBUG_PRINT("We don't have enought space to create another keymap (Max size hardcoded to 10)...\n"); // DEBUG
         // TODO: Error we don't have space to create another keyMap.
     }
 
@@ -806,8 +808,6 @@ bool Controller::CreateNewKeyMap() // TODO: Needs to be tested.
 
 void Controller::SignalErrorToUser() // TODO: Needs to be tested?
 {
-    // We can't cycle through 0 keymaps...
-    // Signal that something is wrong.
     for (int i = 0; i < 5; i++)
     {
         digitalWrite(LED_BUILTIN, HIGH);

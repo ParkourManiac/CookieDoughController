@@ -38,7 +38,7 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket *packet, unsigned int
 
     // Fill adress of packet->payload with the payload from eeprom.
     delete[](packet->payload);
-    packet->payload = new uint8_t[packet->payloadLength]; // TODO: Is there a way to avoid using new here?
+    packet->payload = new uint8_t[packet->payloadLength]; // Note: Is there a way to avoid using new here?
     for (unsigned int i = 0; i < packet->payloadLength; i++)
     {
         packet->payload[i] = payload[i];

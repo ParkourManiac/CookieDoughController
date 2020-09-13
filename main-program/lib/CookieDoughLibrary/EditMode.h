@@ -2,8 +2,6 @@
 #define EDIT_MODE_H
 
 #include "Key.h"
-extern const int normalKeyCount; // TODO: Fix this dependency?
-
 
 class EditMode {
 public:
@@ -19,8 +17,9 @@ public:
     bool useEditModeLedSignal = false;
 
 private:
+    const int normalKeyCount;
     Key *selectedKey = nullptr;
-    Key *tempCopy = new Key[normalKeyCount]; // TODO: Cleanup on destruction.
+    Key *tempCopy = nullptr;
     int keysPressed = 0;
     int inputKeyCode = 0;
     bool shouldAddValue = false;
@@ -32,7 +31,8 @@ private:
     int currentBlink = 0;
 
 public:
-    explicit EditMode(bool _useEditModeLedSignal);
+    explicit EditMode(int _normalKeyCount, bool _useEditModeLedSignal);
+    ~EditMode();
 
     /**
      * @brief Toggles and resets EditMode.

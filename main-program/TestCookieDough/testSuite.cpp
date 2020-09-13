@@ -27,6 +27,9 @@ void SendKeyboardEvent_CallsSerialWriteWithTheCorrectBuffer();
 void ChangeKeyMap_TheDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedToTrue();
 void ChangeKeyMap_ACustomKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse();
 void ChangeKeyMap_ACustomKeymapWithSimilarButNotTheSameSettingsAsDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse();
+void ChangeKeyMap_DefaultKeymapIsSelectedAndWeAreEquippingACustomKeymap_CurrentKeymapNowContainsKeysOfCustomKeymap();
+void ChangeKeyMap_EmptiesBufferAndSendsItAsAKeyReleaseEventForAllKeys();
+void ChangeKeyMap_ConfiguresThePinsOfTheProvidedKeymap();
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquipped_EquipsTheFirstKeymapInTheList();
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeCycleTwice_EquipsTheSecondKeymapInTheList();
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeOnlyhaveTwoCustomKeymapsAndWeCycleThreeTimes_WhenWeCycleOffTheLastCustomKeymapItLoopsBackToTheFirstKeymapInTheList();
@@ -118,6 +121,8 @@ void DebounceRead_OldPinStateIsUpdated();
 void UpdatePinStatesForKeyMap_CallsDigitalReadForEachItem();
 void UpdatePinStatesForKeyMap_CorrectlyParsesKeyPin();
 void UpdatePinStatesForKeyMap_UpdatesStateForAllPins();
+void UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works();
+void UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works();
 void KeyConstructor_IntializesPinAndKeycodeCorrectly();
 void SpecialKeyConstructor_IntializesPinAndFunctionCorrectly();
 void BareKeyboardKeyConstructor_IntializesPinAndKeycodeCorrectly();
@@ -203,6 +208,9 @@ void RunTests()
 	RUN_TEST(ChangeKeyMap_TheDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedToTrue);
 	RUN_TEST(ChangeKeyMap_ACustomKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse);
 	RUN_TEST(ChangeKeyMap_ACustomKeymapWithSimilarButNotTheSameSettingsAsDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse);
+	RUN_TEST(ChangeKeyMap_DefaultKeymapIsSelectedAndWeAreEquippingACustomKeymap_CurrentKeymapNowContainsKeysOfCustomKeymap);
+	RUN_TEST(ChangeKeyMap_EmptiesBufferAndSendsItAsAKeyReleaseEventForAllKeys);
+	RUN_TEST(ChangeKeyMap_ConfiguresThePinsOfTheProvidedKeymap);
 	RUN_TEST(CycleKeyMap_TheDefaultKeymapIsCurrentlyEquipped_EquipsTheFirstKeymapInTheList);
 	RUN_TEST(CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeCycleTwice_EquipsTheSecondKeymapInTheList);
 	RUN_TEST(CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeOnlyhaveTwoCustomKeymapsAndWeCycleThreeTimes_WhenWeCycleOffTheLastCustomKeymapItLoopsBackToTheFirstKeymapInTheList);
@@ -294,6 +302,8 @@ void RunTests()
 	RUN_TEST(UpdatePinStatesForKeyMap_CallsDigitalReadForEachItem);
 	RUN_TEST(UpdatePinStatesForKeyMap_CorrectlyParsesKeyPin);
 	RUN_TEST(UpdatePinStatesForKeyMap_UpdatesStateForAllPins);
+	RUN_TEST(UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works);
+	RUN_TEST(UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works);
 	RUN_TEST(KeyConstructor_IntializesPinAndKeycodeCorrectly);
 	RUN_TEST(SpecialKeyConstructor_IntializesPinAndFunctionCorrectly);
 	RUN_TEST(BareKeyboardKeyConstructor_IntializesPinAndKeycodeCorrectly);
@@ -369,12 +379,16 @@ int digitalRead(uint8_t pin)
 
 unsigned int pinMode_invocations = 0;
 uint8_t pinMode_param_pin;
+std::vector<uint8_t> pinMode_param_pin_v;
 uint8_t pinMode_param_mode;
+std::vector<uint8_t> pinMode_param_mode_v;
 void pinMode(uint8_t pin, uint8_t mode)
 {
 	pinMode_invocations++;
 	pinMode_param_pin = (uint8_t)pin;
+	pinMode_param_pin_v.push_back((uint8_t)pin);
 	pinMode_param_mode = (uint8_t)mode;
+	pinMode_param_mode_v.push_back((uint8_t)mode);
 
 }
 
@@ -848,7 +862,9 @@ void ResetMocks()
 	digitalRead_invocations = 0;
 	digitalRead_return = int();
 	pinMode_param_pin = uint8_t();
+	pinMode_param_pin_v.clear();
 	pinMode_param_mode = uint8_t();
+	pinMode_param_mode_v.clear();
 	pinMode_invocations = 0;
 	millis_invocations = 0;
 	millis_return = long();

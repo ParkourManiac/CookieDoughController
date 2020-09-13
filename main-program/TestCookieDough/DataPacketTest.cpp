@@ -266,7 +266,7 @@ void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
                 EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == ((uint8_t *)&data)[1]);
 }
 
-void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite.
+void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
 {
     unsigned int adress = 13;
     uint16_t data = 421;
@@ -299,7 +299,7 @@ void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the 
     delete(resultPtr);
 }
 
-void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite.
+void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
 {
     unsigned int adress = 13;
     uint16_t data = 421;

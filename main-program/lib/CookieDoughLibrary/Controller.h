@@ -29,12 +29,13 @@ private:
     LinkedList<BareKeyboardKey *> *customKeyMapsPtr = new LinkedList<BareKeyboardKey *>();
     LinkedList<BareKeyboardKey *> customKeyMaps = *customKeyMapsPtr;
 
-    uint8_t buf[8] ={ 0 }; // Keyboard report buffer. // TODO: Refactor to use a buffer size variable.
+    const uint8_t bufferSize = 8;
+    uint8_t *buf = new uint8_t[bufferSize]{ 0 }; // Keyboard report buffer.
 
     unsigned int eepromAdress = 0;
     unsigned int nextFreeEepromAdress = 0;
 
-    EditMode editmode = EditMode(true);
+    EditMode editmode = EditMode(normalKeyCount, true);
 
     const float longPressDuration = 4000;
 
@@ -178,12 +179,35 @@ public:
      */
     void ExecuteSpecialCommands();
 
-    // TODO: Document all functions
+    /**
+     * @brief Toggles into or out of editmode for the controller.
+     * Note: If no custom keymap exist when entering editmode, a keymap will be created automatically.
+     */
     void ToggleEditMode();
 
+    /**
+     * @brief Saves the current setup of custom keymaps to memory.
+     * Note: Will wait for the EEPROM to finish writing before continuing.
+     */
     void SaveControllerSettings();
+
+    /**
+     * @brief Deletes the currently selected keymap. 
+     * Note: Can only delete custom keymaps. Cannot be used on default keymap.
+     */
     void DeleteCurrentKeyMap();
+
+    /**
+     * @brief Creates a new keymap and adds it to the list of custom keymaps.
+     * 
+     * @return true The keymap was successfully created.
+     * @return false The keymap couldn't be created due to insufficient amount of free space or an error occured.
+     */
     bool CreateNewKeyMap();
+
+    /**
+     * @brief Quickly blinks the builtin led 5 times to indicate that something went wrong.
+     */
     void SignalErrorToUser();
 };
 
