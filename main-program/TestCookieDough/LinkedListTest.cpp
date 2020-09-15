@@ -355,7 +355,7 @@ void InsertItem_LengthIncreasesByOne()
 void InsertMultipleItems_LengthIsSameAsAmountOfItems()
 {
     LinkedList<int> list;
-    int expectedSize;
+    int expectedSize = 10;
 
     for (int i = 0; i < expectedSize; i++)
     {

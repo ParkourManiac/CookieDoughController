@@ -33,6 +33,11 @@ public:
      */
     unsigned int length = 0;
 
+    ~LinkedList() 
+    {
+        Clear();
+    }
+
     /**
      * @brief Returns true if the list is empty.
      * 
