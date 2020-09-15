@@ -1,3 +1,5 @@
+STD-VERSION ?= c++11
+
 all: # Builds the project.
 	platformio run
 
@@ -7,7 +9,7 @@ upload: # Builds and uploads the project to the targeted arduino.
 # Name of command: Dependent on file. ($^ -The dependent file. -g -Keep symbols for debugging. -o -Output file)
 compileTests: TestCookieDough
 	python $^/generateTestSuite.py TestCookieDough && \
-	g++ -ITestCookieDough/Fakes -std=c++11 -g -D "private=public" \
+	g++ -ITestCookieDough/Fakes -std=$(STD-VERSION) -g -D "private=public" \
 		-D "DEBUG(VALUE)= " \
 		-D "DEBUG_PRINT(VALUE)= " \
 		-o $^/Testrun/latestTestRun $^/*.cpp $^/TestHelper/*.cpp \
@@ -19,6 +21,9 @@ compileTests: TestCookieDough
 
 test: compileTests # "Dependent" on compileTests. ("compileTests" will run before this command).
 	./TestCookieDough/Testrun/latestTestRun
+
+testWithMemoryCheck:
+	make test STD-VERSION=c++14
 
 lint:
 	cpplint --recursive \
