@@ -1,3 +1,7 @@
+ifdef USE-ALLOC-TRACKER
+ALLOC-TRACKER = -DUSE_ALLOCATION_TRACKER_H
+endif
+ALLOC-TRACKER ?= 
 STD-VERSION ?= c++11
 
 all: # Builds the project.
@@ -9,7 +13,7 @@ upload: # Builds and uploads the project to the targeted arduino.
 # Name of command: Dependent on file. ($^ -The dependent file. -g -Keep symbols for debugging. -o -Output file)
 compileTests: TestCookieDough
 	python $^/generateTestSuite.py TestCookieDough && \
-	g++ -ITestCookieDough/Fakes -std=$(STD-VERSION) -g -D "private=public" \
+	g++ -ITestCookieDough/Fakes -std=$(STD-VERSION) $(ALLOC-TRACKER) -g -D "private=public" \
 		-D "DEBUG(VALUE)= " \
 		-D "DEBUG_PRINT(VALUE)= " \
 		-o $^/Testrun/latestTestRun $^/*.cpp $^/TestHelper/*.cpp \
@@ -23,7 +27,7 @@ test: compileTests # "Dependent" on compileTests. ("compileTests" will run befor
 	./TestCookieDough/Testrun/latestTestRun
 
 testWithMemoryCheck:
-	make test STD-VERSION=c++14
+	make test STD-VERSION=c++14 USE-ALLOC-TRACKER=1
 
 lint:
 	cpplint --recursive \

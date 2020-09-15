@@ -10,6 +10,10 @@
 #include <vector>
 #include <iostream>
 
+#ifdef USE_ALLOCATION_TRACKER_H
+#include "AllocationTracker.h"
+#endif
+
 /**
  * @brief Stores useful information about a test result.
  */
@@ -65,9 +69,27 @@ void SetupColors();
 #define RUN_TEST(functionName) \
     std::cout <<("\033[1;33m");      \
     std::cout <<(#functionName);     \
-    std::cout <<("\033[0m"           \
-           "\n");              \
+    std::cout <<("\033[0m");         \
+    BEGIN_MEMORY_CHECK();            \
     functionName();            \
-    ResetMockData();
+    ResetMockData();            \
+    PERFORM_MEMORY_CHECK(); \
+    std::cout << "\n";
+
+
+#ifdef USE_ALLOCATION_TRACKER_H
+extern AllocationTracker allocTracker;
+#define BEGIN_MEMORY_CHECK() \
+    allocTracker.SaveMemoryState(); \
+    //std::cout << "Memory currently allocated: " << allocTracker.MemoryInUse() << ". ";
+#define PERFORM_MEMORY_CHECK() \
+    if(allocTracker.HasMemoryStateChanged()) \
+    { \
+        std::cout << " (Memory difference: " << allocTracker.MemoryStateDifference() << ")"; \
+    }
+#else
+#define BEGIN_MEMORY_CHECK()
+#define PERFORM_MEMORY_CHECK()
+#endif
 
 #endif
