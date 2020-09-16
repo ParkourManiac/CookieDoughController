@@ -325,7 +325,7 @@ void DebounceRead_OldPinStateIsUpdated()
 
 void UpdatePinStatesForKeyMap_CallsDigitalReadForEachItem()
 {
-    int length = 2;
+    unsigned int length = 2;
     Key keymap[length] = {
         Key(2, 1337),
         Key(3, 1337),

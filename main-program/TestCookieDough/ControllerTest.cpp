@@ -93,7 +93,7 @@ void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeys
     packet.payload = dataPtr;
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
-    int expectedPacketSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(packet.payload[0]) * packet.payloadLength + sizeof(packet.etx);
+    unsigned int expectedPacketSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(packet.payload[0]) * packet.payloadLength + sizeof(packet.etx);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     unsigned int amountOfKeys, packetAdress, packetSize;
@@ -175,8 +175,8 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
     // Prepare packets to be returned.
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(defectPacket);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(validPacket);
-    int expectedDefectPacketSize = sizeof(defectPacket.stx) + sizeof(defectPacket.payloadLength) + sizeof(defectPacket.crc) + sizeof(defectPacket.payload[0]) * defectPacket.payloadLength + sizeof(defectPacket.etx);
-    int expectedValidPacketSize = sizeof(validPacket.stx) + sizeof(validPacket.payloadLength) + sizeof(validPacket.crc) + sizeof(validPacket.payload[0]) * validPacket.payloadLength + sizeof(validPacket.etx);
+    unsigned int expectedDefectPacketSize = sizeof(defectPacket.stx) + sizeof(defectPacket.payloadLength) + sizeof(defectPacket.crc) + sizeof(defectPacket.payload[0]) * defectPacket.payloadLength + sizeof(defectPacket.etx);
+    unsigned int expectedValidPacketSize = sizeof(validPacket.stx) + sizeof(validPacket.payloadLength) + sizeof(validPacket.crc) + sizeof(validPacket.payload[0]) * validPacket.payloadLength + sizeof(validPacket.etx);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     unsigned int amountOfKeys, packetAdress, packetSize;
@@ -257,7 +257,7 @@ void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtSta
     unsigned int packetAdress;
     controller.RetrieveDataPacketFromMemory(&result, &packetSize, &packetAdress, expectedStartAdress);
 
-    ASSERT_TEST(EEPROMClass_read_param_idx_v[0] == expectedStartAdress);
+    ASSERT_TEST(EEPROMClass_read_param_idx_v[0] == static_cast<int>(expectedStartAdress));
     delete (resultPtr);
     DestroyController();
 }
@@ -279,6 +279,7 @@ void ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload
     bool didNotCrash = false;
     controller.ConvertDataPacketToBareKeyboardKeys(packet, result);
     uint8_t pinAsInt = result[0].pin;
+    pinAsInt++;
     didNotCrash = true;
 
     ASSERT_TEST(didNotCrash == true);
@@ -687,7 +688,7 @@ void ChangeKeyMap_EmptiesBufferAndSendsItAsAKeyReleaseEventForAllKeys()
         BareKeyboardKey(4, 34),
         BareKeyboardKey(5, 45),
     };
-    int expectedBufSize = 8;
+    size_t expectedBufSize = 8;
     controller.buf[1] = 1;
     controller.buf[3] = 4;
     controller.buf[5] = 9;
@@ -699,7 +700,7 @@ void ChangeKeyMap_EmptiesBufferAndSendsItAsAKeyReleaseEventForAllKeys()
     bool serialHasBeenCalled = Serial__write_param_buffer != nullptr;
     bool bufSentIsEmpty = true;
     bool controllerBufIsEmpty = true;
-    for (int i = 0; i < expectedBufSize && serialHasBeenCalled; i++)
+    for (unsigned int i = 0; i < expectedBufSize && serialHasBeenCalled; i++)
     {
         if (!Serial__write_param_buffer[i] == 0)
             bufSentIsEmpty = false;

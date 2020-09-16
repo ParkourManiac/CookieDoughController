@@ -34,11 +34,8 @@ struct /*__attribute__((packed))*/ BareKeyboardKey // TODO: Consider using packe
 {
     IKey pin;         /** The pin connected to the key. */
     IKeycode keyCode; /** The keyboard keycode. */
-    BareKeyboardKey() {}
-    BareKeyboardKey(IKey _pin, IKeycode _keyCode)
-        : pin(_pin), keyCode(_keyCode)
-    {
-    }
+    BareKeyboardKey();
+    BareKeyboardKey(IKey _pin, IKeycode _keyCode);
 };
 
 /**
@@ -51,11 +48,8 @@ struct Key
     IKey pin;         /** The pin connected to the key. */
     IKeycode keyCode; /** The keyboard keycode. */
     IPinState state;  /** Contains information about the state of the button. */
-    Key() {}
-    Key(IKey _pin, IKeycode _keyCode)
-        : pin(_pin), keyCode(_keyCode)
-    {
-    }
+    Key();
+    Key(IKey _pin, IKeycode _keyCode);
 };
 
 /**
@@ -79,11 +73,8 @@ struct SpecialKey
     SpecialFunction function; /** The special function tied to the key. */
     IPinState state;          /** Contains information about the state of the button. */
 
-    SpecialKey() {}
-    SpecialKey(IKey _pin, SpecialFunction _function)
-        : pin(_pin), function(_function)
-    {
-    }
+    SpecialKey();
+    SpecialKey(IKey _pin, SpecialFunction _function);
 };
 
 /**

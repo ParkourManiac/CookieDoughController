@@ -313,11 +313,11 @@ void RegisterKeyRelease_LastKeyIsReleased_AppliesInputKeyCodeToKeyBeingEdited()
     em.keysPressed = 1;
     em.shouldAddValue = false;
     em.inputKeyCode = 1337;
-    int expectedKeyCode = 1337;
+    IKeycode expectedKeyCode = 1337;
 
     em.RegisterKeyRelease();
 
-    ASSERT_TEST(keyBeingEdited.keyCode == 1337);
+    ASSERT_TEST(keyBeingEdited.keyCode == expectedKeyCode);
 }
 
 void RegisterKeyRelease_LastKeyIsReleased_ResetsUsedVariables()

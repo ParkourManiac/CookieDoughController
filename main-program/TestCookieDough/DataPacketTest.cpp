@@ -173,7 +173,7 @@ void SavePacketToEEPROM_SavesStxToFirstGivenAdress()
 
     SavePacketToEEPROM(adress, &data, sizeof(data), &packetSize);
 
-    ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[0] == adress);
+    ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(adress));
 }
 
 void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
@@ -184,7 +184,7 @@ void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
     unsigned int packetSize;
 
     SavePacketToEEPROM(adress, &data, sizeof(data), &packetSize);
-    unsigned int expectedEtxPosition = adress + sizeof(packet.etx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
+    int expectedEtxPosition = adress + sizeof(packet.etx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
 
     ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[1] == expectedEtxPosition && EEPROMClass_put_param_t_o1_v[1] == packet.etx);
 }
@@ -195,11 +195,11 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
     uint8_t *dataPtr = (uint8_t*) &data;
     unsigned int adress = 20;
     DataPacket packet;
-    unsigned int expectedStxAdress = adress;
-    unsigned int expectedPayloadLengthAdress = adress + sizeof(packet.stx);
-    unsigned int expectedCRCAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength);
-    unsigned int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
-    unsigned int expectedEtxAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
+    int expectedStxAdress = static_cast<int>(adress);
+    int expectedPayloadLengthAdress = adress + sizeof(packet.stx);
+    int expectedCRCAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength);
+    int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
+    int expectedEtxAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
     unsigned int expectedPacketSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data) + sizeof(packet.etx);
 
     // This ensures that ParsePacketFromEEPROM returns true
@@ -215,7 +215,7 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
     bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(resultBool == true && 
-                EEPROMClass_put_param_idx_o1_v[0] == adress && EEPROMClass_put_param_t_o1_v[0] == packet.stx &&
+                EEPROMClass_put_param_idx_o1_v[0] == expectedStxAdress && EEPROMClass_put_param_t_o1_v[0] == packet.stx &&
                 EEPROMClass_put_param_idx_o2_v[0] == expectedPayloadLengthAdress && EEPROMClass_put_param_t_o2_v[0] == sizeof(data) &&
                 EEPROMClass_put_param_idx_o3_v[0] == expectedCRCAdress && EEPROMClass_put_param_t_o3_v[0] == CalculateCRC(dataPtr, sizeof(data)) &&
                 EEPROMClass_update_param_idx_v[0] == expectedPayloadAdress && EEPROMClass_update_param_val_v[0] == dataPtr[0] &&
@@ -224,17 +224,12 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
                 packetSize == expectedPacketSize);
 }
 
-void SavePacketToEEPROM_EepromFailedToWriteDownCorrectData_PacketIsCorrectlyPutDown()
+void SavePacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse()
 {
     uint16_t data = 42;
     uint8_t *dataPtr = (uint8_t*) &data;
     unsigned int adress = 20;
     DataPacket packet;
-    unsigned int expectedStxAdress = adress;
-    unsigned int expectedPayloadLengthAdress = adress + sizeof(packet.stx);
-    unsigned int expectedCRCAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength);
-    unsigned int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
-    unsigned int expectedEtxAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
 
     // This ensures that ParsePacketFromEEPROM returns true
     EEPROMClass_read_return_v.push_back(packet.stx);
@@ -258,7 +253,7 @@ void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
     unsigned int adress = 20;
     unsigned int packetSize;
 
-    unsigned int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
+    int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
 
     SavePacketToEEPROM(adress, (uint8_t *)&data, sizeof(data), &packetSize);
 

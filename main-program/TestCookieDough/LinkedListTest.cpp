@@ -235,7 +235,7 @@ void AddMultipleItemsToList_FirstlyAddedIsHeadLastlyAddedIsTail()
 void AddItem_LengthIncreasesByOne()
 {
     LinkedList<int> list;
-    int expected = 1;
+    unsigned int expected = 1;
 
     list.Add(1337);
 
@@ -355,9 +355,9 @@ void InsertItem_LengthIncreasesByOne()
 void InsertMultipleItems_LengthIsSameAsAmountOfItems()
 {
     LinkedList<int> list;
-    int expectedSize = 10;
+    unsigned int expectedSize = 10;
 
-    for (int i = 0; i < expectedSize; i++)
+    for (unsigned int i = 0; i < expectedSize; i++)
     {
         list.Insert(0, i);
     }
@@ -551,10 +551,10 @@ void RemoveOnlyItemInList_LengthIsZero() {
 
 void RemoveItemInPopulatedList_LengthDecreasesByOne() {
     LinkedList<int> list;
-    int amountOfAddedItems = 7;
+    unsigned int amountOfAddedItems = 7;
     int indexToRemove = 3;
 
-    for(int i = 0; i < amountOfAddedItems; i++) {
+    for(unsigned int i = 0; i < amountOfAddedItems; i++) {
         list.Add(1);
     }
 

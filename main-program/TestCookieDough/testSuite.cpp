@@ -54,7 +54,7 @@ void TestIfOverwriteReferenceResettingIsWorking_ResetsBetweenTests();
 void SavePacketToEEPROM_SavesStxToFirstGivenAdress();
 void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket();
 void SavePacketToEEPROM_PacketIsCorrectlyPutDown();
-void SavePacketToEEPROM_EepromFailedToWriteDownCorrectData_PacketIsCorrectlyPutDown();
+void SavePacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse();
 void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData();
 void ParsePacketFromEEPROM_ReturnsCorrectPackage();
 void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse();
@@ -235,7 +235,7 @@ void RunTests()
 	RUN_TEST(SavePacketToEEPROM_SavesStxToFirstGivenAdress);
 	RUN_TEST(SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket);
 	RUN_TEST(SavePacketToEEPROM_PacketIsCorrectlyPutDown);
-	RUN_TEST(SavePacketToEEPROM_EepromFailedToWriteDownCorrectData_PacketIsCorrectlyPutDown);
+	RUN_TEST(SavePacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse);
 	RUN_TEST(SavePacketToEEPROM_AdaptsSizeOfPacketToFitData);
 	RUN_TEST(ParsePacketFromEEPROM_ReturnsCorrectPackage);
 	RUN_TEST(ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse);
