@@ -2,6 +2,27 @@
 #include "../lib/CookieDoughLibrary/LinkedList.h"
 #include "../lib/CookieDoughLibrary/LinkedList.cpp"
 
+void NodeConstructor_NoArguments_InitializesWithADefaultObjectAsValueAndNextIsNullptr()
+{
+    bool expectedValue = bool();
+    Node<bool> *expectedNext = nullptr;
+
+    Node<bool> node = Node<bool>();
+
+    ASSERT_TEST(node.value == expectedValue && node.next == expectedNext);
+}
+
+void NodeConstructor_NoArguments_InitializesValueAndNextWithPovidedArguments()
+{
+    int expectedValue = 15;
+    Node<int> next = Node<int>();
+    Node<int> *expectedNextPtr = &next;
+
+    Node<int> node = Node<int>(expectedValue, expectedNextPtr);
+
+    ASSERT_TEST(node.value == expectedValue && node.next == expectedNextPtr);
+}
+
 void GetFirstNode_GetsFirstNode()
 {
     LinkedList<int> list;

@@ -142,6 +142,8 @@ void UpdatePinStatesForKeyMap_CorrectlyParsesKeyPin();
 void UpdatePinStatesForKeyMap_UpdatesStateForAllPins();
 void UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works();
 void UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works();
+void NodeConstructor_NoArguments_InitializesWithADefaultObjectAsValueAndNextIsNullptr();
+void NodeConstructor_NoArguments_InitializesValueAndNextWithPovidedArguments();
 void GetFirstNode_GetsFirstNode();
 void GetSecondNode_GetsSecondNode();
 void GetNodeInTheMiddleOfList_GetsNode();
@@ -339,6 +341,8 @@ void RunTests()
 	RUN_TEST(UpdatePinStatesForKeyMap_UpdatesStateForAllPins);
 	RUN_TEST(UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works);
 	RUN_TEST(UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works);
+	RUN_TEST(NodeConstructor_NoArguments_InitializesWithADefaultObjectAsValueAndNextIsNullptr);
+	RUN_TEST(NodeConstructor_NoArguments_InitializesValueAndNextWithPovidedArguments);
 	RUN_TEST(GetFirstNode_GetsFirstNode);
 	RUN_TEST(GetSecondNode_GetsSecondNode);
 	RUN_TEST(GetNodeInTheMiddleOfList_GetsNode);
