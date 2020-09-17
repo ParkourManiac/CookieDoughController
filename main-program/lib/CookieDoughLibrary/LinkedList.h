@@ -17,7 +17,10 @@ struct Node {
     /**
      * @brief The pointer to the next node in the chain of nodes.
      */
-    Node* next = nullptr;
+    Node* next;
+
+    Node();
+    Node(T _value, Node* _next = nullptr);
 };
 
 /**

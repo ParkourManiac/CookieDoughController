@@ -12,6 +12,98 @@ extern int digitalRead_return;
 extern uint8_t digitalRead_param_pin;
 extern unsigned int digitalRead_invocations;
 
+void KeyConstructor_NoArguments_IntializesPinAndKeycodeWithZeroAndIPinStateWithDefaultValues()
+{
+    uint8_t expectedPin = 0;
+    int expectedKeycode = 0;
+    IPinState expectedState = IPinState();
+
+    Key key = Key();
+
+    bool hasDefaultState = (
+        key.state.value == expectedState.value &&
+        key.state.oldValue == expectedState.oldValue &&
+        key.state.timeOfActivation == expectedState.timeOfActivation &&
+        key.state.lastDebounceTime == expectedState.lastDebounceTime &&
+        key.state.oldPinState == expectedState.oldPinState
+    );
+    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode && hasDefaultState);
+}
+
+void KeyConstructor_WithArguments_IntializesPinAndKeycodeCorrectly()
+{
+    uint8_t expectedPin = 7;
+    int expectedKeycode = 19;
+    IPinState expectedState = IPinState();
+
+    Key key = Key(expectedPin, expectedKeycode);
+
+    bool hasDefaultState = (
+        key.state.value == expectedState.value &&
+        key.state.oldValue == expectedState.oldValue &&
+        key.state.timeOfActivation == expectedState.timeOfActivation &&
+        key.state.lastDebounceTime == expectedState.lastDebounceTime &&
+        key.state.oldPinState == expectedState.oldPinState
+    );
+    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode && hasDefaultState);
+}
+
+void SpecialKeyConstructor_NoArguments_IntializesPinAndFunctionCorrectly()
+{
+    uint8_t expectedPin = 0;
+    SpecialFunction expectedFunction = toggleDefaultKeyMap;
+    IPinState expectedState = IPinState();
+
+    SpecialKey key = SpecialKey();
+
+    bool hasDefaultState = (
+        key.state.value == expectedState.value &&
+        key.state.oldValue == expectedState.oldValue &&
+        key.state.timeOfActivation == expectedState.timeOfActivation &&
+        key.state.lastDebounceTime == expectedState.lastDebounceTime &&
+        key.state.oldPinState == expectedState.oldPinState
+    );
+    ASSERT_TEST(key.pin == expectedPin && key.function == expectedFunction && hasDefaultState);
+}
+
+void SpecialKeyConstructor_WithArguments_IntializesPinAndFunctionCorrectly()
+{
+    uint8_t expectedPin = 7;
+    SpecialFunction expectedFunction = cycleKeyMap;
+    IPinState expectedState = IPinState();
+
+    SpecialKey key = SpecialKey(expectedPin, expectedFunction);
+
+    bool hasDefaultState = (
+        key.state.value == expectedState.value &&
+        key.state.oldValue == expectedState.oldValue &&
+        key.state.timeOfActivation == expectedState.timeOfActivation &&
+        key.state.lastDebounceTime == expectedState.lastDebounceTime &&
+        key.state.oldPinState == expectedState.oldPinState
+    );
+    ASSERT_TEST(key.pin == expectedPin && key.function == expectedFunction && hasDefaultState);
+}
+
+void BareKeyboardKeyConstructor_NoArguments_IntializesPinAndKeycodeWithZero()
+{
+    IKey expectedPin = 0;
+    IKeycode expectedKeycode = 0;
+
+    BareKeyboardKey key = BareKeyboardKey();
+
+    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode);
+}
+
+void BareKeyboardKeyConstructor_WithArguments_IntializesPinAndKeycodeCorrectly()
+{
+    IKey expectedPin = 7;
+    IKeycode expectedKeycode = 19;
+
+    BareKeyboardKey key = BareKeyboardKey(expectedPin, expectedKeycode);
+
+    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode);
+}
+
 void SpecialKeyEqualityOperator_PinAndFunctionAreTheSameBetweenObjects_ReturnsTrue()
 {
     IKey pin = 1;
@@ -77,6 +169,63 @@ void SpecialKeyNotEqualityOperator_PinAndFunctionAreTheSameBetweenObjects_Return
 {
     SpecialKey first = SpecialKey(1, toggleDefaultKeyMap);
     SpecialKey second = SpecialKey(1, toggleDefaultKeyMap);
+    bool expectedResult = !(first == second);
+
+    bool result = first != second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void BareKeyboardKeyEqualityOperator_PinAndKeycodeAreTheSameBetweenObjects_ReturnsTrue()
+{
+    IKey pin = 1;
+    IKeycode keycode = 5;
+    BareKeyboardKey first = BareKeyboardKey(pin, keycode);
+    BareKeyboardKey second = BareKeyboardKey(pin, keycode);
+    bool expectedResult = true;
+
+    bool result = first == second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void BareKeyboardKeyEqualityOperator_PinDifferBetweenObjects_ReturnsFalse()
+{
+    BareKeyboardKey first = BareKeyboardKey(5, 2);
+    BareKeyboardKey second = BareKeyboardKey(1, 2);
+    bool expectedResult = false;
+
+    bool result = first == second;
+    
+    ASSERT_TEST(result == expectedResult);
+}
+
+void BareKeyboardKeyEqualityOperator_KeycodeDifferBetweenObjects_ReturnsFalse()
+{
+    BareKeyboardKey first = BareKeyboardKey(1, 7);
+    BareKeyboardKey second = BareKeyboardKey(1, 3);
+    bool expectedResult = false;
+
+    bool result = first == second;
+    
+    ASSERT_TEST(result == expectedResult);
+}
+
+void BareKeyboardKeyNotEqualityOperator_PinAndKeycodeDifferBetweenObjects_ReturnsOppositeOfEqualityOperator()
+{
+    BareKeyboardKey first = BareKeyboardKey(1, 3);
+    BareKeyboardKey second = BareKeyboardKey(3, 7);
+    bool expectedResult = !(first == second);
+
+    bool result = first != second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void BareKeyboardKeyNotEqualityOperator_PinAndKeycodeAreTheSameBetweenObjects_ReturnsOppositeOfEqualityOperator()
+{
+    BareKeyboardKey first = BareKeyboardKey(1, 3);
+    BareKeyboardKey second = BareKeyboardKey(1, 3);
     bool expectedResult = !(first == second);
 
     bool result = first != second;
@@ -463,34 +612,4 @@ void UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works()
     UpdatePinStatesForKeyMap(keymap, length);
 
     ASSERT_TEST(keymap[0].state.oldPinState == true && keymap[1].state.oldPinState == true);
-}
-
-void KeyConstructor_IntializesPinAndKeycodeCorrectly()
-{
-    uint8_t expectedPin = 7;
-    int expectedKeycode = 19;
-
-    Key key = Key(expectedPin, expectedKeycode);
-
-    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode);
-}
-
-void SpecialKeyConstructor_IntializesPinAndFunctionCorrectly()
-{
-    uint8_t expectedPin = 7;
-    SpecialFunction expectedFunction = cycleKeyMap;
-
-    SpecialKey key = SpecialKey(expectedPin, expectedFunction);
-
-    ASSERT_TEST(key.pin == expectedPin && key.function == expectedFunction);
-}
-
-void BareKeyboardKeyConstructor_IntializesPinAndKeycodeCorrectly()
-{
-    IKey expectedPin = 7;
-    IKeycode expectedKeycode = 19;
-
-    BareKeyboardKey key = BareKeyboardKey(expectedPin, expectedKeycode);
-
-    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode);
 }

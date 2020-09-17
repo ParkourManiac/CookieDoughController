@@ -3,6 +3,19 @@
 
 #include "LinkedList.h"
 
+
+template<class T>
+Node<T>::Node() 
+    : value(T()), next(nullptr) 
+{
+}
+
+template<class T>
+Node<T>::Node(T _value, Node* _next) 
+    : value(_value), next(_next)
+{
+}
+
 template<class T>
 bool LinkedList<T>::IsEmpty() {
     return head == nullptr;

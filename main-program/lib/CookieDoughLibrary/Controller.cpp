@@ -4,25 +4,25 @@
 #include <Arduino.h>
 #include <stdlib.h>
 
-Controller::Controller(BareKeyboardKey *_defaultKeymap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKeys) 
+Controller::Controller(BareKeyboardKey *_defaultKeymap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKeys)
     : normalKeyCount(amountOfDefaultKeys)
+    , defaultKeymap(new BareKeyboardKey[this->normalKeyCount])
     , specialKeyCount(amountOfSpecialKeys)
+    , specialKeys(new SpecialKey[this->specialKeyCount])
+    , currentKeyMap(new Key[this->normalKeyCount])
+    , customKeyMapsPtr(new LinkedList<BareKeyboardKey *>())
+    , customKeyMaps(*(this->customKeyMapsPtr))
+    , buf(new uint8_t[this->bufferSize]{ 0 })
 {
-    defaultKeymap = new BareKeyboardKey[normalKeyCount];
     for(int i = 0; i < normalKeyCount; i++) 
     {
         defaultKeymap[i] = _defaultKeymap[i];
     }
 
-    specialKeys = new SpecialKey[specialKeyCount];
     for(int i = 0; i < specialKeyCount; i++) 
     {
         specialKeys[i] = _specialKeys[i];
     }
-    currentKeyMap = new Key[normalKeyCount];
-    customKeyMapsPtr = new LinkedList<BareKeyboardKey *>();
-    customKeyMaps = *customKeyMapsPtr;
-    buf = new uint8_t[bufferSize]{ 0 };
 }
 
 Controller::Controller(const Controller& other) 

@@ -1,21 +1,44 @@
 #include "Key.h"
 #include <Arduino.h>
 
-BareKeyboardKey::BareKeyboardKey() {}
+BareKeyboardKey::BareKeyboardKey() : pin(0), keyCode(0) 
+{
+}
+
 BareKeyboardKey::BareKeyboardKey(IKey _pin, IKeycode _keyCode)
-    : pin(_pin), keyCode(_keyCode) {}
+    : pin(_pin), keyCode(_keyCode) 
+{
+}
+
 bool BareKeyboardKey::operator==(const BareKeyboardKey &other)
 {
     return pin == other.pin && keyCode == other.keyCode;
 }
 
-Key::Key() {}
-Key::Key(IKey _pin, IKeycode _keyCode)
-    : pin(_pin), keyCode(_keyCode) {}
+bool BareKeyboardKey::operator!=(const BareKeyboardKey &other)
+{
+    return !(*this == other);
+}
 
-SpecialKey::SpecialKey() {}
+Key::Key()
+    : pin(0), keyCode(0), state(IPinState())
+{
+}
+
+Key::Key(IKey _pin, IKeycode _keyCode)
+    : pin(_pin), keyCode(_keyCode), state(IPinState())
+{
+}
+
+SpecialKey::SpecialKey() 
+    : pin(0), function(toggleDefaultKeyMap), state(IPinState())
+{
+}
+
 SpecialKey::SpecialKey(IKey _pin, SpecialFunction _function)
-    : pin(_pin), function(_function) {}
+    : pin(_pin), function(_function), state(IPinState())
+{
+}
 
 bool SpecialKey::operator==(const SpecialKey &other)
 {

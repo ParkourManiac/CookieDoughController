@@ -43,7 +43,8 @@ struct /*__attribute__((packed))*/ BareKeyboardKey // TODO: Consider using packe
      * @return true Both objects have the same pin and keycode.
      * @return false The objects do not use the same pin and keycode.
      */
-    bool operator==(const BareKeyboardKey &other); // TODO: Does this add to size? Needs to be tested.
+    bool operator==(const BareKeyboardKey &other); // Needs to be tested.
+    bool operator!=(const BareKeyboardKey &other); // Needs to be tested.
 };
 
 /**

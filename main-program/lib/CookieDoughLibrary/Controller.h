@@ -12,25 +12,25 @@
 class Controller
 {
 private:
-    BareKeyboardKey *defaultKeymap;
     int normalKeyCount;
+    BareKeyboardKey *defaultKeymap;
     
-    SpecialKey *specialKeys;
     int specialKeyCount;
+    SpecialKey *specialKeys;
 
     /**
      * @brief Is true when the default keymap is equipped.
      */
     bool isUsingDefaultKeymap = false;
 
-    Key *currentKeyMap = new Key[normalKeyCount];
+    Key *currentKeyMap;
 
     unsigned int customKeyMapIndex = 0;
-    LinkedList<BareKeyboardKey *> *customKeyMapsPtr = new LinkedList<BareKeyboardKey *>();
-    LinkedList<BareKeyboardKey *> customKeyMaps = *customKeyMapsPtr;
+    LinkedList<BareKeyboardKey *> *customKeyMapsPtr;
+    LinkedList<BareKeyboardKey *> customKeyMaps;
 
     const uint8_t bufferSize = 8;
-    uint8_t *buf = new uint8_t[bufferSize]{ 0 }; // Keyboard report buffer.
+    uint8_t *buf; // Keyboard report buffer.
 
     unsigned int eepromAdress = 0;
     unsigned int nextFreeEepromAdress = 0;
