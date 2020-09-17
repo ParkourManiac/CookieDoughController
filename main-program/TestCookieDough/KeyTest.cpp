@@ -12,6 +12,78 @@ extern int digitalRead_return;
 extern uint8_t digitalRead_param_pin;
 extern unsigned int digitalRead_invocations;
 
+void SpecialKeyEqualityOperator_PinAndFunctionAreTheSameBetweenObjects_ReturnsTrue()
+{
+    IKey pin = 1;
+    SpecialFunction function = toggleDefaultKeyMap;
+    SpecialKey first = SpecialKey(pin, function);
+    SpecialKey second = SpecialKey(pin, function);
+    bool expectedResult = true;
+
+    bool result = first == second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void SpecialKeyEqualityOperator_PinDifferBetweenObjects_ReturnsFalse()
+{
+    SpecialKey first = SpecialKey(5, toggleDefaultKeyMap);
+    SpecialKey second = SpecialKey(1, toggleDefaultKeyMap);
+    bool expectedResult = false;
+
+    bool result = first == second;
+    
+    ASSERT_TEST(result == expectedResult);
+}
+
+void SpecialKeyEqualityOperator_FunctionDifferBetweenObjects_ReturnsFalse()
+{
+    SpecialKey first = SpecialKey(1, toggleDefaultKeyMap);
+    SpecialKey second = SpecialKey(1, cycleKeyMap);
+    bool expectedResult = false;
+
+    bool result = first == second;
+    
+    ASSERT_TEST(result == expectedResult);
+}
+
+void SpecialKeyEqualityOperator_PinAndFunctionAreTheSameBetweenObjectsButStateIsDifferent_IgnoresStateAndReturnsTrue()
+{
+    IKey pin = 1;
+    SpecialFunction function = toggleDefaultKeyMap;
+    SpecialKey first = SpecialKey(pin, function);
+    SpecialKey second = SpecialKey(pin, function);
+    first.state.value = false;
+    second.state.value = true;
+    bool expectedResult = true;
+
+    bool result = first == second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void SpecialKeyNotEqualityOperator_PinAndFunctionDifferBetweenObjects_ReturnsOppositeOfEqualityOperator()
+{
+    SpecialKey first = SpecialKey(1, toggleDefaultKeyMap);
+    SpecialKey second = SpecialKey(3, cycleKeyMap);
+    bool expectedResult = !(first == second);
+
+    bool result = first != second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void SpecialKeyNotEqualityOperator_PinAndFunctionAreTheSameBetweenObjects_ReturnsOppositeOfEqualityOperator()
+{
+    SpecialKey first = SpecialKey(1, toggleDefaultKeyMap);
+    SpecialKey second = SpecialKey(1, toggleDefaultKeyMap);
+    bool expectedResult = !(first == second);
+
+    bool result = first != second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
 void ConfigurePinForKey_IKeyIsPassedToPinMode()
 {
     IKey expectedPin = 2;

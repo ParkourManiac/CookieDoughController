@@ -19,12 +19,10 @@ extern std::vector<uint8_t> EEPROMClass_update_param_val_v;
 
 extern std::vector<uint8_t> pinMode_param_pin_v;
 
-BareKeyboardKey *defaultKeymap;
-SpecialKey *specialKeys;
 Controller SetUpController()
 {
     const int normalKeyCount = 4;
-    defaultKeymap = new BareKeyboardKey[normalKeyCount]{
+    BareKeyboardKey defaultKeymap[normalKeyCount] {
         // Key map Arrow keys
         BareKeyboardKey(2, 80),
         BareKeyboardKey(3, 82),
@@ -33,7 +31,7 @@ Controller SetUpController()
     };
 
     const int specialKeyCount = 3;
-    specialKeys = new SpecialKey[specialKeyCount]{
+    SpecialKey specialKeys[specialKeyCount] {
         SpecialKey(10, toggleEditMode),
         SpecialKey(11, cycleKeyMap),
         SpecialKey(12, toggleDefaultKeyMap),
@@ -42,10 +40,62 @@ Controller SetUpController()
     return Controller(defaultKeymap, normalKeyCount, specialKeys, specialKeyCount);
 }
 
-void DestroyController()
+void Controller_Constructor_CopiesProvidedKeymapsIntoClass()
 {
-    delete[](defaultKeymap);
-    delete[](specialKeys);
+    // Arrange
+    const int expectedNormalKeyCount = 2;
+    BareKeyboardKey expectedDefaultKeymap[expectedNormalKeyCount] {
+        BareKeyboardKey(2, 10),
+        BareKeyboardKey(3, 23),
+    };
+    const int expectedSpecialKeyCount = 1;
+    SpecialKey expectedSpecialKeys[expectedSpecialKeyCount] {
+        SpecialKey(12, toggleDefaultKeyMap),
+    };
+    int tempNormalKeyCount = expectedNormalKeyCount;
+    BareKeyboardKey tempDefaultKeymap[tempNormalKeyCount] {
+        expectedDefaultKeymap[0],
+        expectedDefaultKeymap[1],
+    };
+    int tempSpecialKeyCount = expectedSpecialKeyCount;
+    SpecialKey tempSpecialKeys[tempSpecialKeyCount] {
+        expectedSpecialKeys[0],
+    };
+
+    // Act
+    Controller controller = Controller(tempDefaultKeymap, tempNormalKeyCount, tempSpecialKeys, tempSpecialKeyCount);
+    tempNormalKeyCount = 0;
+    tempSpecialKeyCount = 0;
+    tempDefaultKeymap[0] = BareKeyboardKey(0,0);
+    tempDefaultKeymap[1] = BareKeyboardKey(0,0);
+    tempSpecialKeys[0] = SpecialKey(0, cycleKeyMap);
+    // Temp values are changed.
+
+    // Assert that the controller was not changed by the temp values.
+    ASSERT_TEST(
+        !(expectedDefaultKeymap[0] == tempDefaultKeymap[0]) &&
+        controller.defaultKeymap[0] == expectedDefaultKeymap[0] &&
+        controller.defaultKeymap[1] == expectedDefaultKeymap[1] &&
+        controller.normalKeyCount == expectedNormalKeyCount &&
+        controller.specialKeys[0] == expectedSpecialKeys[0] &&
+        controller.specialKeyCount == expectedSpecialKeyCount
+    );
+}
+
+void Controller_Constructor_AllocatesEnoughSpaceForPointers() 
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey temp;
+
+    bool didNotCrash = false;
+    controller.defaultKeymap[controller.normalKeyCount - 1] = BareKeyboardKey(3, 4);
+    controller.specialKeys[controller.specialKeyCount - 1] = SpecialKey(5, toggleDefaultKeyMap);
+    controller.currentKeyMap[controller.normalKeyCount - 1] = Key(1, 2);
+    controller.buf[controller.bufferSize - 1] = 10;
+    controller.customKeyMapsPtr->Add(&temp);
+    didNotCrash = true;
+
+    ASSERT_TEST(didNotCrash == true);
 }
 
 void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse()
@@ -69,7 +119,6 @@ void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndRetur
     doesNotCrash = true;
 
     ASSERT_TEST(resultBool == false && doesNotCrash == true);
-    DestroyController();
     delete[](result);
     delete[](dataPtr);
 }
@@ -105,7 +154,6 @@ void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeys
                 amountOfKeys == 2 &&
                 result[0].pin == key1.pin && result[0].keyCode == key1.keyCode &&
                 result[1].pin == key2.pin && result[1].keyCode == key2.keyCode);
-    DestroyController();
     delete[](result);
 }
 
@@ -135,7 +183,6 @@ void RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse()
     bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
 
     ASSERT_TEST(resultBool == false);
-    DestroyController();
     delete[](result);
 }
 
@@ -188,7 +235,6 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
                 amountOfKeys == 2 &&
                 result[0].pin == validKey1.pin && result[0].keyCode == validKey1.keyCode &&
                 result[1].pin == validKey2.pin && result[1].keyCode == validKey2.keyCode);
-    DestroyController();
     delete[](result);
 }
 
@@ -229,7 +275,6 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
         packetSize == 10);
 
     delete (resultPtr);
-    DestroyController();
 }
 
 void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse()
@@ -244,7 +289,6 @@ void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse()
 
     ASSERT_TEST(resultBool == false);
     delete (resultPtr);
-    DestroyController();
 }
 
 void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtStartAdress()
@@ -259,7 +303,6 @@ void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtSta
 
     ASSERT_TEST(EEPROMClass_read_param_idx_v[0] == static_cast<int>(expectedStartAdress));
     delete (resultPtr);
-    DestroyController();
 }
 
 void ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload_DoesNotCrash()
@@ -283,7 +326,6 @@ void ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload
     didNotCrash = true;
 
     ASSERT_TEST(didNotCrash == true);
-    DestroyController();
     delete[](dataPtr);
 }
 
@@ -311,7 +353,6 @@ void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBar
 
     ASSERT_TEST(result[0].pin == key1.pin && result[0].keyCode == key1.keyCode &&
                 result[1].pin == key2.pin && result[1].keyCode == key2.keyCode);
-    DestroyController();
 }
 
 void ParseBareKeyboardKeyArrayIntoKeymapList_PopulatesTheListWithTheGivenKeys()
@@ -358,7 +399,6 @@ void ParseBareKeyboardKeyArrayIntoKeymapList_PopulatesTheListWithTheGivenKeys()
                 resultKeymap2[1].pin == 11 && resultKeymap2[1].keyCode == 12 &&
                 resultKeymap2[2].pin == 13 && resultKeymap2[2].keyCode == 14 &&
                 resultKeymap2[3].pin == 15 && resultKeymap2[3].keyCode == 16);
-    DestroyController();
 }
 
 void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue()
@@ -439,7 +479,6 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
                 result[1].pin == data[1].pin && result[1].keyCode == data[1].keyCode &&
                 result[2].pin == data[2].pin && result[2].keyCode == data[2].keyCode &&
                 result[3].pin == data[3].pin && result[3].keyCode == data[3].keyCode);
-    DestroyController();
 }
 
 void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
@@ -568,7 +607,6 @@ void WipeKeyboardEventBuffer_BufferOnlyContainsZeroes()
         controller.buf[5] == 0 &&
         controller.buf[6] == 0 &&
         controller.buf[7] == 0);
-    DestroyController();
 }
 
 void SendKeyboardEvent_CallsSerialWriteWithTheCorrectBufferSize()
@@ -578,7 +616,6 @@ void SendKeyboardEvent_CallsSerialWriteWithTheCorrectBufferSize()
     controller.SendKeyboardEvent();
 
     ASSERT_TEST(Serial__write_param_size == 8);
-    DestroyController();
 }
 
 void SendKeyboardEvent_CallsSerialWriteWithTheCorrectBuffer()
@@ -605,17 +642,15 @@ void SendKeyboardEvent_CallsSerialWriteWithTheCorrectBuffer()
         Serial__write_param_buffer[5] == expectedBuffer[5] &&
         Serial__write_param_buffer[6] == expectedBuffer[6] &&
         Serial__write_param_buffer[7] == expectedBuffer[7]);
-    DestroyController();
 }
 
 void ChangeKeyMap_TheDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedToTrue()
 {
     Controller controller = SetUpController();
 
-    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.ChangeKeyMap(controller.defaultKeymap);
 
     ASSERT_TEST(controller.isUsingDefaultKeymap == true);
-    DestroyController();
 }
 
 void ChangeKeyMap_ACustomKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse()
@@ -631,7 +666,6 @@ void ChangeKeyMap_ACustomKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse()
     controller.ChangeKeyMap(customKeymap);
 
     ASSERT_TEST(controller.isUsingDefaultKeymap == false);
-    DestroyController();
 }
 
 void ChangeKeyMap_ACustomKeymapWithSimilarButNotTheSameSettingsAsDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse()
@@ -667,7 +701,7 @@ void ChangeKeyMap_DefaultKeymapIsSelectedAndWeAreEquippingACustomKeymap_CurrentK
         BareKeyboardKey(5, 45),
     };
 
-    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.ChangeKeyMap(controller.defaultKeymap);
     controller.ChangeKeyMap(expectedKeymap);
 
     ASSERT_TEST(
@@ -675,7 +709,6 @@ void ChangeKeyMap_DefaultKeymapIsSelectedAndWeAreEquippingACustomKeymap_CurrentK
         controller.currentKeyMap[1].pin == expectedKeymap[1].pin && controller.currentKeyMap[1].keyCode == expectedKeymap[1].keyCode &&
         controller.currentKeyMap[2].pin == expectedKeymap[2].pin && controller.currentKeyMap[2].keyCode == expectedKeymap[2].keyCode &&
         controller.currentKeyMap[3].pin == expectedKeymap[3].pin && controller.currentKeyMap[3].keyCode == expectedKeymap[3].keyCode);
-    DestroyController();
 }
 
 void ChangeKeyMap_EmptiesBufferAndSendsItAsAKeyReleaseEventForAllKeys()
@@ -709,7 +742,6 @@ void ChangeKeyMap_EmptiesBufferAndSendsItAsAKeyReleaseEventForAllKeys()
             controllerBufIsEmpty = false;
     }
     ASSERT_TEST(bufSentIsEmpty && controllerBufIsEmpty && serialHasBeenCalled && Serial__write_param_size == expectedBufSize);
-    DestroyController();
 }
 
 void ChangeKeyMap_ConfiguresThePinsOfTheProvidedKeymap()
@@ -730,7 +762,6 @@ void ChangeKeyMap_ConfiguresThePinsOfTheProvidedKeymap()
         pinMode_param_pin_v[2] == keymap[2].pin &&
         pinMode_param_pin_v[3] == keymap[3].pin
     );
-    DestroyController();
 }
 
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquipped_EquipsTheFirstKeymapInTheList()
@@ -751,7 +782,7 @@ void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquipped_EquipsTheFirstKeymapInTheLi
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(expectedKeymap);
     controller.customKeyMaps.Add(keymap2);
-    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.ChangeKeyMap(controller.defaultKeymap);
 
     controller.CycleKeyMap();
 
@@ -760,7 +791,6 @@ void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquipped_EquipsTheFirstKeymapInTheLi
         expectedKeymap[1].pin == controller.currentKeyMap[1].pin && expectedKeymap[1].keyCode == controller.currentKeyMap[1].keyCode &&
         expectedKeymap[2].pin == controller.currentKeyMap[2].pin && expectedKeymap[2].keyCode == controller.currentKeyMap[2].keyCode &&
         expectedKeymap[3].pin == controller.currentKeyMap[3].pin && expectedKeymap[3].keyCode == controller.currentKeyMap[3].keyCode);
-    DestroyController();
 }
 
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeCycleTwice_EquipsTheSecondKeymapInTheList()
@@ -781,7 +811,7 @@ void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeCycleTwice_EquipsTheSec
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(expectedKeymap);
-    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.ChangeKeyMap(controller.defaultKeymap);
 
     controller.CycleKeyMap();
     controller.CycleKeyMap();
@@ -791,7 +821,6 @@ void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeCycleTwice_EquipsTheSec
         expectedKeymap[1].pin == controller.currentKeyMap[1].pin && expectedKeymap[1].keyCode == controller.currentKeyMap[1].keyCode &&
         expectedKeymap[2].pin == controller.currentKeyMap[2].pin && expectedKeymap[2].keyCode == controller.currentKeyMap[2].keyCode &&
         expectedKeymap[3].pin == controller.currentKeyMap[3].pin && expectedKeymap[3].keyCode == controller.currentKeyMap[3].keyCode);
-    DestroyController();
 }
 
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeOnlyhaveTwoCustomKeymapsAndWeCycleThreeTimes_WhenWeCycleOffTheLastCustomKeymapItLoopsBackToTheFirstKeymapInTheList()
@@ -812,7 +841,7 @@ void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeOnlyhaveTwoCustomKeymap
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(expectedKeymap);
     controller.customKeyMaps.Add(keymap2);
-    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.ChangeKeyMap(controller.defaultKeymap);
 
     controller.CycleKeyMap();
     controller.CycleKeyMap();
@@ -823,7 +852,6 @@ void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeOnlyhaveTwoCustomKeymap
         expectedKeymap[1].pin == controller.currentKeyMap[1].pin && expectedKeymap[1].keyCode == controller.currentKeyMap[1].keyCode &&
         expectedKeymap[2].pin == controller.currentKeyMap[2].pin && expectedKeymap[2].keyCode == controller.currentKeyMap[2].keyCode &&
         expectedKeymap[3].pin == controller.currentKeyMap[3].pin && expectedKeymap[3].keyCode == controller.currentKeyMap[3].keyCode);
-    DestroyController();
 }
 
 void SaveKeyMapsToMemory_PutsDownKeysAsBareKeyboardArrayIntoEEPROM()
@@ -862,7 +890,6 @@ void SaveKeyMapsToMemory_PutsDownKeysAsBareKeyboardArrayIntoEEPROM()
     }
 
     ASSERT_TEST(success);
-    DestroyController();
     delete[] expectedData;
 }
 
@@ -915,7 +942,6 @@ void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
         success == true &&
         controller.nextFreeEepromAdress == controller.eepromAdress + packetSize);
     delete[](expectedData);
-    DestroyController();
 }
 
 void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEepromAdressOfControllerWithCorrectValue()
@@ -967,7 +993,6 @@ void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEe
         success == true &&
         controller.nextFreeEepromAdress == controller.eepromAdress + packetSize);
     // delete[](expectedData); // This line makes the test fail SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController.
-    DestroyController();
 }
 
 void ToggleEditMode_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWithTheValuesPresentInCurrentKeymap()
@@ -987,7 +1012,7 @@ void ToggleEditMode_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWit
     };
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(customKeymap);
-    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.ChangeKeyMap(controller.defaultKeymap);
     controller.CycleKeyMap(); // Selects the first custom keymap.
     controller.currentKeyMap[0] = Key(expectedKeymap[0].pin, expectedKeymap[0].keyCode);
     controller.currentKeyMap[1] = Key(expectedKeymap[1].pin, expectedKeymap[1].keyCode);
@@ -1002,7 +1027,6 @@ void ToggleEditMode_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWit
         resultingCustomKeymap[1].pin == expectedKeymap[1].pin && resultingCustomKeymap[1].keyCode == expectedKeymap[1].keyCode &&
         resultingCustomKeymap[2].pin == expectedKeymap[2].pin && resultingCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
         resultingCustomKeymap[3].pin == expectedKeymap[3].pin && resultingCustomKeymap[3].keyCode == expectedKeymap[3].keyCode);
-    DestroyController();
 }
 
 void SaveControllerSettings_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWithTheValuesPresentInCurrentKeymap()
@@ -1022,7 +1046,7 @@ void SaveControllerSettings_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomK
     };
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(customKeymap);
-    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.ChangeKeyMap(controller.defaultKeymap);
     controller.CycleKeyMap(); // Selects the first custom keymap.
     controller.currentKeyMap[0] = Key(expectedKeymap[0].pin, expectedKeymap[0].keyCode);
     controller.currentKeyMap[1] = Key(expectedKeymap[1].pin, expectedKeymap[1].keyCode);
@@ -1037,7 +1061,6 @@ void SaveControllerSettings_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomK
         resultingCustomKeymap[1].pin == expectedKeymap[1].pin && resultingCustomKeymap[1].keyCode == expectedKeymap[1].keyCode &&
         resultingCustomKeymap[2].pin == expectedKeymap[2].pin && resultingCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
         resultingCustomKeymap[3].pin == expectedKeymap[3].pin && resultingCustomKeymap[3].keyCode == expectedKeymap[3].keyCode);
-    DestroyController();
 }
 
 void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWithTheValuesPresentInCurrentKeymap()
@@ -1057,7 +1080,7 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCust
     };
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(customKeymap);
-    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.ChangeKeyMap(controller.defaultKeymap);
     controller.CycleKeyMap(); // Selects the first custom keymap.
     controller.currentKeyMap[0] = Key(expectedKeymap[0].pin, expectedKeymap[0].keyCode);
     controller.currentKeyMap[1] = Key(expectedKeymap[1].pin, expectedKeymap[1].keyCode);
@@ -1072,7 +1095,6 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCust
         resultingCustomKeymap[1].pin == expectedKeymap[1].pin && resultingCustomKeymap[1].keyCode == expectedKeymap[1].keyCode &&
         resultingCustomKeymap[2].pin == expectedKeymap[2].pin && resultingCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
         resultingCustomKeymap[3].pin == expectedKeymap[3].pin && resultingCustomKeymap[3].keyCode == expectedKeymap[3].keyCode);
-    DestroyController();
 }
 
 void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_UpdatesTheSelectedCustomKeymap()
@@ -1099,7 +1121,7 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeyma
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(customKeymap1);
     controller.customKeyMaps.Add(customKeymap2);
-    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.ChangeKeyMap(controller.defaultKeymap);
     // Selects the second keymap.
     controller.CycleKeyMap();
     controller.CycleKeyMap();
@@ -1117,7 +1139,6 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeyma
         resultingSecondCustomKeymap[1].pin == expectedKeymap[1].pin && resultingSecondCustomKeymap[1].keyCode == expectedKeymap[1].keyCode &&
         resultingSecondCustomKeymap[2].pin == expectedKeymap[2].pin && resultingSecondCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
         resultingSecondCustomKeymap[3].pin == expectedKeymap[3].pin && resultingSecondCustomKeymap[3].keyCode == expectedKeymap[3].keyCode);
-    DestroyController();
 }
 
 void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_DoesNotChangeTheOtherKeymaps()
@@ -1150,7 +1171,7 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeyma
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(customKeymap1);
     controller.customKeyMaps.Add(customKeymap2);
-    controller.ChangeKeyMap(controller.defaultKeyMap);
+    controller.ChangeKeyMap(controller.defaultKeymap);
     // Selects the second keymap.
     controller.CycleKeyMap();
     controller.CycleKeyMap();
@@ -1168,5 +1189,4 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeyma
         resultingFirstCustomKeymap[1].pin == expectedKeymap[1].pin && resultingFirstCustomKeymap[1].keyCode == expectedKeymap[1].keyCode &&
         resultingFirstCustomKeymap[2].pin == expectedKeymap[2].pin && resultingFirstCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
         resultingFirstCustomKeymap[3].pin == expectedKeymap[3].pin && resultingFirstCustomKeymap[3].keyCode == expectedKeymap[3].keyCode);
-    DestroyController();
 }

@@ -36,6 +36,14 @@ struct /*__attribute__((packed))*/ BareKeyboardKey // TODO: Consider using packe
     IKeycode keyCode; /** The keyboard keycode. */
     BareKeyboardKey();
     BareKeyboardKey(IKey _pin, IKeycode _keyCode);
+    /**
+     * @brief Checks if the pin and the keycode are equal between two objects.
+     * 
+     * @param other The BareKeyboardKey to be compared against.
+     * @return true Both objects have the same pin and keycode.
+     * @return false The objects do not use the same pin and keycode.
+     */
+    bool operator==(const BareKeyboardKey &other); // TODO: Does this add to size? Needs to be tested.
 };
 
 /**
@@ -75,6 +83,22 @@ struct SpecialKey
 
     SpecialKey();
     SpecialKey(IKey _pin, SpecialFunction _function);
+    /**
+     * @brief Checks if the pin and the keycode are equal between two objects.
+     * 
+     * @param other The SpecialKey to be compared against.
+     * @return true Both objects have the same pin and keycode.
+     * @return false The objects do not use the same pin and keycode.
+     */
+    bool operator==(const SpecialKey &other);
+    /**
+     * @brief Checks if the pin and the keycode are not equal between two objects.
+     * 
+     * @param other The SpecialKey to be compared against.
+     * @return true The objects do not use the same pin and keycode.
+     * @return false Both objects have the same pin and keycode.
+     */
+    bool operator!=(const SpecialKey &other);
 };
 
 /**

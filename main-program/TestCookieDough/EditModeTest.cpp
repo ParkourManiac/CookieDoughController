@@ -16,6 +16,18 @@ extern double pow_param_exponent;
 extern unsigned long millis_return;
 extern unsigned int millis_invocations;
 
+void EditMode_Constructor_SetsCorrectValues()
+{
+    const int expectedNormalKeyCount = 4;
+    bool expectedUseEditModeLedSignal = true;
+    EditMode editmode = EditMode(expectedNormalKeyCount, expectedUseEditModeLedSignal);
+
+    ASSERT_TEST(
+        editmode.normalKeyCount == expectedNormalKeyCount &&
+        editmode.useEditModeLedSignal == expectedUseEditModeLedSignal
+    );
+}
+
 void EditMode_Initialized_NotEnabledByDefault()
 {
     EditMode editmode = EditMode(normalKeyCount, true);

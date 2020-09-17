@@ -12,7 +12,7 @@
 class Controller
 {
 private:
-    BareKeyboardKey *defaultKeyMap;
+    BareKeyboardKey *defaultKeymap;
     int normalKeyCount;
     
     SpecialKey *specialKeys;
@@ -43,18 +43,15 @@ public:
     /**
      * @brief Construct a new Controller object and sets up the Controllers initial keymap and the keymap used for special functions.
      * 
-     * @param _defaultKeyMap The keymap to be used as the default keymap.
+     * @param _defaultKeymap The keymap to be used as the default keymap.
      * @param amountOfDefaultKeys The amount of keys inside the default keymap.
      * @param _specialKeys The keymap to be used for special function keys.
-     * @param amountOfSpecialKey The amount of keys inside the specialKeys keymap.
+     * @param amountOfSpecialKeys The amount of keys inside the specialKeys keymap.
      */
-    Controller(BareKeyboardKey *_defaultKeyMap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKey) 
-        : defaultKeyMap(_defaultKeyMap)
-        , normalKeyCount(amountOfDefaultKeys)
-        , specialKeys(_specialKeys)
-        , specialKeyCount(amountOfSpecialKey)
-    {
-    }
+    Controller(BareKeyboardKey *_defaultKeymap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKeys);
+    Controller(const Controller& other);
+    ~Controller();
+    void operator=(const Controller&) = delete;
 
     /**
      * @brief Sets up the controller by loading the keymaps from memory and configuring the corresponding Arduino pin for each key.

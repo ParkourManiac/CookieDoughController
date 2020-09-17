@@ -5,7 +5,8 @@
 #include "Fakes/Arduino.h"
 #include "Fakes/EEPROM.h"
 
-void DestroyController();
+void Controller_Constructor_CopiesProvidedKeymapsIntoClass();
+void Controller_Constructor_AllocatesEnoughSpaceForPointers();
 void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse();
 void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeysInside();
 void RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse();
@@ -58,6 +59,7 @@ void SavePacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse();
 void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData();
 void ParsePacketFromEEPROM_ReturnsCorrectPackage();
 void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse();
+void EditMode_Constructor_SetsCorrectValues();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
 void Toggle_WhenEnabled_BecomesDisabled();
@@ -92,6 +94,12 @@ void EditModeLoop_TwoKeysBecamePressed_RegistersTwoKeyPresses();
 void EditModeLoop_KeyBecameReleased_RegistersKeyRelease();
 void EditModeLoop_TwoKeysBecameReleased_RegistersTwoKeyReleases();
 void EditModeLoop_WhenIdle_SignalEditMode();
+void SpecialKeyEqualityOperator_PinAndFunctionAreTheSameBetweenObjects_ReturnsTrue();
+void SpecialKeyEqualityOperator_PinDifferBetweenObjects_ReturnsFalse();
+void SpecialKeyEqualityOperator_FunctionDifferBetweenObjects_ReturnsFalse();
+void SpecialKeyEqualityOperator_PinAndFunctionAreTheSameBetweenObjectsButStateIsDifferent_IgnoresStateAndReturnsTrue();
+void SpecialKeyNotEqualityOperator_PinAndFunctionDifferBetweenObjects_ReturnsOppositeOfEqualityOperator();
+void SpecialKeyNotEqualityOperator_PinAndFunctionAreTheSameBetweenObjects_ReturnsOppositeOfEqualityOperator();
 void ConfigurePinForKey_IKeyIsPassedToPinMode();
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey();
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey();
@@ -186,7 +194,8 @@ void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
 
 void RunTests() 
 {
-	RUN_TEST(DestroyController);
+	RUN_TEST(Controller_Constructor_CopiesProvidedKeymapsIntoClass);
+	RUN_TEST(Controller_Constructor_AllocatesEnoughSpaceForPointers);
 	RUN_TEST(RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse);
 	RUN_TEST(RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeysInside);
 	RUN_TEST(RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse);
@@ -239,6 +248,7 @@ void RunTests()
 	RUN_TEST(SavePacketToEEPROM_AdaptsSizeOfPacketToFitData);
 	RUN_TEST(ParsePacketFromEEPROM_ReturnsCorrectPackage);
 	RUN_TEST(ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse);
+	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
 	RUN_TEST(Toggle_WhenEnabled_BecomesDisabled);
@@ -273,6 +283,12 @@ void RunTests()
 	RUN_TEST(EditModeLoop_KeyBecameReleased_RegistersKeyRelease);
 	RUN_TEST(EditModeLoop_TwoKeysBecameReleased_RegistersTwoKeyReleases);
 	RUN_TEST(EditModeLoop_WhenIdle_SignalEditMode);
+	RUN_TEST(SpecialKeyEqualityOperator_PinAndFunctionAreTheSameBetweenObjects_ReturnsTrue);
+	RUN_TEST(SpecialKeyEqualityOperator_PinDifferBetweenObjects_ReturnsFalse);
+	RUN_TEST(SpecialKeyEqualityOperator_FunctionDifferBetweenObjects_ReturnsFalse);
+	RUN_TEST(SpecialKeyEqualityOperator_PinAndFunctionAreTheSameBetweenObjectsButStateIsDifferent_IgnoresStateAndReturnsTrue);
+	RUN_TEST(SpecialKeyNotEqualityOperator_PinAndFunctionDifferBetweenObjects_ReturnsOppositeOfEqualityOperator);
+	RUN_TEST(SpecialKeyNotEqualityOperator_PinAndFunctionAreTheSameBetweenObjects_ReturnsOppositeOfEqualityOperator);
 	RUN_TEST(ConfigurePinForKey_IKeyIsPassedToPinMode);
 	RUN_TEST(ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey);
 	RUN_TEST(ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey);

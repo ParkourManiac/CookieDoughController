@@ -32,6 +32,8 @@ private:
 
 public:
     explicit EditMode(int _normalKeyCount, bool _useEditModeLedSignal);
+    EditMode(const EditMode& other);
+    void operator=(const EditMode&) = delete;
     ~EditMode();
 
     /**

@@ -4,6 +4,10 @@
 BareKeyboardKey::BareKeyboardKey() {}
 BareKeyboardKey::BareKeyboardKey(IKey _pin, IKeycode _keyCode)
     : pin(_pin), keyCode(_keyCode) {}
+bool BareKeyboardKey::operator==(const BareKeyboardKey &other)
+{
+    return pin == other.pin && keyCode == other.keyCode;
+}
 
 Key::Key() {}
 Key::Key(IKey _pin, IKeycode _keyCode)
@@ -12,6 +16,16 @@ Key::Key(IKey _pin, IKeycode _keyCode)
 SpecialKey::SpecialKey() {}
 SpecialKey::SpecialKey(IKey _pin, SpecialFunction _function)
     : pin(_pin), function(_function) {}
+
+bool SpecialKey::operator==(const SpecialKey &other)
+{
+    return pin == other.pin && function == other.function;
+}
+
+bool SpecialKey::operator!=(const SpecialKey &other)
+{
+    return !(*this == other);
+}
 
     
 

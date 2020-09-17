@@ -4,6 +4,41 @@
 #include <Arduino.h>
 #include <stdlib.h>
 
+Controller::Controller(BareKeyboardKey *_defaultKeymap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKeys) 
+    : normalKeyCount(amountOfDefaultKeys)
+    , specialKeyCount(amountOfSpecialKeys)
+{
+    defaultKeymap = new BareKeyboardKey[normalKeyCount];
+    for(int i = 0; i < normalKeyCount; i++) 
+    {
+        defaultKeymap[i] = _defaultKeymap[i];
+    }
+
+    specialKeys = new SpecialKey[specialKeyCount];
+    for(int i = 0; i < specialKeyCount; i++) 
+    {
+        specialKeys[i] = _specialKeys[i];
+    }
+    currentKeyMap = new Key[normalKeyCount];
+    customKeyMapsPtr = new LinkedList<BareKeyboardKey *>();
+    customKeyMaps = *customKeyMapsPtr;
+    buf = new uint8_t[bufferSize]{ 0 };
+}
+
+Controller::Controller(const Controller& other) 
+    : Controller(other.defaultKeymap, other.normalKeyCount, other.specialKeys, other.specialKeyCount) 
+{   
+}
+
+Controller::~Controller()
+{
+    delete[](defaultKeymap);
+    delete[](specialKeys);
+    delete[](currentKeyMap);
+    delete(customKeyMapsPtr);
+    delete[](buf);
+}
+
 void Controller::Setup()
 {
     // // DEBUG CLEAN EEPROM
@@ -14,7 +49,7 @@ void Controller::Setup()
 
     DEBUG_PRINT("\nChanging to default keymap.\n");
     DEBUG(delay(100));
-    ChangeKeyMap(defaultKeyMap);
+    ChangeKeyMap(defaultKeymap);
     LoadKeymapsFromMemoryIntoList(&customKeyMaps); // SRAM: -162 (When loading one keymap of 4 keys).
     ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount); //SRAM: -0
     ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount); //SRAM: -0
@@ -255,7 +290,7 @@ bool Controller::IsKeyValid(const IKey &pin)
 {
     for (int i = 0; i < normalKeyCount; i++)
     {
-        if (pin == defaultKeyMap[i].pin)
+        if (pin == defaultKeymap[i].pin)
             return true;
     }
 
@@ -300,7 +335,7 @@ void Controller::ChangeKeyMap(BareKeyboardKey *keyMap)
     SendKeyboardEvent();
 
     // Keep track if we are using the default keymap.
-    isUsingDefaultKeymap = keyMap == defaultKeyMap;
+    isUsingDefaultKeymap = keyMap == defaultKeymap;
 
     // Configure pins
     ConfigurePinsForKeyMap(currentKeyMap, normalKeyCount);
@@ -321,7 +356,7 @@ void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys /
     bool toggleToDefault = !isUsingDefaultKeymap;
     if (toggleToDefault)
     {
-        ChangeKeyMap(defaultKeyMap);
+        ChangeKeyMap(defaultKeymap);
     }
     else if (customKeyMaps.IsEmpty())
     {
@@ -633,7 +668,7 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
         if (customKeyMaps.IsEmpty())
         {
             DEBUG_PRINT("Switched to default keymap\n"); // DEBUG
-            ChangeKeyMap(defaultKeyMap);
+            ChangeKeyMap(defaultKeymap);
             customKeyMapIndex = 0;
         }
         else // the list still contains a keymap...
@@ -724,7 +759,7 @@ bool Controller::CreateNewKeyMap() // TODO: Needs to be tested.
         // Copy the default pin values to the new keyMap.
         for (int i = 0; i < normalKeyCount; i++)
         {
-            newKeyMap[i] = BareKeyboardKey(defaultKeyMap[i].pin, initialKeycode);
+            newKeyMap[i] = BareKeyboardKey(defaultKeymap[i].pin, initialKeycode);
         }
 
         // Add it to the list and set it to the current keymap.

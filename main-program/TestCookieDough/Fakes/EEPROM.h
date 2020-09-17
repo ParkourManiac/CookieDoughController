@@ -20,6 +20,8 @@ public:
     const uint32_t &put(int idx, const uint32_t &t); // cookieOption: useVector
 };
 
+#pragma GCC diagnostic ignored "-Wunused-variable"
 static EEPROMClass EEPROM;
+#pragma GCC diagnostic pop
 
 #endif

@@ -1,8 +1,13 @@
 #include "EditMode.h"
 #include <Arduino.h>
 
+EditMode::EditMode(const EditMode& other) 
+    :EditMode(other.normalKeyCount, other.useEditModeLedSignal)
+{
+}
+
 EditMode::EditMode(int _normalKeyCount, bool _useEditModeLedSignal)
-    : useEditModeLedSignal(_useEditModeLedSignal), normalKeyCount(_normalKeyCount)
+    : useEditModeLedSignal(_useEditModeLedSignal), normalKeyCount(_normalKeyCount), selectedKey(nullptr)
 {
     tempCopy = new Key[normalKeyCount];
 }
