@@ -12,10 +12,10 @@
 class Controller
 {
 private:
-    int normalKeyCount;
+    const int normalKeyCount;
     BareKeyboardKey *defaultKeymap;
     
-    int specialKeyCount;
+    const int specialKeyCount;
     SpecialKey *specialKeys;
 
     /**

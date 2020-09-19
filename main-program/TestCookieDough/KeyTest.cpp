@@ -385,7 +385,7 @@ void OnLongPress_TimePassedIsEqualToLongPressDuration_ReturnTrue()
 
 void ConfigurePinsForKeyMap_InvokesPinModeForEachKey()
 {
-    int length = 3;
+    const int length = 3;
     Key keymap[length] = {
         Key(2, 1337),
         Key(3, 1337),
@@ -399,7 +399,7 @@ void ConfigurePinsForKeyMap_InvokesPinModeForEachKey()
 
 void ConfigurePinsForKeyMap_CallsPinModeWithPinFromKeyMap()
 {
-    int length = 1;
+    const int length = 1;
     Key keymap[length] = {
         Key(13, 1337),
     };
@@ -412,7 +412,7 @@ void ConfigurePinsForKeyMap_CallsPinModeWithPinFromKeyMap()
 
 void ConfigurePinsForKeyMap_SetsUpPinAsInputPullup()
 {
-    int length = 1;
+    const int length = 1;
     Key keymap[length] = {
         Key(13, 1337),
     };
@@ -546,7 +546,7 @@ void DebounceRead_OldPinStateIsUpdated()
 
 void UpdatePinStatesForKeyMap_CallsDigitalReadForEachItem()
 {
-    unsigned int length = 2;
+    const unsigned int length = 2;
     Key keymap[length] = {
         Key(2, 1337),
         Key(3, 1337),
@@ -559,7 +559,7 @@ void UpdatePinStatesForKeyMap_CallsDigitalReadForEachItem()
 
 void UpdatePinStatesForKeyMap_CorrectlyParsesKeyPin()
 {
-    int length = 1;
+    const int length = 1;
     Key keymap[length] = {
         Key(3, 1337),
     };
@@ -573,7 +573,7 @@ void UpdatePinStatesForKeyMap_CorrectlyParsesKeyPin()
 void UpdatePinStatesForKeyMap_UpdatesStateForAllPins()
 {
     digitalRead_return = true;
-    int length = 2;
+    const int length = 2;
     Key keymap[length] = {
         Key(2, 1337),
         Key(3, 1337),
@@ -587,7 +587,7 @@ void UpdatePinStatesForKeyMap_UpdatesStateForAllPins()
 void UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works() 
 {
     digitalRead_return = true;
-    int length = 2;
+    const int length = 2;
     Key keymap[length] = {
         Key(2, 1337),
         Key(3, 1337),
@@ -602,7 +602,7 @@ void UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works()
 void UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works()
 {
     digitalRead_return = true;
-    int length = 2;
+    const int length = 2;
     SpecialKey keymap[length] = {
         SpecialKey(2, toggleDefaultKeyMap),
         SpecialKey(3, toggleEditMode),

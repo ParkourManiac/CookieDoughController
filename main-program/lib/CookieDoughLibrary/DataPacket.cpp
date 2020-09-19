@@ -29,7 +29,7 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket *packet, unsigned int
         return false;
 
     // PAYLOAD: Retrieve payload as an uint8_t array.
-    uint8_t payload[packet->payloadLength];
+    uint8_t *payload = new uint8_t[packet->payloadLength];
     for (unsigned int i = 0; i < packet->payloadLength; i++)
     {
         payload[i] = EEPROM.read(currentAdress + i);
@@ -43,6 +43,7 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket *packet, unsigned int
     {
         packet->payload[i] = payload[i];
     }
+    delete[](payload);
 
     // // DEBUG
     // DEBUG_PRINT("Reading: ");

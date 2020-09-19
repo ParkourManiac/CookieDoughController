@@ -19,10 +19,11 @@ extern std::vector<uint8_t> EEPROMClass_update_param_val_v;
 
 extern std::vector<uint8_t> pinMode_param_pin_v;
 
+const int genericNormalKeyCount = 4;
+const int genericSpecialKeyCount = 3;
 Controller SetUpController()
 {
-    const int normalKeyCount = 4;
-    BareKeyboardKey defaultKeymap[normalKeyCount] {
+    BareKeyboardKey defaultKeymap[genericNormalKeyCount] {
         // Key map Arrow keys
         BareKeyboardKey(2, 80),
         BareKeyboardKey(3, 82),
@@ -30,14 +31,13 @@ Controller SetUpController()
         BareKeyboardKey(5, 79),
     };
 
-    const int specialKeyCount = 3;
-    SpecialKey specialKeys[specialKeyCount] {
+    SpecialKey specialKeys[genericSpecialKeyCount] {
         SpecialKey(10, toggleEditMode),
         SpecialKey(11, cycleKeyMap),
         SpecialKey(12, toggleDefaultKeyMap),
     };
 
-    return Controller(defaultKeymap, normalKeyCount, specialKeys, specialKeyCount);
+    return Controller(defaultKeymap, genericNormalKeyCount, specialKeys, genericSpecialKeyCount);
 }
 
 void Controller_Constructor_CopiesProvidedKeymapsIntoClass()
@@ -52,20 +52,18 @@ void Controller_Constructor_CopiesProvidedKeymapsIntoClass()
     SpecialKey expectedSpecialKeys[expectedSpecialKeyCount] {
         SpecialKey(12, toggleDefaultKeyMap),
     };
-    int tempNormalKeyCount = expectedNormalKeyCount;
+    const int tempNormalKeyCount = expectedNormalKeyCount;
     BareKeyboardKey tempDefaultKeymap[tempNormalKeyCount] {
         expectedDefaultKeymap[0],
         expectedDefaultKeymap[1],
     };
-    int tempSpecialKeyCount = expectedSpecialKeyCount;
+    const int tempSpecialKeyCount = expectedSpecialKeyCount;
     SpecialKey tempSpecialKeys[tempSpecialKeyCount] {
         expectedSpecialKeys[0],
     };
 
     // Act
     Controller controller = Controller(tempDefaultKeymap, tempNormalKeyCount, tempSpecialKeys, tempSpecialKeyCount);
-    tempNormalKeyCount = 0;
-    tempSpecialKeyCount = 0;
     tempDefaultKeymap[0] = BareKeyboardKey(0,0);
     tempDefaultKeymap[1] = BareKeyboardKey(0,0);
     tempSpecialKeys[0] = SpecialKey(0, cycleKeyMap);
@@ -358,7 +356,7 @@ void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBar
 void ParseBareKeyboardKeyArrayIntoKeymapList_PopulatesTheListWithTheGivenKeys()
 {
     Controller controller = SetUpController();
-    unsigned int amountOfKeys = 8;
+    const unsigned int amountOfKeys = 8;
     BareKeyboardKey key1, key2, key3, key4, key5, key6, key7, key8;
     key1.pin = 1;
     key1.keyCode = 2;
@@ -411,8 +409,11 @@ void IsKeyValid_ThePinOfTheKeyIsPresentInTheDefaultKeymap_ReturnsTrue()
         BareKeyboardKey(4, 0),
         BareKeyboardKey(5, 0),
     };
-    SpecialKey specialKeys[0];
-    Controller controller(defaultKeymap, normalKeyCount, specialKeys, 0);
+    const int specialKeyCount = 1;
+    SpecialKey specialKeys[specialKeyCount] {
+        SpecialKey(12, toggleDefaultKeyMap),
+    };
+    Controller controller(defaultKeymap, normalKeyCount, specialKeys, specialKeyCount);
     BareKeyboardKey key;
     key.pin = 2;
     key.keyCode = 1337;
@@ -432,8 +433,11 @@ void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
         BareKeyboardKey(4, 0),
         BareKeyboardKey(5, 0),
     };
-    SpecialKey specialKeysConfiguration[0];
-    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
+    const int specialKeyCount = 1;
+    SpecialKey specialKeysConfiguration[specialKeyCount] {
+        SpecialKey(12, toggleDefaultKeyMap),
+    };
+    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, specialKeyCount);
     BareKeyboardKey key;
     key.pin = 52;
     key.keyCode = 1337;
@@ -455,7 +459,7 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
     key3.keyCode = 22;
     key4.pin = 5;
     key4.keyCode = 7;
-    BareKeyboardKey data[controller.normalKeyCount] = {
+    BareKeyboardKey data[genericNormalKeyCount] = {
         key1,
         key2,
         key3,
@@ -490,8 +494,11 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
         BareKeyboardKey(4, 0),
         BareKeyboardKey(5, 0),
     };
-    SpecialKey specialKeysConfiguration[0];
-    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
+    const int specialKeyCount = 1;
+    SpecialKey specialKeysConfiguration[specialKeyCount] {
+        SpecialKey(12, toggleDefaultKeyMap),
+    };
+    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, specialKeyCount);
     BareKeyboardKey key1, key2, key3, key4;
     key1.pin = 111;
     key2.pin = 24;
@@ -501,7 +508,7 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
     key2.keyCode = 26;
     key3.keyCode = 22;
     key4.keyCode = 7;
-    BareKeyboardKey data[controller.normalKeyCount] = {
+    BareKeyboardKey data[normalKeyCount] = {
         key1,
         key2,
         key3,
@@ -529,8 +536,11 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
         BareKeyboardKey(4, 0),
         BareKeyboardKey(5, 0),
     };
-    SpecialKey specialKeysConfiguration[0];
-    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
+    const int specialKeyCount = 1;
+    SpecialKey specialKeysConfiguration[specialKeyCount] {
+        SpecialKey(12, toggleDefaultKeyMap),
+    };
+    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, specialKeyCount);
     BareKeyboardKey defectKey1, defectKey2, defectKey3, defectKey4, validKey1, validKey2, validKey3, validKey4;
     defectKey1.pin = 140;
     defectKey2.pin = 75;
@@ -548,13 +558,13 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
     validKey2.keyCode = 26;
     validKey3.keyCode = 22;
     validKey4.keyCode = 7;
-    BareKeyboardKey defectData[controller.normalKeyCount] = {
+    BareKeyboardKey defectData[normalKeyCount] = {
         defectKey1,
         defectKey2,
         defectKey3,
         defectKey4,
     };
-    BareKeyboardKey validData[controller.normalKeyCount] = {
+    BareKeyboardKey validData[normalKeyCount] = {
         validKey1,
         validKey2,
         validKey3,
@@ -656,7 +666,7 @@ void ChangeKeyMap_TheDefaultKeymapIsEquipped_isUsingDefaultKeymapIsAssignedToTru
 void ChangeKeyMap_ACustomKeymapIsEquipped_isUsingDefaultKeymapIsAssignedFalse()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey customKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey customKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 1),
         BareKeyboardKey(3, 2),
         BareKeyboardKey(4, 3),
@@ -677,9 +687,12 @@ void ChangeKeyMap_ACustomKeymapWithSimilarButNotTheSameSettingsAsDefaultKeymapIs
         BareKeyboardKey(4, 0),
         BareKeyboardKey(5, 0),
     };
-    SpecialKey specialKeysConfiguration[0];
-    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, 0);
-    BareKeyboardKey customKeymap[controller.normalKeyCount] = {
+    const int specialKeyCount = 1;
+    SpecialKey specialKeysConfiguration[specialKeyCount] {
+        SpecialKey(12, toggleDefaultKeyMap),
+    };
+    Controller controller(defaultKeymapConfiguration, normalKeyCount, specialKeysConfiguration, specialKeyCount);
+    BareKeyboardKey customKeymap[normalKeyCount] = {
         defaultKeymapConfiguration[0],
         defaultKeymapConfiguration[1],
         defaultKeymapConfiguration[2],
@@ -694,7 +707,7 @@ void ChangeKeyMap_ACustomKeymapWithSimilarButNotTheSameSettingsAsDefaultKeymapIs
 void ChangeKeyMap_DefaultKeymapIsSelectedAndWeAreEquippingACustomKeymap_CurrentKeymapNowContainsKeysOfCustomKeymap()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey expectedKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 12),
         BareKeyboardKey(3, 23),
         BareKeyboardKey(4, 34),
@@ -715,7 +728,7 @@ void ChangeKeyMap_EmptiesBufferAndSendsItAsAKeyReleaseEventForAllKeys()
 {
     // Arrange
     Controller controller = SetUpController();
-    BareKeyboardKey keymap[controller.normalKeyCount] = {
+    BareKeyboardKey keymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 12),
         BareKeyboardKey(3, 23),
         BareKeyboardKey(4, 34),
@@ -747,7 +760,7 @@ void ChangeKeyMap_EmptiesBufferAndSendsItAsAKeyReleaseEventForAllKeys()
 void ChangeKeyMap_ConfiguresThePinsOfTheProvidedKeymap()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey keymap[controller.normalKeyCount] = {
+    BareKeyboardKey keymap[genericNormalKeyCount] = {
         BareKeyboardKey(34, 12),
         BareKeyboardKey(6, 23),
         BareKeyboardKey(21, 34),
@@ -767,13 +780,13 @@ void ChangeKeyMap_ConfiguresThePinsOfTheProvidedKeymap()
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquipped_EquipsTheFirstKeymapInTheList()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey expectedKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 1),
         BareKeyboardKey(4, 2),
         BareKeyboardKey(5, 3),
     };
-    BareKeyboardKey keymap2[controller.normalKeyCount] = {
+    BareKeyboardKey keymap2[genericNormalKeyCount] = {
         BareKeyboardKey(2, 4),
         BareKeyboardKey(3, 5),
         BareKeyboardKey(4, 6),
@@ -796,13 +809,13 @@ void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquipped_EquipsTheFirstKeymapInTheLi
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeCycleTwice_EquipsTheSecondKeymapInTheList()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey keymap1[controller.normalKeyCount] = {
+    BareKeyboardKey keymap1[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 1),
         BareKeyboardKey(4, 2),
         BareKeyboardKey(5, 3),
     };
-    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey expectedKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 4),
         BareKeyboardKey(3, 5),
         BareKeyboardKey(4, 6),
@@ -826,13 +839,13 @@ void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeCycleTwice_EquipsTheSec
 void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeOnlyhaveTwoCustomKeymapsAndWeCycleThreeTimes_WhenWeCycleOffTheLastCustomKeymapItLoopsBackToTheFirstKeymapInTheList()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey expectedKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 1),
         BareKeyboardKey(4, 2),
         BareKeyboardKey(5, 3),
     };
-    BareKeyboardKey keymap2[controller.normalKeyCount] = {
+    BareKeyboardKey keymap2[genericNormalKeyCount] = {
         BareKeyboardKey(2, 4),
         BareKeyboardKey(3, 5),
         BareKeyboardKey(4, 6),
@@ -857,23 +870,23 @@ void CycleKeyMap_TheDefaultKeymapIsCurrentlyEquippedAndWeOnlyhaveTwoCustomKeymap
 void SaveKeyMapsToMemory_PutsDownKeysAsBareKeyboardArrayIntoEEPROM()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey keymap1[controller.normalKeyCount] = {
+    BareKeyboardKey keymap1[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 1),
         BareKeyboardKey(4, 2),
         BareKeyboardKey(5, 3),
     };
-    BareKeyboardKey keymap2[controller.normalKeyCount] = {
+    BareKeyboardKey keymap2[genericNormalKeyCount] = {
         BareKeyboardKey(2, 4),
         BareKeyboardKey(3, 5),
         BareKeyboardKey(4, 6),
         BareKeyboardKey(5, 7),
     };
-    BareKeyboardKey *expectedData = new BareKeyboardKey[controller.normalKeyCount * 2]{
+    BareKeyboardKey *expectedData = new BareKeyboardKey[genericNormalKeyCount * 2]{
         keymap1[0], keymap1[1], keymap1[2], keymap1[3],
         keymap2[0], keymap2[1], keymap2[2], keymap2[3]};
     uint8_t *expectedDataPtr = (uint8_t *)expectedData;
-    int payloadLength = sizeof(BareKeyboardKey[controller.normalKeyCount * 2]);
+    int payloadLength = sizeof(BareKeyboardKey[genericNormalKeyCount * 2]);
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);
@@ -896,23 +909,23 @@ void SaveKeyMapsToMemory_PutsDownKeysAsBareKeyboardArrayIntoEEPROM()
 void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey keymap1[controller.normalKeyCount] = {
+    BareKeyboardKey keymap1[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 1),
         BareKeyboardKey(4, 2),
         BareKeyboardKey(5, 3),
     };
-    BareKeyboardKey keymap2[controller.normalKeyCount] = {
+    BareKeyboardKey keymap2[genericNormalKeyCount] = {
         BareKeyboardKey(2, 4),
         BareKeyboardKey(3, 5),
         BareKeyboardKey(4, 6),
         BareKeyboardKey(5, 7),
     };
-    BareKeyboardKey *expectedData = new BareKeyboardKey[controller.normalKeyCount * 2]{
+    BareKeyboardKey *expectedData = new BareKeyboardKey[genericNormalKeyCount * 2]{
         keymap1[0], keymap1[1], keymap1[2], keymap1[3],
         keymap2[0], keymap2[1], keymap2[2], keymap2[3]};
     uint8_t *expectedDataPtr = (uint8_t *)expectedData;
-    int payloadLength = sizeof(BareKeyboardKey[controller.normalKeyCount * 2]);
+    int payloadLength = sizeof(BareKeyboardKey[genericNormalKeyCount * 2]);
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);
@@ -947,23 +960,23 @@ void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
 void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEepromAdressOfControllerWithCorrectValue()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey keymap1[controller.normalKeyCount] = {
+    BareKeyboardKey keymap1[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 1),
         BareKeyboardKey(4, 2),
         BareKeyboardKey(5, 3),
     };
-    BareKeyboardKey keymap2[controller.normalKeyCount] = {
+    BareKeyboardKey keymap2[genericNormalKeyCount] = {
         BareKeyboardKey(2, 4),
         BareKeyboardKey(3, 5),
         BareKeyboardKey(4, 6),
         BareKeyboardKey(5, 7),
     };
-    BareKeyboardKey *expectedData = new BareKeyboardKey[controller.normalKeyCount * 2]{
+    BareKeyboardKey *expectedData = new BareKeyboardKey[genericNormalKeyCount * 2]{
         keymap1[0], keymap1[1], keymap1[2], keymap1[3],
         keymap2[0], keymap2[1], keymap2[2], keymap2[3]};
     uint8_t *expectedDataPtr = (uint8_t *)expectedData;
-    int payloadLength = sizeof(BareKeyboardKey[controller.normalKeyCount * 2]);
+    int payloadLength = sizeof(BareKeyboardKey[genericNormalKeyCount * 2]);
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);
@@ -998,13 +1011,13 @@ void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEe
 void ToggleEditMode_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWithTheValuesPresentInCurrentKeymap()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey customKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey customKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 0),
         BareKeyboardKey(4, 0),
         BareKeyboardKey(5, 0),
     };
-    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey expectedKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 11),
         BareKeyboardKey(3, 22),
         BareKeyboardKey(4, 33),
@@ -1032,13 +1045,13 @@ void ToggleEditMode_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWit
 void SaveControllerSettings_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWithTheValuesPresentInCurrentKeymap()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey customKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey customKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 0),
         BareKeyboardKey(4, 0),
         BareKeyboardKey(5, 0),
     };
-    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey expectedKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 11),
         BareKeyboardKey(3, 22),
         BareKeyboardKey(4, 33),
@@ -1066,13 +1079,13 @@ void SaveControllerSettings_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomK
 void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWithTheValuesPresentInCurrentKeymap()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey customKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey customKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 0),
         BareKeyboardKey(4, 0),
         BareKeyboardKey(5, 0),
     };
-    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey expectedKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 11),
         BareKeyboardKey(3, 22),
         BareKeyboardKey(4, 33),
@@ -1100,19 +1113,19 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCust
 void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_UpdatesTheSelectedCustomKeymap()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey customKeymap1[controller.normalKeyCount] = {
+    BareKeyboardKey customKeymap1[genericNormalKeyCount] = {
         BareKeyboardKey(2, 1),
         BareKeyboardKey(3, 1),
         BareKeyboardKey(4, 1),
         BareKeyboardKey(5, 1),
     };
-    BareKeyboardKey customKeymap2[controller.normalKeyCount] = {
+    BareKeyboardKey customKeymap2[genericNormalKeyCount] = {
         BareKeyboardKey(2, 2),
         BareKeyboardKey(3, 2),
         BareKeyboardKey(4, 2),
         BareKeyboardKey(5, 2),
     };
-    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey expectedKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 11),
         BareKeyboardKey(3, 22),
         BareKeyboardKey(4, 33),
@@ -1144,25 +1157,25 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeyma
 void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_DoesNotChangeTheOtherKeymaps()
 {
     Controller controller = SetUpController();
-    BareKeyboardKey customKeymap1[controller.normalKeyCount] = {
+    BareKeyboardKey customKeymap1[genericNormalKeyCount] = {
         BareKeyboardKey(2, 123),
         BareKeyboardKey(3, 123),
         BareKeyboardKey(4, 123),
         BareKeyboardKey(5, 123),
     };
-    BareKeyboardKey customKeymap2[controller.normalKeyCount] = {
+    BareKeyboardKey customKeymap2[genericNormalKeyCount] = {
         BareKeyboardKey(2, 2),
         BareKeyboardKey(3, 2),
         BareKeyboardKey(4, 2),
         BareKeyboardKey(5, 2),
     };
-    BareKeyboardKey editedCurrentKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey editedCurrentKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 0),
         BareKeyboardKey(4, 0),
         BareKeyboardKey(5, 0),
     };
-    BareKeyboardKey expectedKeymap[controller.normalKeyCount] = {
+    BareKeyboardKey expectedKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 123),
         BareKeyboardKey(3, 123),
         BareKeyboardKey(4, 123),
