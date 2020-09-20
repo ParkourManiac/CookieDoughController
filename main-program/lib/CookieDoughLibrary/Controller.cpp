@@ -506,6 +506,10 @@ void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested. Refactor 
                     }
                     break;
                 }
+                default:
+                {
+                    break;
+                }
                 }
             }
             else // If we released the button...
@@ -543,6 +547,10 @@ void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested. Refactor 
                             DeleteCurrentKeyMap();
                         }
                     }
+                    break;
+                }
+                default:
+                {
                     break;
                 }
                 }

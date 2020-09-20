@@ -3,7 +3,7 @@
 
 void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket() {
     uint16_t data = 1337;
-    uint8_t *dataPtr = (uint8_t*)&data;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet;
     packet.payloadLength = sizeof(data);
     packet.payload = dataPtr;
@@ -19,7 +19,7 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuc
                 packet.stx == result.stx &&
                 packet.payloadLength == result.payloadLength &&
                 packet.crc == result.crc &&
-                *((uint16_t*)packet.payload) == data &&
+                *(reinterpret_cast<uint16_t*>(packet.payload)) == data && // TODO: Is this the correct way to retrieve the data?
                 packet.etx == result.etx &&
                 packetSize == 10);
     delete(resultPtr);

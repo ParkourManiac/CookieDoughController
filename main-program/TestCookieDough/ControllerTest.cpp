@@ -134,7 +134,7 @@ void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeys
         key1,
         key2,
     };
-    uint8_t *dataPtr = (uint8_t *)&data;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet;
     packet.payloadLength = sizeof(data);
     packet.payload = dataPtr;
@@ -169,7 +169,7 @@ void RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse()
         defectKey1,
         defectKey2,
     };
-    uint8_t *defectDataPtr = (uint8_t *)&defectData;
+    uint8_t *defectDataPtr = reinterpret_cast<uint8_t *>(&defectData);
     DataPacket defectPacket;
     defectPacket.payloadLength = sizeof(defectData);
     defectPacket.payload = defectDataPtr;
@@ -197,7 +197,7 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
         defectKey1,
         defectKey2,
     };
-    uint8_t *defectDataPtr = (uint8_t *)&defectData;
+    uint8_t *defectDataPtr = reinterpret_cast<uint8_t *>(&defectData);
     DataPacket defectPacket;
     defectPacket.payloadLength = sizeof(defectData);
     defectPacket.payload = defectDataPtr;
@@ -212,7 +212,7 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
         validKey1,
         validKey2,
     };
-    uint8_t *validDataPtr = (uint8_t *)&validData;
+    uint8_t *validDataPtr = reinterpret_cast<uint8_t *>(&validData);
     DataPacket validPacket;
     validPacket.payloadLength = sizeof(validData);
     validPacket.payload = validDataPtr;
@@ -249,7 +249,7 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
     EEPROMClass_length_return_v.push_back(1000);
     // Makes the function find a packet on the third adress. (Index 2 in EEPROM)
     uint16_t data = 1337;
-    uint8_t *dataPtr = (uint8_t *)&data;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet;
     packet.payloadLength = sizeof(data);
     packet.payload = dataPtr;
@@ -267,7 +267,7 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
         packet.stx == result.stx &&
         packet.payloadLength == result.payloadLength &&
         packet.crc == result.crc &&
-        *((uint16_t *)packet.payload) == data &&
+        *(reinterpret_cast<uint16_t *>(packet.payload)) == data && // TODO: Is this the correct way to retrieve the data?
         packet.etx == result.etx &&
         packetAdress == 2 &&
         packetSize == 10);
@@ -464,7 +464,7 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
         key3,
         key4,
     };
-    uint8_t *dataPtr = (uint8_t *)&data;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet;
     packet.payloadLength = sizeof(data);
     packet.payload = dataPtr;
@@ -513,7 +513,7 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
         key3,
         key4,
     };
-    uint8_t *dataPtr = (uint8_t *)&data;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet;
     packet.payloadLength = sizeof(data);
     packet.payload = dataPtr;
@@ -570,13 +570,13 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
         validKey4,
     };
     // Set up valid packet.
-    uint8_t *validDataPtr = (uint8_t *)&validData;
+    uint8_t *validDataPtr = reinterpret_cast<uint8_t *>(&validData);
     DataPacket validPacket;
     validPacket.payloadLength = sizeof(validData);
     validPacket.payload = validDataPtr;
     validPacket.crc = CalculateCRC(validPacket.payload, validPacket.payloadLength);
     // Set up defect packet.
-    uint8_t *defectDataPtr = (uint8_t *)&defectData;
+    uint8_t *defectDataPtr = reinterpret_cast<uint8_t *>(&defectData);
     DataPacket defectPacket;
     defectPacket.payloadLength = sizeof(defectData);
     defectPacket.payload = defectDataPtr;
@@ -884,7 +884,7 @@ void SaveKeyMapsToMemory_PutsDownKeysAsBareKeyboardArrayIntoEEPROM()
     BareKeyboardKey *expectedData = new BareKeyboardKey[genericNormalKeyCount * 2]{
         keymap1[0], keymap1[1], keymap1[2], keymap1[3],
         keymap2[0], keymap2[1], keymap2[2], keymap2[3]};
-    uint8_t *expectedDataPtr = (uint8_t *)expectedData;
+    uint8_t *expectedDataPtr = reinterpret_cast<uint8_t *>(expectedData);
     int payloadLength = sizeof(BareKeyboardKey[genericNormalKeyCount * 2]);
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
@@ -923,7 +923,7 @@ void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
     BareKeyboardKey *expectedData = new BareKeyboardKey[genericNormalKeyCount * 2]{
         keymap1[0], keymap1[1], keymap1[2], keymap1[3],
         keymap2[0], keymap2[1], keymap2[2], keymap2[3]};
-    uint8_t *expectedDataPtr = (uint8_t *)expectedData;
+    uint8_t *expectedDataPtr = reinterpret_cast<uint8_t *>(expectedData);
     uint16_t payloadLength = sizeof(BareKeyboardKey[genericNormalKeyCount * 2]);
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
@@ -974,7 +974,7 @@ void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEe
     BareKeyboardKey *expectedData = new BareKeyboardKey[genericNormalKeyCount * 2]{
         keymap1[0], keymap1[1], keymap1[2], keymap1[3],
         keymap2[0], keymap2[1], keymap2[2], keymap2[3]};
-    uint8_t *expectedDataPtr = (uint8_t *)expectedData;
+    uint8_t *expectedDataPtr = reinterpret_cast<uint8_t *>(expectedData);
     uint16_t payloadLength = sizeof(BareKeyboardKey[genericNormalKeyCount * 2]);
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);

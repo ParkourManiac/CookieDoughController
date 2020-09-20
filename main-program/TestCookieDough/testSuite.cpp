@@ -7,6 +7,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-qual"
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 int digitalRead_return;
 unsigned int digitalRead_invocations = 0;
 uint8_t digitalRead_param_pin;

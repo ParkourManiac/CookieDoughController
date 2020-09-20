@@ -576,9 +576,6 @@ def DefineReturnVariableResetBehaviour(blueprint, prefix, suffix):
 
     return code
 
-def WriteCodeForIgnoringWarnings(file):
-    file.write('#pragma GCC diagnostic ignored "-Wcast-qual"\n')
-
 
 if len(sys.argv) <= 1:
     raise NameError(
@@ -601,10 +598,9 @@ else:
         WriteCodeForIncludingMockedLibraries(mockableFiles, file)
 
         file.write('#pragma GCC diagnostic push\n')
-        WriteCodeForIgnoringWarnings(file)
-
+        file.write('#pragma GCC diagnostic ignored "-Wcast-qual"\n')
+        file.write('#pragma GCC diagnostic ignored "-Wold-style-cast"\n')
         WriteCodeForMockedLibraries(mockableFiles, file)
-
         file.write('#pragma GCC diagnostic pop\n\n')
         
         WriteCodeForRunningTests(testFunctions, file)

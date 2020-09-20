@@ -192,7 +192,7 @@ void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
 void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
 {
     uint16_t data = 42;
-    uint8_t *dataPtr = (uint8_t*) &data;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     uint16_t adress = 20;
     DataPacket packet;
     int expectedStxAdress = static_cast<int>(adress);
@@ -227,7 +227,7 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
 void SavePacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse()
 {
     uint16_t data = 42;
-    uint8_t *dataPtr = (uint8_t*) &data;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     uint16_t adress = 20;
     DataPacket packet;
 
@@ -250,15 +250,16 @@ void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
 {
     DataPacket packet;
     uint16_t data = 42;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     uint16_t adress = 20;
     uint16_t packetSize;
 
     int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
 
-    SavePacketToEEPROM(adress, (uint8_t *)&data, sizeof(data), &packetSize);
+    SavePacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
 
-    ASSERT_TEST(EEPROMClass_update_param_idx_v[0] == expectedPayloadAdress && EEPROMClass_update_param_val_v[0] == ((uint8_t *)&data)[0] &&
-                EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == ((uint8_t *)&data)[1]);
+    ASSERT_TEST(EEPROMClass_update_param_idx_v[0] == expectedPayloadAdress && EEPROMClass_update_param_val_v[0] == dataPtr[0] &&
+                EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == dataPtr[1]);
 }
 
 void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
@@ -267,7 +268,7 @@ void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the 
     uint16_t data = 421;
     DataPacket expectedPacket;
     expectedPacket.payloadLength = sizeof(data);
-    expectedPacket.payload = (uint8_t*) &data;
+    expectedPacket.payload = reinterpret_cast<uint8_t*>(&data);
     expectedPacket.crc = -934053193;
 
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
@@ -300,7 +301,7 @@ void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad t
     uint16_t data = 421;
     DataPacket expectedPacket;
     expectedPacket.payloadLength = sizeof(data);
-    expectedPacket.payload = (uint8_t*) &data;
+    expectedPacket.payload = reinterpret_cast<uint8_t*>(&data);
     expectedPacket.crc = -934053193;
 
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
