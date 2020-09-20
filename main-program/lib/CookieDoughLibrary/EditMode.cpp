@@ -132,20 +132,22 @@ void EditMode::RegisterKeyRelease()
 
         shouldAddValue = false;
 
-        // DEBUG
-        if (selectedKey != nullptr)
-        {
-            DEBUG_PRINT("Inputed keycode: ");
-            DEBUG_PRINT(inputKeyCode);
-            DEBUG_PRINT(", (for pin: ");
-            DEBUG_PRINT(selectedKey->pin);
-            DEBUG_PRINT(", keycode: ");
-            DEBUG_PRINT(selectedKey->keyCode);
-            DEBUG_PRINT(")\n");
-        }
-        else
-            DEBUG_PRINT("Selected is nullptr!\n");
-        // DEBUG
+        DEBUG(
+            if (selectedKey != nullptr)
+            {
+                DEBUG_PRINT("Inputed keycode: ");
+                DEBUG_PRINT(inputKeyCode);
+                DEBUG_PRINT(", (for pin: ");
+                DEBUG_PRINT(selectedKey->pin);
+                DEBUG_PRINT(", keycode: ");
+                DEBUG_PRINT(selectedKey->keyCode);
+                DEBUG_PRINT(")\n");
+            }
+            else 
+            {
+                DEBUG_PRINT("Selected is nullptr!\n");
+            }
+        );
     }
 
     // If we are releasing the last pressed key...
