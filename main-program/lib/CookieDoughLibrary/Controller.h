@@ -32,12 +32,12 @@ private:
     const uint8_t bufferSize = 8;
     uint8_t *buf; // Keyboard report buffer.
 
-    unsigned int eepromAdress = 0;
-    unsigned int nextFreeEepromAdress = 0;
+    uint16_t eepromAdress = 0;
+    uint16_t nextFreeEepromAdress = 0;
 
     EditMode editmode = EditMode(normalKeyCount, true);
 
-    const float longPressDuration = 2000;
+    const unsigned long longPressDuration = 2000;
 
 public:
     /**
@@ -90,7 +90,7 @@ public:
      * @return true If we succesfully retrieved the array of keys.
      * @return false If we were unable to find any valid packet.
      */
-    bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, unsigned int *amountOfKeys, unsigned int *packetAdress, unsigned int *packetSize);
+    bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, uint16_t *amountOfKeys, uint16_t *packetAdress, uint16_t *packetSize);
 
     /**
      * @brief Finds and retrieves a DataPacket stored on the EEPROM.
@@ -101,7 +101,7 @@ public:
      * @return true The DataPacket was succesfully found and retrieved.
      * @return false The DataPacket was not found or the DataPackets found were corrupt.
      */
-    bool RetrieveDataPacketFromMemory(DataPacket *packet, unsigned int *packetSize, unsigned int *packetAdress, unsigned int startAdress = 0);
+    bool RetrieveDataPacketFromMemory(DataPacket *packet, uint16_t *packetSize, uint16_t *packetAdress, uint16_t startAdress = 0);
 
     /**
      * @brief Converts a DataPacket payload into an array of BareKeyboardKeys.

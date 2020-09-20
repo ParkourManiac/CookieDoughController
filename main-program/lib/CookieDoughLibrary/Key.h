@@ -12,7 +12,8 @@ using IKey = uint8_t;
  * @brief An alias for the type of a keycode.
  * 
  */
-using IKeycode = int;
+using IKeycode = int;   // TODO: buf can only store keycode as uint8_t. Should it actually be an uint8_t? 
+                        // Currently being static_cast into uint8_t before sent to buffer. Meaning max size is 255. IKeycode % 255.
 
 /**
  * @brief Used to store information about a pins state and debounce values.

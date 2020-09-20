@@ -127,7 +127,7 @@ void EditMode::RegisterKeyRelease()
     {
         // Raise value of keycode.
         int exponent = keysPressed - 1;
-        int numberToAdd = pow(10, exponent);
+        int numberToAdd = static_cast<int>(pow(10, exponent));
         inputKeyCode += numberToAdd;
 
         shouldAddValue = false;

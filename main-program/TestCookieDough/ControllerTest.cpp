@@ -111,7 +111,7 @@ void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndRetur
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
-    unsigned int amountOfKeys, packetAdress, packetSize;
+    uint16_t amountOfKeys, packetAdress, packetSize;
     bool doesNotCrash = false;
     bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
     doesNotCrash = true;
@@ -143,7 +143,7 @@ void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeys
     unsigned int expectedPacketSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(packet.payload[0]) * packet.payloadLength + sizeof(packet.etx);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
-    unsigned int amountOfKeys, packetAdress, packetSize;
+    uint16_t amountOfKeys, packetAdress, packetSize;
     bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
 
     ASSERT_TEST(resultBool == true &&
@@ -177,7 +177,7 @@ void RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse()
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(defectPacket);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
-    unsigned int amountOfKeys, packetAdress, packetSize;
+    uint16_t amountOfKeys, packetAdress, packetSize;
     bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
 
     ASSERT_TEST(resultBool == false);
@@ -224,7 +224,7 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
     unsigned int expectedValidPacketSize = sizeof(validPacket.stx) + sizeof(validPacket.payloadLength) + sizeof(validPacket.crc) + sizeof(validPacket.payload[0]) * validPacket.payloadLength + sizeof(validPacket.etx);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
-    unsigned int amountOfKeys, packetAdress, packetSize;
+    uint16_t amountOfKeys, packetAdress, packetSize;
     bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
 
     ASSERT_TEST(resultBool == true &&
@@ -258,8 +258,8 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
 
     DataPacket *resultPtr = new DataPacket();
     DataPacket result = *resultPtr;
-    unsigned int packetSize;
-    unsigned int packetAdress;
+    uint16_t packetSize;
+    uint16_t packetAdress;
     bool resultBool = controller.RetrieveDataPacketFromMemory(&result, &packetSize, &packetAdress);
 
     ASSERT_TEST(
@@ -281,8 +281,8 @@ void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse()
 
     DataPacket *resultPtr = new DataPacket();
     DataPacket result = *resultPtr;
-    unsigned int packetSize;
-    unsigned int packetAdress;
+    uint16_t packetSize;
+    uint16_t packetAdress;
     bool resultBool = controller.RetrieveDataPacketFromMemory(&result, &packetSize, &packetAdress);
 
     ASSERT_TEST(resultBool == false);
@@ -291,12 +291,11 @@ void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse()
 
 void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtStartAdress()
 {
-    unsigned int expectedStartAdress = 25;
+    uint16_t expectedStartAdress = 25;
     Controller controller = SetUpController();
     DataPacket *resultPtr = new DataPacket();
     DataPacket result = *resultPtr;
-    unsigned int packetSize;
-    unsigned int packetAdress;
+    uint16_t packetSize, packetAdress;
     controller.RetrieveDataPacketFromMemory(&result, &packetSize, &packetAdress, expectedStartAdress);
 
     ASSERT_TEST(EEPROMClass_read_param_idx_v[0] == static_cast<int>(expectedStartAdress));
@@ -925,7 +924,7 @@ void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
         keymap1[0], keymap1[1], keymap1[2], keymap1[3],
         keymap2[0], keymap2[1], keymap2[2], keymap2[3]};
     uint8_t *expectedDataPtr = (uint8_t *)expectedData;
-    int payloadLength = sizeof(BareKeyboardKey[genericNormalKeyCount * 2]);
+    uint16_t payloadLength = sizeof(BareKeyboardKey[genericNormalKeyCount * 2]);
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);
@@ -976,7 +975,7 @@ void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEe
         keymap1[0], keymap1[1], keymap1[2], keymap1[3],
         keymap2[0], keymap2[1], keymap2[2], keymap2[3]};
     uint8_t *expectedDataPtr = (uint8_t *)expectedData;
-    int payloadLength = sizeof(BareKeyboardKey[genericNormalKeyCount * 2]);
+    uint16_t payloadLength = sizeof(BareKeyboardKey[genericNormalKeyCount * 2]);
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);

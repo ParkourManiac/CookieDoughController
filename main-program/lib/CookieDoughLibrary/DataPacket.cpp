@@ -3,7 +3,7 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 
-bool ParsePacketFromEEPROM(unsigned int adress, DataPacket *packet, unsigned int *packetSize)
+bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packetSize)
 {
     *packetSize = 0;
     unsigned int currentAdress = adress;
@@ -61,14 +61,14 @@ bool ParsePacketFromEEPROM(unsigned int adress, DataPacket *packet, unsigned int
 
     // ETX: Move adress to end of packet and assign packet size.
     currentAdress += sizeof(packet->etx);
-    *packetSize = currentAdress - adress;
+    *packetSize = static_cast<uint16_t>(currentAdress - adress);
     return true;
 }
 
-bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSize, unsigned int *packetSize) 
+bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t *packetSize) 
 {
     *packetSize = 0;
-    unsigned int currentAdress = adress;
+    uint16_t currentAdress = adress;
 
     // Create packet.
     DataPacket packet;
@@ -78,18 +78,18 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
 
     // Write packet.
     EEPROM.put(currentAdress, packet.stx);
-    currentAdress += sizeof(packet.stx);
+    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.stx));
     EEPROM.put(currentAdress, packet.payloadLength);
-    currentAdress += sizeof(packet.payloadLength);
+    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.payloadLength));
     EEPROM.put(currentAdress, packet.crc);
-    currentAdress += sizeof(packet.crc);
-    for (unsigned int i = 0; i < packet.payloadLength; i++)
+    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.crc));
+    for (uint16_t i = 0; i < packet.payloadLength; i++)
     {
         EEPROM.update(currentAdress + i, packet.payload[i]);
     }
-    currentAdress += packet.payloadLength * sizeof(packet.payload[0]);
+    currentAdress = static_cast<uint16_t>(currentAdress + (packet.payloadLength * sizeof(packet.payload[0])));
     EEPROM.put(currentAdress, packet.etx);
-    currentAdress += sizeof(packet.etx);
+    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.etx));
 
     // // DEBUG
     // DEBUG_PRINT("Putting down: ");
@@ -103,7 +103,7 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     // Verify that package can be read from memory correctly.
     DataPacket *dataPtr = new DataPacket();
     DataPacket packetFromEeprom = *dataPtr;
-    unsigned int _sizeOfPacket;
+    uint16_t _sizeOfPacket;
     bool success = ParsePacketFromEEPROM(adress, &packetFromEeprom, &_sizeOfPacket);
     if (!success || packet.crc != packetFromEeprom.crc)
     {
@@ -111,7 +111,7 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
         return false; // Throw: Something went wrong when writing.
     }
 
-    *packetSize = currentAdress - adress;
+    *packetSize = static_cast<uint16_t>(currentAdress - adress);
     DEBUG_PRINT("Size of packet: "); // DEBUG
     DEBUG_PRINT(*packetSize); // DEBUG
     DEBUG_PRINT("\n");
@@ -120,7 +120,7 @@ bool SavePacketToEEPROM(unsigned int adress, uint8_t *data, unsigned int dataSiz
     return true; // Package saved successfully.
 }
 
-uint32_t CalculateCRC(uint8_t *data, unsigned int length)
+uint32_t CalculateCRC(uint8_t *data, uint16_t length)
 {
     const uint32_t crc_table[16] = {
         0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
@@ -130,7 +130,7 @@ uint32_t CalculateCRC(uint8_t *data, unsigned int length)
 
     uint32_t crc = ~0L;
 
-    for (unsigned int index = 0; index < length; ++index)
+    for (uint16_t index = 0; index < length; ++index)
     {
         crc = crc_table[(crc ^ data[index]) & 0x0f] ^ (crc >> 4);
         crc = crc_table[(crc ^ (data[index] >> 4)) & 0x0f] ^ (crc >> 4);
