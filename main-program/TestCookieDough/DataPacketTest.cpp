@@ -184,9 +184,9 @@ void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
     uint16_t packetSize;
 
     SavePacketToEEPROM(adress, &data, sizeof(data), &packetSize);
-    int expectedEtxPosition = adress + sizeof(packet.etx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
+    unsigned int expectedEtxPosition = adress + sizeof(packet.etx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
 
-    ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[1] == expectedEtxPosition && EEPROMClass_put_param_t_o1_v[1] == packet.etx);
+    ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[1] == static_cast<int>(expectedEtxPosition) && EEPROMClass_put_param_t_o1_v[1] == packet.etx);
 }
 
 void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
@@ -195,11 +195,11 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     uint16_t adress = 20;
     DataPacket packet;
-    int expectedStxAdress = static_cast<int>(adress);
-    int expectedPayloadLengthAdress = adress + sizeof(packet.stx);
-    int expectedCRCAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength);
-    int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
-    int expectedEtxAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
+    unsigned int expectedStxAdress = static_cast<int>(adress);
+    unsigned int expectedPayloadLengthAdress = adress + sizeof(packet.stx);
+    unsigned int expectedCRCAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength);
+    unsigned int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
+    unsigned int expectedEtxAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
     unsigned int expectedPacketSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data) + sizeof(packet.etx);
 
     // This ensures that ParsePacketFromEEPROM returns true
@@ -215,12 +215,12 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
     bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(resultBool == true && 
-                EEPROMClass_put_param_idx_o1_v[0] == expectedStxAdress && EEPROMClass_put_param_t_o1_v[0] == packet.stx &&
-                EEPROMClass_put_param_idx_o2_v[0] == expectedPayloadLengthAdress && EEPROMClass_put_param_t_o2_v[0] == sizeof(data) &&
-                EEPROMClass_put_param_idx_o3_v[0] == expectedCRCAdress && EEPROMClass_put_param_t_o3_v[0] == CalculateCRC(dataPtr, sizeof(data)) &&
-                EEPROMClass_update_param_idx_v[0] == expectedPayloadAdress && EEPROMClass_update_param_val_v[0] == dataPtr[0] &&
-                EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == dataPtr[1] &&
-                EEPROMClass_put_param_idx_o1_v[1] == expectedEtxAdress && EEPROMClass_put_param_t_o1_v[1] == packet.etx &&
+                EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(expectedStxAdress) && EEPROMClass_put_param_t_o1_v[0] == packet.stx &&
+                EEPROMClass_put_param_idx_o2_v[0] == static_cast<int>(expectedPayloadLengthAdress) && EEPROMClass_put_param_t_o2_v[0] == sizeof(data) &&
+                EEPROMClass_put_param_idx_o3_v[0] == static_cast<int>(expectedCRCAdress) && EEPROMClass_put_param_t_o3_v[0] == CalculateCRC(dataPtr, sizeof(data)) &&
+                EEPROMClass_update_param_idx_v[0] == static_cast<int>(expectedPayloadAdress) && EEPROMClass_update_param_val_v[0] == dataPtr[0] &&
+                EEPROMClass_update_param_idx_v[1] == static_cast<int>(expectedPayloadAdress) + 1 && EEPROMClass_update_param_val_v[1] == dataPtr[1] &&
+                EEPROMClass_put_param_idx_o1_v[1] == static_cast<int>(expectedEtxAdress) && EEPROMClass_put_param_t_o1_v[1] == packet.etx &&
                 packetSize == expectedPacketSize);
 }
 
@@ -254,7 +254,7 @@ void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
     uint16_t adress = 20;
     uint16_t packetSize;
 
-    int expectedPayloadAdress = adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc);
+    int expectedPayloadAdress = static_cast<int>(adress + sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc));
 
     SavePacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
 
@@ -269,7 +269,7 @@ void ParsePacketFromEEPROM_ReturnsCorrectPackage() // TODO: bad test. Locks the 
     DataPacket expectedPacket;
     expectedPacket.payloadLength = sizeof(data);
     expectedPacket.payload = reinterpret_cast<uint8_t*>(&data);
-    expectedPacket.crc = -934053193;
+    expectedPacket.crc = CalculateCRC(expectedPacket.payload, expectedPacket.payloadLength);
 
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
@@ -302,7 +302,7 @@ void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad t
     DataPacket expectedPacket;
     expectedPacket.payloadLength = sizeof(data);
     expectedPacket.payload = reinterpret_cast<uint8_t*>(&data);
-    expectedPacket.crc = -934053193;
+    expectedPacket.crc = CalculateCRC(expectedPacket.payload, expectedPacket.payloadLength);
 
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);

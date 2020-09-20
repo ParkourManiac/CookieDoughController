@@ -935,7 +935,7 @@ void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
     packet.payloadLength = payloadLength;
     packet.payload = expectedDataPtr;
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-    int packetSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + payloadLength + sizeof(packet.etx);
+    unsigned int packetSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + payloadLength + sizeof(packet.etx);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);
@@ -986,7 +986,7 @@ void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEe
     packet.payloadLength = payloadLength;
     packet.payload = expectedDataPtr;
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-    int packetSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + payloadLength + sizeof(packet.etx);
+    unsigned int packetSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + payloadLength + sizeof(packet.etx);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);

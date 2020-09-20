@@ -347,9 +347,9 @@ void OnKeyRelease_PinStateIsActive_ReturnFalse()
 void OnLongPress_TimePassedIsNotGreaterThanLongPressDuration_ReturnFalse()
 {
     IPinState state;
-    int currentTime = 0;
+    unsigned long currentTime = 0;
     state.timeOfActivation = 0;
-    int longPressDuration = 5;
+    unsigned int longPressDuration = 5;
 
     millis_return = currentTime;
     bool result = OnLongPress(state, longPressDuration);
@@ -360,9 +360,9 @@ void OnLongPress_TimePassedIsNotGreaterThanLongPressDuration_ReturnFalse()
 void OnLongPress_TimePassedIsGreaterThanLongPressDuration_ReturnTrue()
 {
     IPinState state;
-    int currentTime = 10;
+    unsigned long currentTime = 10;
     state.timeOfActivation = 0;
-    int longPressDuration = 5;
+    unsigned int longPressDuration = 5;
 
     millis_return = currentTime;
     bool result = OnLongPress(state, longPressDuration);
@@ -373,9 +373,9 @@ void OnLongPress_TimePassedIsGreaterThanLongPressDuration_ReturnTrue()
 void OnLongPress_TimePassedIsEqualToLongPressDuration_ReturnTrue()
 {
     IPinState state;
-    int currentTime = 5;
+    unsigned long currentTime = 5;
     state.timeOfActivation = 0;
-    int longPressDuration = currentTime - state.timeOfActivation;
+    unsigned int longPressDuration = currentTime - state.timeOfActivation;
 
     millis_return = currentTime;
     bool result = OnLongPress(state, longPressDuration);
