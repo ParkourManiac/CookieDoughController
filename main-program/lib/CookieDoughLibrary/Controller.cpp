@@ -373,9 +373,9 @@ void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys /
 
 void Controller::SendKeyInfo() // TODO: Needs to be tested
 {
-    for (int i = 0; i < normalKeyCount; i++)
+    for (int keyIndex = 0; keyIndex < normalKeyCount; keyIndex++)
     {
-        Key &key = currentKeyMap[i];
+        Key &key = currentKeyMap[keyIndex];
 
         if (OnKeyPress(key.state))
         {
