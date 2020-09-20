@@ -274,6 +274,8 @@ void RegisterKeyRelease_ShouldAddValueIsTrue_CorrectValueIsAddedToInputKeyCode()
     ASSERT_TEST(em.inputKeyCode == expectedKeyCode);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
 void RegisterKeyRelease_TwoKeysWerePressedBeforeReleasing_ProvidesExponentZeroAndBaseTenToPow()
 {
     EditMode em = EditMode(normalKeyCount, true);
@@ -306,6 +308,8 @@ void RegisterKeyRelease_FourKeysWerePressedBeforeReleasing_ProvidesExponentTwoAn
 
     ASSERT_TEST(pow_param_exponent == 2 && pow_param_base == 10);
 }
+#pragma GCC diagnostic pop
+
 
 void RegisterKeyRelease_AfterAddingValue_PreventNextKeyReleaseFromAddingValueToInputKeyCode()
 {
