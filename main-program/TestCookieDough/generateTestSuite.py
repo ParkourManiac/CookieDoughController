@@ -576,6 +576,10 @@ def DefineReturnVariableResetBehaviour(blueprint, prefix, suffix):
 
     return code
 
+def WriteCodeForIgnoringWarnings(file):
+    file.write('#pragma GCC diagnostic ignored "-Wcast-qual"\n')
+
+
 if len(sys.argv) <= 1:
     raise NameError(
         "ABORTED: Please provide a folder in which the testSuite.cpp will be generated.")
@@ -595,8 +599,15 @@ else:
         file.write('#include "testSuite.h" \n#include "test.h"\n\n')
 
         WriteCodeForIncludingMockedLibraries(mockableFiles, file)
-        WriteCodeForRunningTests(testFunctions, file)
+
+        file.write('#pragma GCC diagnostic push\n')
+        WriteCodeForIgnoringWarnings(file)
+
         WriteCodeForMockedLibraries(mockableFiles, file)
+
+        file.write('#pragma GCC diagnostic pop\n\n')
+        
+        WriteCodeForRunningTests(testFunctions, file)
 
 
 
