@@ -7,9 +7,8 @@ EditMode::EditMode(const EditMode& other)
 }
 
 EditMode::EditMode(int _normalKeyCount, bool _useEditModeLedSignal)
-    : useEditModeLedSignal(_useEditModeLedSignal), normalKeyCount(_normalKeyCount), selectedKey(nullptr)
+    : useEditModeLedSignal(_useEditModeLedSignal), normalKeyCount(_normalKeyCount), selectedKey(nullptr), tempCopy(new Key[normalKeyCount])
 {
-    tempCopy = new Key[normalKeyCount];
 }
 
 EditMode::~EditMode()

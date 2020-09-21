@@ -69,7 +69,7 @@ public:
      *
      * @param keyMapList The list of keymaps to be saved.
      */
-    void SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keyMapList);
+    void SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList);
 
     /**
      * @brief If present on the EEPROM, Loads a list of keymaps from memory

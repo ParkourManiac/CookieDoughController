@@ -1202,3 +1202,16 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeyma
         resultingFirstCustomKeymap[2].pin == expectedKeymap[2].pin && resultingFirstCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
         resultingFirstCustomKeymap[3].pin == expectedKeymap[3].pin && resultingFirstCustomKeymap[3].keyCode == expectedKeymap[3].keyCode);
 }
+
+
+void DEBUGTEST_NEWDELETE() // TODO: DELETE THIS AFTER IT WORKS TO TRACK ARRAY new[] AND delete[].
+{
+    int *a = new int[12];
+    // delete[](a);
+}
+
+void DEBUGTEST_NEWDELETE2() // TODO: DELETE THIS AFTER IT WORKS TO TRACK ARRAY new[] AND delete[].
+{
+    int *a = new int[12];
+    delete[](a);
+}

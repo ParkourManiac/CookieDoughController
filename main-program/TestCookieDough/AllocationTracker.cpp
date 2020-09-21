@@ -45,7 +45,7 @@ uint32_t AllocationTracker::StateDifferenceDeleteCount()
     return deleteCallCount - oldDeleteCallCount;
 }
 
-void *operator new(std::size_t size)
+void *operator new(std::size_t size) // TODO: Does not overload the new[] operator...
 {
     // std::cout << "Allocating " << size << " bytes.\n";
     allocTracker.allocatedMemory += size;
@@ -53,12 +53,23 @@ void *operator new(std::size_t size)
     return malloc(size);
 }
 
-void operator delete(void *memory, std::size_t size) // NOTE: Only works in -std=c++14
+// void* operator new[](std::size_t size) // TODO: Needs to be overloaded correctly...
+// {
+//     return ::operator new(size);
+// }
+
+void operator delete(void *memory, std::size_t size) // TODO: Does not overload the delete[] operator... // NOTE: Only works in -std=c++14
 {
     // std::cout << "Freeing " << size << " bytes.\n";
     allocTracker.freedMemory += size;
     allocTracker.deleteCallCount += 1;
     free(memory);
 }
+
+// void operator delete[](void* memory) // TODO: Does not strack size!?!?!?
+// {
+//     std::cout << "deleting\n";
+//     delete(memory);
+// }
 
 #endif

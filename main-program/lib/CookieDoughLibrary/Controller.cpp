@@ -71,7 +71,7 @@ void Controller::Update()
     }
 }
 
-void Controller::SaveKeyMapsToMemory(LinkedList<BareKeyboardKey *> keymapList)
+void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList)
 {
     const int keyCount = keymapList.length * normalKeyCount;
     BareKeyboardKey *serializedKeyMaps = new BareKeyboardKey[keyCount];
