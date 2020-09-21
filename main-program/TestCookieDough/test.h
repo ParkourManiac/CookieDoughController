@@ -85,7 +85,9 @@ extern AllocationTracker allocTracker;
 #define PERFORM_MEMORY_CHECK() \
     if(allocTracker.HasMemoryStateChanged()) \
     { \
-        std::cout << " (Memory difference: " << allocTracker.MemoryStateDifference() << ")"; \
+        std::cout << " (Memory difference: " << allocTracker.StateDifferenceMemory() \
+            << ", New:Delete ratio:" \
+            << allocTracker.StateDifferenceNewCount() << ":" << allocTracker.StateDifferenceDeleteCount() << ")"; \
     }
 #else
 #define BEGIN_MEMORY_CHECK()
