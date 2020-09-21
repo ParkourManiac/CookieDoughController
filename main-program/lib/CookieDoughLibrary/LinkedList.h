@@ -36,10 +36,10 @@ public:
      */
     unsigned int length = 0;
 
-    ~LinkedList() 
-    {
-        Clear();
-    }
+    LinkedList();
+    LinkedList(const LinkedList& other);
+    ~LinkedList();
+    void operator=(const LinkedList&) = delete;
 
     /**
      * @brief Returns true if the list is empty.
@@ -92,7 +92,7 @@ public:
      * @param idx The index of the node we want to retrieve.
      * @return Node<T>* The node at the specified index.
      */
-    Node<T>* GetNodeAtIndex(size_t idx);
+    Node<T>* GetNodeAtIndex(size_t idx) const;
 
     /**
      * @brief Retrieves the pointer to the item at the specified index.
@@ -100,17 +100,17 @@ public:
      * @param idx The index of the item.
      * @return T* The pointer to the item at the specified index.
      */
-    T* operator[](size_t idx);
+    T* operator[](size_t idx) const;
 
 private: 
     /**
      * @brief The first element of the list.
      */
-    Node<T>* head = nullptr;
+    Node<T>* head;
     /**
      * @brief The last element of the list.
      */
-    Node<T>* tail = nullptr;
+    Node<T>* tail;
 };
 
 #endif

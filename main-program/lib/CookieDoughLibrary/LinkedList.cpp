@@ -17,6 +17,28 @@ Node<T>::Node(T _value, Node* _next)
 }
 
 template<class T>
+LinkedList<T>::LinkedList() 
+    : head(nullptr), tail(nullptr)
+{}
+
+template<class T>
+LinkedList<T>::LinkedList(const LinkedList& other) : LinkedList()
+{
+    for(unsigned int i = 0; i < other.length; i++)
+    {
+        T valueToInsert = other.GetNodeAtIndex(i)->value;
+        this->Add(valueToInsert);
+    }
+}
+
+
+template<class T>
+LinkedList<T>::~LinkedList() 
+{
+    Clear();
+}
+
+template<class T>
 bool LinkedList<T>::IsEmpty() {
     return head == nullptr;
 }
@@ -175,7 +197,7 @@ void LinkedList<T>::Clear()
 }
 
 template <class T>
-Node<T> *LinkedList<T>::GetNodeAtIndex(size_t idx)
+Node<T> *LinkedList<T>::GetNodeAtIndex(size_t idx) const
 {
     if (head == nullptr)
         return nullptr; // Throw error: List is empty.
@@ -198,7 +220,7 @@ Node<T> *LinkedList<T>::GetNodeAtIndex(size_t idx)
 }
 
 template <class T>
-T *LinkedList<T>::operator[](size_t idx)
+T *LinkedList<T>::operator[](size_t idx) const
 {
     return &GetNodeAtIndex(idx)->value;
 }

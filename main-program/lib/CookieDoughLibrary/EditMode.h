@@ -18,8 +18,8 @@ public:
 
 private:
     const int normalKeyCount;
-    Key *selectedKey = nullptr;
-    Key *tempCopy = nullptr;
+    Key *selectedKey;
+    Key *tempCopy;
     int keysPressed = 0;
     int inputKeyCode = 0;
     bool shouldAddValue = false;

@@ -23,6 +23,72 @@ void NodeConstructor_NoArguments_InitializesValueAndNextWithPovidedArguments()
     ASSERT_TEST(node.value == expectedValue && node.next == expectedNextPtr);
 }
 
+//
+
+// template<class T>
+// LinkedList<T>::LinkedList(const LinkedList& other) : LinkedList()
+// {
+//     for(unsigned int i = 0; i < other.length; i++)
+//     {
+//         T valueToInsert = other.GetNodeAtIndex(i)->value;
+//         this->Insert(i, valueToInsert);
+//     }
+// }
+
+// template<class T>
+// LinkedList<T>::~LinkedList() 
+// {
+//     Clear();
+// }
+
+void LinkedListConstructor_NoArguments_HeadAndTailAreSetToNullptrAndLengthIsZero() 
+{
+    LinkedList<int> list = LinkedList<int>();
+
+    ASSERT_TEST(
+        list.head == nullptr &&
+        list.tail == nullptr &&
+        list.length == 0
+    );
+}
+
+void LinkedListCopyConstructor_ItemsArePlacedInTheSameOrder() 
+{
+    LinkedList<int> list = LinkedList<int>();
+    list.Add(3);
+    list.Add(4);
+    list.Add(5);
+
+    LinkedList<int> listCopy = LinkedList<int>(list);
+
+    ASSERT_TEST(
+        *listCopy[0] == *list[0] &&
+        *listCopy[1] == *list[1] &&
+        *listCopy[2] == *list[2]
+    );
+}
+
+void LinkedListCopyConstructor_MakesACopyOfAllItems()
+{
+    int expectedItem1 = 3;
+    int expectedItem2 = 4;
+    int expectedItem3 = 5;
+    LinkedList<int> list = LinkedList<int>();
+    list.Add(expectedItem1);
+    list.Add(expectedItem2);
+    list.Add(expectedItem3);
+
+    LinkedList<int> listCopy = LinkedList<int>(list);
+    list.Clear();
+
+    ASSERT_TEST(
+        *listCopy[0] == expectedItem1 &&
+        *listCopy[1] == expectedItem2 &&
+        *listCopy[2] == expectedItem3
+    );
+}
+
+
 void GetFirstNode_GetsFirstNode()
 {
     LinkedList<int> list;
