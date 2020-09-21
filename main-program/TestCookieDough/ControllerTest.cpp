@@ -938,7 +938,7 @@ void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
     unsigned int packetSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + payloadLength + sizeof(packet.etx);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
-    controller.SaveKeyMapsToMemory(controller.customKeyMaps);
+    controller.SaveKeyMapsToMemory(controller.customKeyMaps); // TODO: Watch gdb tutorial https://www.youtube.com/watch?v=bWH-nL7v5F4
 
     // Check that the keys were properly saved.
     bool success = true;

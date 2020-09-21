@@ -80,14 +80,14 @@ void SetupColors();
 #ifdef USE_ALLOCATION_TRACKER_H
 extern AllocationTracker allocTracker;
 #define BEGIN_MEMORY_CHECK() \
-    allocTracker.SaveMemoryState(); \
-    //std::cout << "Memory currently allocated: " << allocTracker.MemoryInUse() << ". ";
+    allocTracker.SaveMemoryState();
 #define PERFORM_MEMORY_CHECK() \
     if(allocTracker.HasMemoryStateChanged()) \
     { \
-        std::cout << " (Memory difference: " << allocTracker.StateDifferenceMemory() \
-            << ", New:Delete ratio:" \
-            << allocTracker.StateDifferenceNewCount() << ":" << allocTracker.StateDifferenceDeleteCount() << ")"; \
+        std::cout << " (Memory difference: " << allocTracker.StateDifferenceMemory(); \
+        std::cout << ", \"New-Delete ratio\": " \
+            << allocTracker.StateDifferenceNewCount() << "-" \
+            << allocTracker.StateDifferenceDeleteCount() << ")"; \
     }
 #else
 #define BEGIN_MEMORY_CHECK()

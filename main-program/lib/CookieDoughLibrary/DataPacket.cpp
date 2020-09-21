@@ -29,10 +29,10 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
         return false;
 
     // PAYLOAD: Retrieve payload as an uint8_t array.
-    uint8_t *payload = new uint8_t[packet->payloadLength];
+    uint8_t *payloadFromEEPROM = new uint8_t[packet->payloadLength];
     for (unsigned int i = 0; i < packet->payloadLength; i++)
     {
-        payload[i] = EEPROM.read(currentAdress + i);
+        payloadFromEEPROM[i] = EEPROM.read(currentAdress + i);
     }
     currentAdress += packet->payloadLength * sizeof(packet->payload[0]);
 
@@ -41,9 +41,9 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
     packet->payload = new uint8_t[packet->payloadLength]; // Note: Is there a way to avoid using new here?
     for (unsigned int i = 0; i < packet->payloadLength; i++)
     {
-        packet->payload[i] = payload[i];
+        packet->payload[i] = payloadFromEEPROM[i];
     }
-    delete[](payload);
+    delete[](payloadFromEEPROM);
 
     // // DEBUG
     // DEBUG_PRINT("Reading: ");
@@ -102,22 +102,26 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
 
     // Verify that package can be read from memory correctly.
     DataPacket *dataPtr = new DataPacket();
-    DataPacket packetFromEeprom = *dataPtr;
+    dataPtr->payload = new uint8_t[1];
     uint16_t _sizeOfPacket;
-    bool success = ParsePacketFromEEPROM(adress, &packetFromEeprom, &_sizeOfPacket);
-    if (!success || packet.crc != packetFromEeprom.crc)
+    bool success = ParsePacketFromEEPROM(adress, dataPtr, &_sizeOfPacket);
+    if (!success || packet.crc != dataPtr->crc)
     {
+        delete[](dataPtr->payload);
         delete(dataPtr);
         return false; // Throw: Something went wrong when writing.
+    } else
+    {
+        *packetSize = static_cast<uint16_t>(currentAdress - adress);
+        DEBUG_PRINT("Size of packet: "); // DEBUG
+        DEBUG_PRINT(*packetSize); // DEBUG
+        DEBUG_PRINT("\n");
+        DEBUG(delay(100)); // DEBUG
+        delete[](dataPtr->payload);
+        delete(dataPtr);
+        return true; // Package saved successfully.
     }
 
-    *packetSize = static_cast<uint16_t>(currentAdress - adress);
-    DEBUG_PRINT("Size of packet: "); // DEBUG
-    DEBUG_PRINT(*packetSize); // DEBUG
-    DEBUG_PRINT("\n");
-    DEBUG(delay(100)); // DEBUG
-    delete(dataPtr);
-    return true; // Package saved successfully.
 }
 
 uint32_t CalculateCRC(uint8_t *data, uint16_t length)
