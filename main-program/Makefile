@@ -32,4 +32,17 @@ lint:
 	cpplint --recursive \
 	src \
 	lib
+
+check: # TODO: Unsure if this actually works. Might not be configured correctly.
+		# -IC:/MyInstalledPrograms/MinGW/lib/gcc/mingw32/9.2.0/include
+		# -IC:/MyInstalledPrograms/MinGW/lib/gcc/mingw32/9.2.0/include-fixed
+		# ./TestCookieDough/*
+	cppcheck --quiet --platform=avr8 --check-library --enable=all --max-ctu-depth=100 --language=c++ --file-filter=*.cpp --std=$(STD-VERSION) $(ALLOC-TRACKER) -D "private=public" \
+		-Ilib/CookieDoughLibrary \
+		-ITestCookieDough/Fakes \
+		-D "TEST_ENVIRONMENT" \
+		-D "DEBUG(VALUE)= " \
+		-D "DEBUG_PRINT(VALUE)= " \
+		./src/* \
+		./lib/CookieDoughLibrary/*
 	

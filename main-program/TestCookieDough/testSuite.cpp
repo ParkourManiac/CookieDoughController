@@ -682,6 +682,7 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCust
 void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_UpdatesTheSelectedCustomKeymap();
 void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_DoesNotChangeTheOtherKeymaps();
 void DEBUGTEST_NEWDELETE();
+void DEBUGTEST_NEWDELETE2();
 void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket();
 void DataPacket_StxIsTwo();
 void DataPacket_EtxIsThree();
@@ -885,6 +886,7 @@ void RunTests()
 	RUN_TEST(UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_UpdatesTheSelectedCustomKeymap);
 	RUN_TEST(UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_DoesNotChangeTheOtherKeymaps);
 	RUN_TEST(DEBUGTEST_NEWDELETE);
+	RUN_TEST(DEBUGTEST_NEWDELETE2);
 	RUN_TEST(Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket);
 	RUN_TEST(DataPacket_StxIsTwo);
 	RUN_TEST(DataPacket_EtxIsThree);

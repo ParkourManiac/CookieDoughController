@@ -379,7 +379,7 @@ void ParseBareKeyboardKeyArrayIntoKeymapList_PopulatesTheListWithTheGivenKeys()
     controller.ParseBareKeyboardKeyArrayIntoKeymapList(keys, amountOfKeys, &result);
 
     bool isEmpty = result[0] == nullptr || result[1] == nullptr;
-    BareKeyboardKey *resultKeymap1, *resultKeymap2;
+    BareKeyboardKey *resultKeymap1 = nullptr, *resultKeymap2 = nullptr;
     if (!isEmpty)
     {
         resultKeymap1 = *(result[0]);
@@ -473,7 +473,7 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
     controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
-    BareKeyboardKey *result;
+    BareKeyboardKey *result = nullptr;
     if (!resultingKeymaps.IsEmpty())
         result = *(resultingKeymaps[0]);
 
@@ -586,7 +586,7 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
     controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
-    BareKeyboardKey *result;
+    BareKeyboardKey *result = nullptr;
     if (!resultingKeymaps.IsEmpty())
         result = *(resultingKeymaps[0]);
 
