@@ -1204,14 +1204,14 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeyma
 }
 
 
-void DEBUGTEST_NEWDELETE() // TODO: DELETE THIS AFTER IT WORKS TO TRACK ARRAY new[] AND delete[].
-{
-    int *a = new int[12];
-    // delete[](a);
-}
+// void DEBUGTEST_NEWDELETE() // TODO: DELETE THIS AFTER IT WORKS TO TRACK ARRAY new[] AND delete[].
+// {
+//     int *a = new int[12];
+//     // delete[](a);
+// }
 
-void DEBUGTEST_NEWDELETE2() // TODO: DELETE THIS AFTER IT WORKS TO TRACK ARRAY new[] AND delete[].
-{
-    int *a = new int[12];
-    delete[](a);
-}
+// void DEBUGTEST_NEWDELETE2() // TODO: DELETE THIS AFTER IT WORKS TO TRACK ARRAY new[] AND delete[].
+// {
+//     int *a = new int[12];
+//     delete[](a);
+// }
