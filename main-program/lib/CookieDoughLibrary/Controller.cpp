@@ -110,7 +110,7 @@ void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
         // TODO: Implement error code.
     }
 
-    delete (serializedKeyMaps);
+    delete[] (serializedKeyMaps);
 }
 
 void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keymapList) // Refactored to BareKeyboardKey.
