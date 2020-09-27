@@ -46,11 +46,11 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
     delete[](payloadFromEEPROM);
 
     // // DEBUG
-    // DEBUG_PRINT("Reading: ");
+    // DEBUG_PRINT(F("Reading: "));
     // for(int i = 0; i < packet->payloadLength; i++) {
     //     DEBUG_PRINT(packet->payload[i], HEX);
     // }
-    // DEBUG_PRINT("\n");
+    // DEBUG_PRINT(F("\n"));
     // DEBUG(delay(100));
     // // DEBUG
 
@@ -92,11 +92,11 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
     currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.etx));
 
     // // DEBUG
-    // DEBUG_PRINT("Putting down: ");
+    // DEBUG_PRINT(F("Putting down: "));
     // for(int i = 0; i < packet.payloadLength; i++) {
     //     DEBUG_PRINT(packet.payload[i], HEX);
     // }
-    // DEBUG_PRINT("\n");
+    // DEBUG_PRINT(F("\n"));
     // DEBUG(delay(100));
     // // DEBUG
 
@@ -113,9 +113,9 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
     } else
     {
         *packetSize = static_cast<uint16_t>(currentAdress - adress);
-        DEBUG_PRINT("Size of packet: "); // DEBUG
+        DEBUG_PRINT(F("Size of packet: ")); // DEBUG
         DEBUG_PRINT(*packetSize); // DEBUG
-        DEBUG_PRINT("\n");
+        DEBUG_PRINT(F("\n"));
         DEBUG(delay(100)); // DEBUG
         delete[](dataPtr->payload);
         delete(dataPtr);

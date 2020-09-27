@@ -70,7 +70,7 @@ void DebounceReadState(IKey pin, IPinState *state) // NOTE: This causes a slight
     {
         state->lastDebounceTime = currentTime;
         // // Print debounce catches.
-        // DEBUG_PRINT("he");
+        // DEBUG_PRINT(F("he"));
     }
 
     uint32_t timePassedSinceDebounce = (currentTime - state->lastDebounceTime);
@@ -93,9 +93,9 @@ void DebounceReadState(IKey pin, IPinState *state) // NOTE: This causes a slight
 
             // // Print debounce catches.
             // if(state->value) {
-            //     DEBUG_PRINT(" hej");
-            // } else {DEBUG_PRINT(" hå");}
-            // DEBUG_PRINT("\n");
+            //     DEBUG_PRINT(F(" hej"));
+            // } else {DEBUG_PRINT(F(" hå"));}
+            // DEBUG_PRINT(F("\n"));
         }
     }
 
