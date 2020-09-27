@@ -272,7 +272,7 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
         packetAdress == 2 &&
         packetSize == 10);
 
-    delete (resultPtr);
+    delete(resultPtr);
 }
 
 void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse()
@@ -893,12 +893,18 @@ void SaveKeyMapsToMemory_PutsDownKeysAsBareKeyboardArrayIntoEEPROM()
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
     bool success = true;
-    for (int i = 0; i < payloadLength; i++)
+    if(static_cast<int>(EEPROMClass_update_param_val_v.size()) >= payloadLength)
     {
-        if (EEPROMClass_update_param_val_v[i] != expectedDataPtr[i])
+        for (int i = 0; i < payloadLength; i++)
         {
-            success = false;
+            if (EEPROMClass_update_param_val_v[i] != expectedDataPtr[i])
+            {
+                success = false;
+            } 
         }
+    } else 
+    {
+        success = false;
     }
 
     ASSERT_TEST(success);
@@ -1202,16 +1208,3 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeyma
         resultingFirstCustomKeymap[2].pin == expectedKeymap[2].pin && resultingFirstCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
         resultingFirstCustomKeymap[3].pin == expectedKeymap[3].pin && resultingFirstCustomKeymap[3].keyCode == expectedKeymap[3].keyCode);
 }
-
-
-// void DEBUGTEST_NEWDELETE() // TODO: DELETE THIS AFTER IT WORKS TO TRACK ARRAY new[] AND delete[].
-// {
-//     int *a = new int[12];
-//     // delete[](a);
-// }
-
-// void DEBUGTEST_NEWDELETE2() // TODO: DELETE THIS AFTER IT WORKS TO TRACK ARRAY new[] AND delete[].
-// {
-//     int *a = new int[12];
-//     delete[](a);
-// }
