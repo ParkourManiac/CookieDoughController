@@ -72,7 +72,7 @@ public:
      * @param index The index of the item to be removed.
      * @param valueOfDeleted A pointer to the value of the deleted item.
      */
-    bool RemoveAtIndex(size_t index, T *valueOfDeleted); // TODO: Write test to check if this is a memory leaks using allocTracker.
+    bool RemoveAtIndex(size_t index, T *valueOfDeleted);
 
     /**
      * @brief Removes the item at the specified index.
