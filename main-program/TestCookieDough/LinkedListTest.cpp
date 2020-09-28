@@ -23,24 +23,6 @@ void NodeConstructor_NoArguments_InitializesValueAndNextWithPovidedArguments()
     ASSERT_TEST(node.value == expectedValue && node.next == expectedNextPtr);
 }
 
-//
-
-// template<class T>
-// LinkedList<T>::LinkedList(const LinkedList& other) : LinkedList()
-// {
-//     for(unsigned int i = 0; i < other.length; i++)
-//     {
-//         T valueToInsert = other.GetNodeAtIndex(i)->value;
-//         this->Insert(i, valueToInsert);
-//     }
-// }
-
-// template<class T>
-// LinkedList<T>::~LinkedList() 
-// {
-//     Clear();
-// }
-
 void LinkedListConstructor_NoArguments_HeadAndTailAreSetToNullptrAndLengthIsZero() 
 {
     LinkedList<int> list = LinkedList<int>();
