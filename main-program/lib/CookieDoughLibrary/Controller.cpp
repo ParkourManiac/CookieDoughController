@@ -50,24 +50,24 @@ void Controller::Setup()
     DEBUG_PRINT(F("\nChanging to default keymap.\n"));
     DEBUG(delay(100));
     ChangeKeyMap(defaultKeymap);
-    LoadKeymapsFromMemoryIntoList(&customKeyMaps); // SRAM: -162 (When loading one keymap of 4 keys).
-    ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount); //SRAM: -0
-    ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount); //SRAM: -0
+    LoadKeymapsFromMemoryIntoList(&customKeyMaps);
+    ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount);
+    ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount);
 }
 
 void Controller::Update()
 {
-    UpdatePinStatesForKeyMap(currentKeyMap, normalKeyCount); // SRAM: -6
-    UpdatePinStatesForKeyMap(specialKeys, specialKeyCount); // SRAM: -6
+    UpdatePinStatesForKeyMap(currentKeyMap, normalKeyCount);
+    UpdatePinStatesForKeyMap(specialKeys, specialKeyCount);
 
-    ExecuteSpecialCommands(); // SRAM: -105
+    ExecuteSpecialCommands();
     if (editmode.enabled)
     {
-        editmode.EditModeLoop(currentKeyMap); // SRAM: -2
+        editmode.EditModeLoop(currentKeyMap);
     }
     else
     {
-        SendKeyInfo(); // SRAM: -2
+        SendKeyInfo();
     }
 }
 
