@@ -12,11 +12,12 @@
  */
 void RunTests();
 
-/** // TODO: CHECK IF DESCRIPTION EXAMPLE IS CORRECT!
- * @brief A container for resetting all mock data between tests.
+/**
+ * @brief A function for resetting all mock variables between each test. 
+ * Will be run automatically between each test.
  * 
  * NOTE: Reset your mock data here!
- * Example: For the mock function...
+ * Example: For the following mocked function...
  * ```
  * int sum_parameter_a;
  * int sum_parameter_b;
@@ -38,7 +39,7 @@ void RunTests();
  *      sum_parameter_a = int();
  *      sum_parameter_b = int();
  *      sum_return_value = int();
- *      sum_invocation_count = unsigned int();
+ *      sum_invocation_count = int();
  * }
  * ```
  * 

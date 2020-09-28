@@ -10,7 +10,7 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(DataPacket expectedPacke
 {
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
-    EEPROMClass_length_return_v.push_back(expectedPacket.payloadLength + 100);
+    EEPROMClass_length_return_v.push_back(static_cast<uint16_t>(expectedPacket.payloadLength + 100));
     EEPROMClass_get_param_t_o2_vr.push_back(expectedPacket.crc);
     EEPROMClass_read_return_v.push_back(expectedPacket.etx);
     for (int i = 0; i < expectedPacket.payloadLength; i++) 

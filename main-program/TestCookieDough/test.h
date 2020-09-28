@@ -7,8 +7,12 @@
 
 // IMPORTANT: To run a test please run your function in the file
 // testSuite.cpp RunTests() function using the macro RUN_TEST(functionName).
-#include <stdio.h>
 #include <vector>
+#include <iostream>
+
+#ifdef USE_ALLOCATION_TRACKER_H
+#include "AllocationTracker.h"
+#endif
 
 /**
  * @brief Stores useful information about a test result.
@@ -63,11 +67,31 @@ void SetupColors();
  * Example: 'RUN_TEST(MyFunction);'
  */
 #define RUN_TEST(functionName) \
-    printf("\033[1;33m");      \
-    printf(#functionName);     \
-    printf("\033[0m"           \
-           "\n");              \
+    std::cout <<("\033[1;33m");      \
+    std::cout <<(#functionName);     \
+    std::cout <<("\033[0m");         \
+    BEGIN_MEMORY_CHECK();            \
     functionName();            \
-    ResetMockData();
+    ResetMockData();            \
+    PERFORM_MEMORY_CHECK(); \
+    std::cout << "\n";
+
+
+#ifdef USE_ALLOCATION_TRACKER_H
+extern AllocationTracker allocTracker;
+#define BEGIN_MEMORY_CHECK() \
+    allocTracker.SaveMemoryState();
+#define PERFORM_MEMORY_CHECK() \
+    if(allocTracker.HasMemoryStateChanged()) \
+    { \
+        std::cout << " (Memory difference: " << allocTracker.StateDifferenceMemory(); \
+        std::cout << ", \"New-Delete ratio\": " \
+            << allocTracker.StateDifferenceNewCount() << "-" \
+            << allocTracker.StateDifferenceDeleteCount() << ")"; \
+    }
+#else
+#define BEGIN_MEMORY_CHECK()
+#define PERFORM_MEMORY_CHECK()
+#endif
 
 #endif

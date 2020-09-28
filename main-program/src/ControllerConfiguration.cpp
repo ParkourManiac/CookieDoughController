@@ -1,12 +1,12 @@
 #include <Controller.h>
 
 const int normalKeyCount = 4;
-Key defaultKeyMap[normalKeyCount] = {
+BareKeyboardKey defaultKeymap[normalKeyCount] = {
     // Key map Arrow keys
-    Key(2, 80),
-    Key(3, 82),
-    Key(4, 81),
-    Key(5, 79),
+    BareKeyboardKey(2, 80),
+    BareKeyboardKey(3, 82),
+    BareKeyboardKey(4, 81),
+    BareKeyboardKey(5, 79),
 };
 
 const int specialKeyCount = 3;
@@ -35,4 +35,4 @@ SpecialKey specialKeys[specialKeyCount] = {
 
 
 
-Controller controller(defaultKeyMap, normalKeyCount, specialKeys, specialKeyCount);
+Controller controller(defaultKeymap, normalKeyCount, specialKeys, specialKeyCount);

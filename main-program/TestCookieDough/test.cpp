@@ -9,50 +9,50 @@ int currentTestIndex = 0;
 
 void PrintResults()
 {
-    printf("Results: \n");
+    std::cout << ("Results: \n");
     int failedTests = 0;
     for (int i = 0; i < currentTestIndex; i++)
     {
         if (!results[i].passed)
         {
-            printf("\033[1;31m"
+            std::cout <<("\033[1;31m"
                    "Test failed: ");
-            printf("\033[0m"
+            std::cout <<("\033[0m"
                    "In file (");
-            printf("%s", results[i].file);
-            printf(") at line (");
-            printf("%lu", results[i].line);
-            printf(") while executing code snippet (");
-            printf("%s", results[i].code);
-            printf(")\n");
+            std::cout <<(results[i].file);
+            std::cout <<(") at line (");
+            std::cout <<(results[i].line);
+            std::cout <<(") while executing code snippet (");
+            std::cout <<(results[i].code);
+            std::cout <<(")\n");
 
             failedTests++;
         }
     }
 
     int successfulTests = currentTestIndex - failedTests;
-    printf("\n");
-    printf("%d", successfulTests);
-    printf(" out of ");
-    printf("%d", currentTestIndex);
-    printf(" tests passed.\n");
+    std::cout <<("\n");
+    std::cout <<(successfulTests);
+    std::cout <<(" out of ");
+    std::cout <<(currentTestIndex);
+    std::cout <<(" tests passed.\n");
     if (currentTestIndex == 0)
     {
-        printf("\033[1;35m"
+        std::cout <<("\033[1;35m"
                "It's pretty empty over here... Writing a test in the testSuite.cpp file would fix that problem! ;D\n\n");
-        printf("\033[0m");
+        std::cout <<("\033[0m");
     }
     else if (successfulTests == currentTestIndex)
     {
-        printf("\033[1;32m"
+        std::cout <<("\033[1;32m"
                "All tests PASSED!\n\n");
-        printf("\033[0m");
+        std::cout <<("\033[0m");
     }
     else
     {
-        printf("\033[01;33m"
+        std::cout <<("\033[01;33m"
                "One or more tests FAILED!\n\n");
-        printf("\033[0m");
+        std::cout <<("\033[0m");
     }
 }
 
@@ -60,17 +60,17 @@ void Test(bool eval, const char *code, const char *file, unsigned long line)
 {
     if (currentTestIndex >= AMOUNT_OF_TESTS)
     {
-        printf("\033[01;31m"
+        std::cout <<("\033[01;31m"
                "\n\nThe amount of written tests have exceeded the limit of maximum allowed tests! Please increase the size of AMOUNT_OF_TESTS in test.h to fit more tests! \n");
-        printf("Skipping test: (");
-        printf(code);
-        printf(") at line (");
-        printf("%d", line);
-        printf(")");
-        printf(") in file (");
-        printf(file);
-        printf(")\n\n");
-        printf("\033[0m");
+        std::cout <<("Skipping test: (");
+        std::cout <<(code);
+        std::cout <<(") at line (");
+        std::cout <<(line);
+        std::cout <<(")");
+        std::cout <<(") in file (");
+        std::cout <<(file);
+        std::cout <<(")\n\n");
+        std::cout <<("\033[0m");
         return;
     }
 
@@ -114,8 +114,8 @@ void SetupColors()
 int main()
 {
     SetupColors();
-    printf("\n-------------------\n");
-    printf("Running tests:\n");
+    std::cout <<("\n-------------------\n");
+    std::cout <<("Running tests:\n");
     RunTests();
     PrintResults();
 }

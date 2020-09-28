@@ -2,8 +2,6 @@
 #define EDIT_MODE_H
 
 #include "Key.h"
-extern const int normalKeyCount; // TODO: Fix this dependency?
-
 
 class EditMode {
 public:
@@ -16,23 +14,27 @@ public:
      * on the BUILTIN_LED as long as editmode is turned on (and
      * no keys are currently being pressed).
      */
-    bool useEditModeLedSignal = false;
+    bool useEditModeLedSignal;
 
 private:
-    Key *selectedKey = nullptr;
-    Key *tempCopy = new Key[normalKeyCount]; // TODO: Cleanup on destruction.
+    const int normalKeyCount;
+    Key *selectedKey;
+    Key *tempCopy;
     int keysPressed = 0;
     int inputKeyCode = 0;
     bool shouldAddValue = false;
 
     const int blinksPerSignal = 3;
     bool ledIsOn = false;
-    unsigned long nextBlinkCycle = 0;
-    unsigned long nextBlinkCycleOff = 0;
+    uint32_t nextBlinkCycle = 0;
+    uint32_t nextBlinkCycleOff = 0;
     int currentBlink = 0;
 
 public:
-    EditMode(bool _useEditModeLedSignal);
+    explicit EditMode(int _normalKeyCount, bool _useEditModeLedSignal);
+    EditMode(const EditMode& other);
+    void operator=(const EditMode&) = delete;
+    ~EditMode();
 
     /**
      * @brief Toggles and resets EditMode.
@@ -62,6 +64,7 @@ public:
      * @param keyMapBeingEdited The keyMap to edit.
      */
     void EditModeLoop(Key* keyMapBeingEdited);
+
 private:
     /**
      * @brief Handles selecting which key to edit and
@@ -69,7 +72,7 @@ private:
      * 
      * @param pressedKey The key that was pressed.
      */
-    void RegisterKeyPress(Key &currentKey);
+    void RegisterKeyPress(Key *pressedKey);
 
     /**
      * @brief Handles calculating and updating the

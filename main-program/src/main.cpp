@@ -1,10 +1,10 @@
 #include <Arduino.h>
 
 #include <Controller.h>
-#include <SRAM.cpp>  // DEBUG
+#include <SRAM.cpp>  // DEBUG // NOLINT(build/include)
 
+// #define DEBUG(VALUE) VALUE
 // #define DEBUG_PRINT(VALUE) Serial.print(VALUE)
-// #define DEBUG_PRINTLN(VALUE) Serial.println(VALUE)
 
 /**
  * @brief A pre-defined controller object, set up with the prefered keymap settings.
@@ -29,16 +29,34 @@ void setup()
     // Without this delay the serial port sends a few weird null letters in serial monitor when initially connected.
     delay(1000);
 
-    controller.Setup(); // SRAM: -??
+    controller.Setup();
 }
 
 void loop()
 {
-    controller.Update(); // SRAM: -??
-    delay(1000); // DEBUG
-    Serial.println(freeMemory()); // DEBUG
+    controller.Update();
+
+    // DEBUG
+    if(millis() % 1000 == 0) {
+        Serial.print(freeMemory());
+        Serial.print("\n");
+    } 
+    // DEBUG
 }
 
 // "If you run out of SRAM..." - https://www.arduino.cc/en/tutorial/memory
 
-// TODO: ADD ISSUE ON GITHUB. "Förhindra att mikrokontrollern får slut på SRAM, eller att man skriver in för många keymaps i EEPROM."
+// TODO: 
+    // DataPacket() 
+    // {
+    //     payload = new uint8_t[1] {0};
+    // }
+    // ~DataPacket() 
+    // {
+    //     delete[] (payload);
+    // }
+
+// TODO: When in doubt: Use assert().
+// TODO: __attribute__((packed)) on the structs that need to be saved to eeprom.
+// TODO: Research POD type. Plain-Old-datatype. (Serialization for c++).
+// TODO: Look into using GDB for debugging. b <num> = sets breakpoint. r = run code. c = Continue to next breakpoint. p <expression> = Prints the result of the given expression.

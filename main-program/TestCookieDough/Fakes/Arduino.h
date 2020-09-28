@@ -9,7 +9,7 @@
 #define LED_BUILTIN 13
 
 int digitalRead(uint8_t pin);
-void pinMode(uint8_t pin, uint8_t mode);
+void pinMode(uint8_t pin, uint8_t mode); // cookieOption: useVector
 unsigned long millis();
 void digitalWrite(uint8_t pin, uint8_t val);
 void delay(unsigned long ms);

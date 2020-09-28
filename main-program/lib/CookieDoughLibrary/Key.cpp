@@ -1,67 +1,118 @@
 #include "Key.h"
 #include <Arduino.h>
 
-void ConfigurePinForKey(IKey &key)
+BareKeyboardKey::BareKeyboardKey() : pin(0), keyCode(0) 
 {
-    pinMode(key.pin, INPUT_PULLUP);
 }
 
-void DebounceRead(IPinState &key) // NOTE: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
+BareKeyboardKey::BareKeyboardKey(IKey _pin, IKeycode _keyCode)
+    : pin(_pin), keyCode(_keyCode) 
 {
-    key.oldValue = key.value;
-    unsigned int debounceDelay = 30; // TODO: This balance needs to be play tested.
-    unsigned long currentTime = millis();
+}
 
-    bool pinState = digitalRead(key.pin);
+bool BareKeyboardKey::operator==(const BareKeyboardKey &other)
+{
+    return pin == other.pin && keyCode == other.keyCode;
+}
+
+bool BareKeyboardKey::operator!=(const BareKeyboardKey &other)
+{
+    return !(*this == other);
+}
+
+Key::Key()
+    : pin(0), keyCode(0), state(IPinState())
+{
+}
+
+Key::Key(IKey _pin, IKeycode _keyCode)
+    : pin(_pin), keyCode(_keyCode), state(IPinState())
+{
+}
+
+SpecialKey::SpecialKey() 
+    : pin(0), function(toggleDefaultKeyMap), state(IPinState())
+{
+}
+
+SpecialKey::SpecialKey(IKey _pin, SpecialFunction _function)
+    : pin(_pin), function(_function), state(IPinState())
+{
+}
+
+bool SpecialKey::operator==(const SpecialKey &other)
+{
+    return pin == other.pin && function == other.function;
+}
+
+bool SpecialKey::operator!=(const SpecialKey &other)
+{
+    return !(*this == other);
+}
+
+    
+
+void ConfigurePinForKey(const IKey &pin)
+{
+    pinMode(pin, INPUT_PULLUP);
+}
+
+void DebounceReadState(IKey pin, IPinState *state) // NOTE: This causes a slight input delay. Consider this: if you were to press the button every <30ms the input would not be registered.
+{
+    state->oldValue = state->value;
+    unsigned int debounceDelay = 30; // TODO: This balance needs to be play tested.
+    uint32_t currentTime = millis();
+
+    bool pinState = digitalRead(pin);
 
     // If the pin state has changed...
-    if (pinState != key.oldPinState)
+    if (pinState != state->oldPinState)
     {
-        key.lastDebounceTime = currentTime;
+        state->lastDebounceTime = currentTime;
         // // Print debounce catches.
-        // DEBUG_PRINT("he");
+        // DEBUG_PRINT(F("he"));
     }
 
-    unsigned long timePassedSinceDebounce = (currentTime - key.lastDebounceTime);
+    uint32_t timePassedSinceDebounce = (currentTime - state->lastDebounceTime);
     // If we've waited long enough since last debounce...
     if (timePassedSinceDebounce > debounceDelay)
     {
         // Invert key value to get pin state. Pullup is active low. 1 = off. 0 = on.
-        bool pinStateOfKey = !key.value; 
+        bool pinStateOfKey = !state->value; 
 
         // If the state is outdated...
         if (pinState != pinStateOfKey)
         {
             // Invert input signal. Pullup is active low. 1 = off. 0 = on.
-            key.value = !pinState;
+            state->value = !pinState;
 
-            if (key.value)
+            if (state->value)
             {
-                key.timeOfActivation = currentTime;
+                state->timeOfActivation = currentTime;
             }
 
             // // Print debounce catches.
-            // if(key.value) {
-            //     DEBUG_PRINT(" hej");
-            // } else {DEBUG_PRINT(" hå");}
-            // DEBUG_PRINTLN();
+            // if(state->value) {
+            //     DEBUG_PRINT(F(" hej"));
+            // } else {DEBUG_PRINT(F(" hå"));}
+            // DEBUG_PRINT(F("\n"));
         }
     }
 
-    key.oldPinState = pinState;
+    state->oldPinState = pinState;
 }
 
-bool OnKeyPress(IPinState &key)
+bool OnKeyPress(const IPinState &state)
 {
-    return (key.oldValue != key.value && key.value);
+    return (state.oldValue != state.value && state.value);
 }
 
-bool OnKeyRelease(IPinState &key)
+bool OnKeyRelease(const IPinState &state)
 {
-    return (key.oldValue != key.value && !key.value);
+    return (state.oldValue != state.value && !state.value);
 }
 
-bool OnLongPress(IPinState key, unsigned int longPressDuration)
+bool OnLongPress(const IPinState &state, unsigned int longPressDuration)
 {
-    return (millis() - key.timeOfActivation) >= longPressDuration;
+    return (millis() - state.timeOfActivation) >= longPressDuration;
 }

@@ -12,39 +12,259 @@ extern int digitalRead_return;
 extern uint8_t digitalRead_param_pin;
 extern unsigned int digitalRead_invocations;
 
-void ConfigurePinForKey_IKeysPinIsPassedToPinMode()
+void KeyConstructor_NoArguments_IntializesPinAndKeycodeWithZeroAndIPinStateWithDefaultValues()
 {
-    int expectedPin = 2;
-    IKey key = IKey{.pin = expectedPin};
+    uint8_t expectedPin = 0;
+    int expectedKeycode = 0;
+    IPinState expectedState = IPinState();
 
-    ConfigurePinForKey(key);
+    Key key = Key();
+
+    bool hasDefaultState = (
+        key.state.value == expectedState.value &&
+        key.state.oldValue == expectedState.oldValue &&
+        key.state.timeOfActivation == expectedState.timeOfActivation &&
+        key.state.lastDebounceTime == expectedState.lastDebounceTime &&
+        key.state.oldPinState == expectedState.oldPinState
+    );
+    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode && hasDefaultState);
+}
+
+void KeyConstructor_WithArguments_IntializesPinAndKeycodeCorrectly()
+{
+    uint8_t expectedPin = 7;
+    int expectedKeycode = 19;
+    IPinState expectedState = IPinState();
+
+    Key key = Key(expectedPin, expectedKeycode);
+
+    bool hasDefaultState = (
+        key.state.value == expectedState.value &&
+        key.state.oldValue == expectedState.oldValue &&
+        key.state.timeOfActivation == expectedState.timeOfActivation &&
+        key.state.lastDebounceTime == expectedState.lastDebounceTime &&
+        key.state.oldPinState == expectedState.oldPinState
+    );
+    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode && hasDefaultState);
+}
+
+void SpecialKeyConstructor_NoArguments_IntializesPinAndFunctionCorrectly()
+{
+    uint8_t expectedPin = 0;
+    SpecialFunction expectedFunction = toggleDefaultKeyMap;
+    IPinState expectedState = IPinState();
+
+    SpecialKey key = SpecialKey();
+
+    bool hasDefaultState = (
+        key.state.value == expectedState.value &&
+        key.state.oldValue == expectedState.oldValue &&
+        key.state.timeOfActivation == expectedState.timeOfActivation &&
+        key.state.lastDebounceTime == expectedState.lastDebounceTime &&
+        key.state.oldPinState == expectedState.oldPinState
+    );
+    ASSERT_TEST(key.pin == expectedPin && key.function == expectedFunction && hasDefaultState);
+}
+
+void SpecialKeyConstructor_WithArguments_IntializesPinAndFunctionCorrectly()
+{
+    uint8_t expectedPin = 7;
+    SpecialFunction expectedFunction = cycleKeyMap;
+    IPinState expectedState = IPinState();
+
+    SpecialKey key = SpecialKey(expectedPin, expectedFunction);
+
+    bool hasDefaultState = (
+        key.state.value == expectedState.value &&
+        key.state.oldValue == expectedState.oldValue &&
+        key.state.timeOfActivation == expectedState.timeOfActivation &&
+        key.state.lastDebounceTime == expectedState.lastDebounceTime &&
+        key.state.oldPinState == expectedState.oldPinState
+    );
+    ASSERT_TEST(key.pin == expectedPin && key.function == expectedFunction && hasDefaultState);
+}
+
+void BareKeyboardKeyConstructor_NoArguments_IntializesPinAndKeycodeWithZero()
+{
+    IKey expectedPin = 0;
+    IKeycode expectedKeycode = 0;
+
+    BareKeyboardKey key = BareKeyboardKey();
+
+    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode);
+}
+
+void BareKeyboardKeyConstructor_WithArguments_IntializesPinAndKeycodeCorrectly()
+{
+    IKey expectedPin = 7;
+    IKeycode expectedKeycode = 19;
+
+    BareKeyboardKey key = BareKeyboardKey(expectedPin, expectedKeycode);
+
+    ASSERT_TEST(key.pin == expectedPin && key.keyCode == expectedKeycode);
+}
+
+void SpecialKeyEqualityOperator_PinAndFunctionAreTheSameBetweenObjects_ReturnsTrue()
+{
+    IKey pin = 1;
+    SpecialFunction function = toggleDefaultKeyMap;
+    SpecialKey first = SpecialKey(pin, function);
+    SpecialKey second = SpecialKey(pin, function);
+    bool expectedResult = true;
+
+    bool result = first == second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void SpecialKeyEqualityOperator_PinDifferBetweenObjects_ReturnsFalse()
+{
+    SpecialKey first = SpecialKey(5, toggleDefaultKeyMap);
+    SpecialKey second = SpecialKey(1, toggleDefaultKeyMap);
+    bool expectedResult = false;
+
+    bool result = first == second;
+    
+    ASSERT_TEST(result == expectedResult);
+}
+
+void SpecialKeyEqualityOperator_FunctionDifferBetweenObjects_ReturnsFalse()
+{
+    SpecialKey first = SpecialKey(1, toggleDefaultKeyMap);
+    SpecialKey second = SpecialKey(1, cycleKeyMap);
+    bool expectedResult = false;
+
+    bool result = first == second;
+    
+    ASSERT_TEST(result == expectedResult);
+}
+
+void SpecialKeyEqualityOperator_PinAndFunctionAreTheSameBetweenObjectsButStateIsDifferent_IgnoresStateAndReturnsTrue()
+{
+    IKey pin = 1;
+    SpecialFunction function = toggleDefaultKeyMap;
+    SpecialKey first = SpecialKey(pin, function);
+    SpecialKey second = SpecialKey(pin, function);
+    first.state.value = false;
+    second.state.value = true;
+    bool expectedResult = true;
+
+    bool result = first == second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void SpecialKeyNotEqualityOperator_PinAndFunctionDifferBetweenObjects_ReturnsOppositeOfEqualityOperator()
+{
+    SpecialKey first = SpecialKey(1, toggleDefaultKeyMap);
+    SpecialKey second = SpecialKey(3, cycleKeyMap);
+    bool expectedResult = !(first == second);
+
+    bool result = first != second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void SpecialKeyNotEqualityOperator_PinAndFunctionAreTheSameBetweenObjects_ReturnsOppositeOfEqualityOperator()
+{
+    SpecialKey first = SpecialKey(1, toggleDefaultKeyMap);
+    SpecialKey second = SpecialKey(1, toggleDefaultKeyMap);
+    bool expectedResult = !(first == second);
+
+    bool result = first != second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void BareKeyboardKeyEqualityOperator_PinAndKeycodeAreTheSameBetweenObjects_ReturnsTrue()
+{
+    IKey pin = 1;
+    IKeycode keycode = 5;
+    BareKeyboardKey first = BareKeyboardKey(pin, keycode);
+    BareKeyboardKey second = BareKeyboardKey(pin, keycode);
+    bool expectedResult = true;
+
+    bool result = first == second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void BareKeyboardKeyEqualityOperator_PinDifferBetweenObjects_ReturnsFalse()
+{
+    BareKeyboardKey first = BareKeyboardKey(5, 2);
+    BareKeyboardKey second = BareKeyboardKey(1, 2);
+    bool expectedResult = false;
+
+    bool result = first == second;
+    
+    ASSERT_TEST(result == expectedResult);
+}
+
+void BareKeyboardKeyEqualityOperator_KeycodeDifferBetweenObjects_ReturnsFalse()
+{
+    BareKeyboardKey first = BareKeyboardKey(1, 7);
+    BareKeyboardKey second = BareKeyboardKey(1, 3);
+    bool expectedResult = false;
+
+    bool result = first == second;
+    
+    ASSERT_TEST(result == expectedResult);
+}
+
+void BareKeyboardKeyNotEqualityOperator_PinAndKeycodeDifferBetweenObjects_ReturnsOppositeOfEqualityOperator()
+{
+    BareKeyboardKey first = BareKeyboardKey(1, 3);
+    BareKeyboardKey second = BareKeyboardKey(3, 7);
+    bool expectedResult = !(first == second);
+
+    bool result = first != second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void BareKeyboardKeyNotEqualityOperator_PinAndKeycodeAreTheSameBetweenObjects_ReturnsOppositeOfEqualityOperator()
+{
+    BareKeyboardKey first = BareKeyboardKey(1, 3);
+    BareKeyboardKey second = BareKeyboardKey(1, 3);
+    bool expectedResult = !(first == second);
+
+    bool result = first != second;
+
+    ASSERT_TEST(result == expectedResult);
+}
+
+void ConfigurePinForKey_IKeyIsPassedToPinMode()
+{
+    IKey expectedPin = 2;
+
+    ConfigurePinForKey(expectedPin);
 
     ASSERT_TEST(expectedPin == pinMode_param_pin);
 }
 
 void ConfigurePinForKeyOfTypeKey_IsCorrectlyParsedToIKey()
 {
-    int expectedPin = 2;
+    uint8_t expectedPin = 2;
     Key key = Key(expectedPin, 1337);
 
-    ConfigurePinForKey(key);
+    ConfigurePinForKey(key.pin);
 
     ASSERT_TEST(expectedPin == pinMode_param_pin);
 }
 
 void ConfigurePinForKeyOfTypeSpecialKey_IsCorrectlyParsedToIKey()
 {
-    int expectedPin = 2;
+    uint8_t expectedPin = 2;
     SpecialKey key = SpecialKey(expectedPin, toggleDefaultKeyMap);
 
-    ConfigurePinForKey(key);
+    ConfigurePinForKey(key.pin);
 
     ASSERT_TEST(expectedPin == pinMode_param_pin);
 }
 
 void ConfigurePinForKey_ConfiguresPinAsInputPullup()
 {
-    IKey key = IKey{.pin = 2};
+    IKey key = 2;
 
     ConfigurePinForKey(key);
 
@@ -55,7 +275,7 @@ void ConfigurePinForKey_CallsPinModeOnce()
 {
     SpecialKey key = SpecialKey(2, toggleDefaultKeyMap);
 
-    ConfigurePinForKey(key);
+    ConfigurePinForKey(key.pin);
 
     ASSERT_TEST(1 == pinMode_invocations);
 }
@@ -127,9 +347,9 @@ void OnKeyRelease_PinStateIsActive_ReturnFalse()
 void OnLongPress_TimePassedIsNotGreaterThanLongPressDuration_ReturnFalse()
 {
     IPinState state;
-    int currentTime = 0;
+    unsigned long currentTime = 0;
     state.timeOfActivation = 0;
-    int longPressDuration = 5;
+    unsigned int longPressDuration = 5;
 
     millis_return = currentTime;
     bool result = OnLongPress(state, longPressDuration);
@@ -140,9 +360,9 @@ void OnLongPress_TimePassedIsNotGreaterThanLongPressDuration_ReturnFalse()
 void OnLongPress_TimePassedIsGreaterThanLongPressDuration_ReturnTrue()
 {
     IPinState state;
-    int currentTime = 10;
+    unsigned long currentTime = 10;
     state.timeOfActivation = 0;
-    int longPressDuration = 5;
+    unsigned int longPressDuration = 5;
 
     millis_return = currentTime;
     bool result = OnLongPress(state, longPressDuration);
@@ -153,9 +373,9 @@ void OnLongPress_TimePassedIsGreaterThanLongPressDuration_ReturnTrue()
 void OnLongPress_TimePassedIsEqualToLongPressDuration_ReturnTrue()
 {
     IPinState state;
-    int currentTime = 5;
+    unsigned long currentTime = 5;
     state.timeOfActivation = 0;
-    int longPressDuration = currentTime - state.timeOfActivation;
+    unsigned int longPressDuration = currentTime - state.timeOfActivation;
 
     millis_return = currentTime;
     bool result = OnLongPress(state, longPressDuration);
@@ -165,7 +385,7 @@ void OnLongPress_TimePassedIsEqualToLongPressDuration_ReturnTrue()
 
 void ConfigurePinsForKeyMap_InvokesPinModeForEachKey()
 {
-    int length = 3;
+    const int length = 3;
     Key keymap[length] = {
         Key(2, 1337),
         Key(3, 1337),
@@ -179,7 +399,7 @@ void ConfigurePinsForKeyMap_InvokesPinModeForEachKey()
 
 void ConfigurePinsForKeyMap_CallsPinModeWithPinFromKeyMap()
 {
-    int length = 1;
+    const int length = 1;
     Key keymap[length] = {
         Key(13, 1337),
     };
@@ -192,7 +412,7 @@ void ConfigurePinsForKeyMap_CallsPinModeWithPinFromKeyMap()
 
 void ConfigurePinsForKeyMap_SetsUpPinAsInputPullup()
 {
-    int length = 1;
+    const int length = 1;
     Key keymap[length] = {
         Key(13, 1337),
     };
@@ -208,7 +428,7 @@ void DebounceRead_UpdatesOldValueOfStateWithPreviousStateValue()
     state.oldValue = false;
     state.value = true;
 
-    DebounceRead(state);
+    DebounceReadState(0, &state);
 
     ASSERT_TEST(state.oldValue == true);
 }
@@ -216,11 +436,11 @@ void DebounceRead_UpdatesOldValueOfStateWithPreviousStateValue()
 void DebounceRead_ReadsStateOfPin()
 {
     IPinState state;
-    state.pin = 3;
+    IKey pin = 3;
 
-    DebounceRead(state);
+    DebounceReadState(pin, &state);
 
-    ASSERT_TEST(digitalRead_param_pin == 3 && digitalRead_invocations == 1);
+    ASSERT_TEST(digitalRead_param_pin == pin && digitalRead_invocations == 1);
 }
 
 void DebounceRead_PinStateHasChanged_UpdatesLastDebounceTime()
@@ -232,7 +452,7 @@ void DebounceRead_PinStateHasChanged_UpdatesLastDebounceTime()
     state.oldPinState = true;
     digitalRead_return = false;
 
-    DebounceRead(state);
+    DebounceReadState(0, &state);
 
     ASSERT_TEST(state.lastDebounceTime == expectedDebounceTime);
 }
@@ -246,7 +466,7 @@ void DebounceRead_PinStateHasNotChanged_DoesNotUpdateLastDebounceTime()
     state.oldPinState = true;
     digitalRead_return = true;
 
-    DebounceRead(state);
+    DebounceReadState(0, &state);
 
     ASSERT_TEST(state.lastDebounceTime == expectedDebounceTime);
 }
@@ -258,10 +478,10 @@ void DebounceRead_DebounceTimeExceededAndValueIsOutdated_UpdateStateValue()
     millis_return = state.lastDebounceTime + 100000;
     digitalRead_return = true; // true = Button is released.
     state.oldPinState = true;
-    state.value = true; // Button was previously pressed.
+    state.value = true;    // Button was previously pressed.
     bool expected = false; // We expect the button to be released.
 
-    DebounceRead(state);
+    DebounceReadState(0, &state);
 
     ASSERT_TEST(state.value == expected);
 }
@@ -277,7 +497,7 @@ void DebounceRead_DebounceTimeExceededAndValueIsOutdatedAndTheNewValueIsActive_U
     state.oldPinState = currentPinState;
     state.value = false; // Button was previously released.
 
-    DebounceRead(state);
+    DebounceReadState(0, &state);
 
     ASSERT_TEST(state.timeOfActivation == expectedTimeOfActivation);
 }
@@ -291,7 +511,7 @@ void DebounceRead_ValueIsOutdatedButDebounceTimeIsNotExceeded_DoesNotUpdateState
     bool expected = true;   // We expect the button to still be pressed.
     state.value = expected; // Button was previously pressed.
 
-    DebounceRead(state);
+    DebounceReadState(0, &state);
 
     ASSERT_TEST(state.value == expected);
 }
@@ -302,12 +522,12 @@ void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_D
     digitalRead_return = currentPinState;
     IPinState state;
     state.oldPinState = !currentPinState;
-    state.value = true;                   // Button was previously released.
+    state.value = true; // Button was previously released.
     millis_return = state.lastDebounceTime + 100000;
     unsigned long expectedTimeOfActivation = 1337;
     state.timeOfActivation = expectedTimeOfActivation;
 
-    DebounceRead(state);
+    DebounceReadState(0, &state);
 
     ASSERT_TEST(state.timeOfActivation == expectedTimeOfActivation);
 }
@@ -315,51 +535,81 @@ void DebounceRead_DebounceTimeExceededAndTheValueIsActiveButValueIsNotOutdated_D
 void DebounceRead_OldPinStateIsUpdated()
 {
     IPinState state;
-    digitalRead_return = false;        // Button is pressed.
+    digitalRead_return = false;       // Button is pressed.
     state.oldPinState = true;         // Button was released.
     bool expectedOldPinState = false; // We expect it to become released.
 
-    DebounceRead(state);
+    DebounceReadState(0, &state);
 
     ASSERT_TEST(state.oldPinState == expectedOldPinState);
 }
 
-void ReadPinValuesForKeyMap_CallsDigitalReadForEachItem()
+void UpdatePinStatesForKeyMap_CallsDigitalReadForEachItem()
 {
-    int length = 2;
+    const unsigned int length = 2;
     Key keymap[length] = {
         Key(2, 1337),
         Key(3, 1337),
     };
 
-    ReadPinValuesForKeyMap(keymap, length);
+    UpdatePinStatesForKeyMap(keymap, length);
 
     ASSERT_TEST(digitalRead_invocations == length);
 }
 
-void ReadPinValuesForKeyMap_CorrectlyParsesKeyPin()
+void UpdatePinStatesForKeyMap_CorrectlyParsesKeyPin()
 {
-    int length = 1;
+    const int length = 1;
     Key keymap[length] = {
         Key(3, 1337),
     };
-    int expectedPin = 3;
+    uint8_t expectedPin = 3;
 
-    ReadPinValuesForKeyMap(keymap, length);
+    UpdatePinStatesForKeyMap(keymap, length);
 
     ASSERT_TEST(digitalRead_param_pin == expectedPin);
 }
 
-void ReadPinValuesForKeyMap_UpdatesStateForAllPins()
+void UpdatePinStatesForKeyMap_UpdatesStateForAllPins()
 {
     digitalRead_return = true;
-    int length = 2;
+    const int length = 2;
     Key keymap[length] = {
         Key(2, 1337),
         Key(3, 1337),
     };
 
-    ReadPinValuesForKeyMap(keymap, length);
+    UpdatePinStatesForKeyMap(keymap, length);
 
-    ASSERT_TEST(keymap[0].oldPinState == true && keymap[1].oldPinState == true);
+    ASSERT_TEST(keymap[0].state.oldPinState == true && keymap[1].state.oldPinState == true);
+}
+
+void UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works() 
+{
+    digitalRead_return = true;
+    const int length = 2;
+    Key keymap[length] = {
+        Key(2, 1337),
+        Key(3, 1337),
+    };
+    keymap[0].state.oldPinState = keymap[1].state.oldPinState = false;
+
+    UpdatePinStatesForKeyMap(keymap, length);
+
+    ASSERT_TEST(keymap[0].state.oldPinState == true && keymap[1].state.oldPinState == true);
+}
+
+void UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works()
+{
+    digitalRead_return = true;
+    const int length = 2;
+    SpecialKey keymap[length] = {
+        SpecialKey(2, toggleDefaultKeyMap),
+        SpecialKey(3, toggleEditMode),
+    };
+    keymap[0].state.oldPinState = keymap[1].state.oldPinState = false;
+
+    UpdatePinStatesForKeyMap(keymap, length);
+
+    ASSERT_TEST(keymap[0].state.oldPinState == true && keymap[1].state.oldPinState == true);
 }

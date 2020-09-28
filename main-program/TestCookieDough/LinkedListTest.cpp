@@ -2,6 +2,75 @@
 #include "../lib/CookieDoughLibrary/LinkedList.h"
 #include "../lib/CookieDoughLibrary/LinkedList.cpp"
 
+void NodeConstructor_NoArguments_InitializesWithADefaultObjectAsValueAndNextIsNullptr()
+{
+    bool expectedValue = bool();
+    Node<bool> *expectedNext = nullptr;
+
+    Node<bool> node = Node<bool>();
+
+    ASSERT_TEST(node.value == expectedValue && node.next == expectedNext);
+}
+
+void NodeConstructor_WithArguments_InitializesValueAndNextWithPovidedArguments()
+{
+    int expectedValue = 15;
+    Node<int> next = Node<int>();
+    Node<int> *expectedNextPtr = &next;
+
+    Node<int> node = Node<int>(expectedValue, expectedNextPtr);
+
+    ASSERT_TEST(node.value == expectedValue && node.next == expectedNextPtr);
+}
+
+void LinkedListConstructor_NoArguments_HeadAndTailAreSetToNullptrAndLengthIsZero() 
+{
+    LinkedList<int> list = LinkedList<int>();
+
+    ASSERT_TEST(
+        list.head == nullptr &&
+        list.tail == nullptr &&
+        list.length == 0
+    );
+}
+
+void LinkedListCopyConstructor_ItemsArePlacedInTheSameOrder() 
+{
+    LinkedList<int> list = LinkedList<int>();
+    list.Add(3);
+    list.Add(4);
+    list.Add(5);
+
+    LinkedList<int> listCopy = LinkedList<int>(list);
+
+    ASSERT_TEST(
+        *listCopy[0] == *list[0] &&
+        *listCopy[1] == *list[1] &&
+        *listCopy[2] == *list[2]
+    );
+}
+
+void LinkedListCopyConstructor_MakesACopyOfAllItems()
+{
+    int expectedItem1 = 3;
+    int expectedItem2 = 4;
+    int expectedItem3 = 5;
+    LinkedList<int> list = LinkedList<int>();
+    list.Add(expectedItem1);
+    list.Add(expectedItem2);
+    list.Add(expectedItem3);
+
+    LinkedList<int> listCopy = LinkedList<int>(list);
+    list.Clear();
+
+    ASSERT_TEST(
+        *listCopy[0] == expectedItem1 &&
+        *listCopy[1] == expectedItem2 &&
+        *listCopy[2] == expectedItem3
+    );
+}
+
+
 void GetFirstNode_GetsFirstNode()
 {
     LinkedList<int> list;
@@ -235,7 +304,7 @@ void AddMultipleItemsToList_FirstlyAddedIsHeadLastlyAddedIsTail()
 void AddItem_LengthIncreasesByOne()
 {
     LinkedList<int> list;
-    int expected = 1;
+    unsigned int expected = 1;
 
     list.Add(1337);
 
@@ -355,9 +424,9 @@ void InsertItem_LengthIncreasesByOne()
 void InsertMultipleItems_LengthIsSameAsAmountOfItems()
 {
     LinkedList<int> list;
-    int expectedSize;
+    unsigned int expectedSize = 10;
 
-    for (int i = 0; i < expectedSize; i++)
+    for (unsigned int i = 0; i < expectedSize; i++)
     {
         list.Insert(0, i);
     }
@@ -551,10 +620,10 @@ void RemoveOnlyItemInList_LengthIsZero() {
 
 void RemoveItemInPopulatedList_LengthDecreasesByOne() {
     LinkedList<int> list;
-    int amountOfAddedItems = 7;
+    unsigned int amountOfAddedItems = 7;
     int indexToRemove = 3;
 
-    for(int i = 0; i < amountOfAddedItems; i++) {
+    for(unsigned int i = 0; i < amountOfAddedItems; i++) {
         list.Add(1);
     }
 

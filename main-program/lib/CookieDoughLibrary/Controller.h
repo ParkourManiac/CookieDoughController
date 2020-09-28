@@ -5,50 +5,53 @@
 
 #include "Key.h"
 #include "LinkedList.h"
-#include "LinkedList.cpp"
+#include "LinkedList.cpp" // NOLINT(build/include)
 #include "EditMode.h"
 #include "DataPacket.h"
 
 class Controller
 {
 private:
-    Key *defaultKeyMap;
-    int normalKeyCount;
+    const int normalKeyCount;
+    BareKeyboardKey *defaultKeymap;
     
+    const int specialKeyCount;
     SpecialKey *specialKeys;
-    int specialKeyCount;
 
-    Key *currentKeyMap = defaultKeyMap;
+    /**
+     * @brief Is true when the default keymap is equipped.
+     */
+    bool isUsingDefaultKeymap = false;
+
+    Key *currentKeyMap;
+
     unsigned int customKeyMapIndex = 0;
+    LinkedList<BareKeyboardKey *> *customKeyMapsPtr;
+    LinkedList<BareKeyboardKey *> customKeyMaps;
 
-    LinkedList<Key *> *customKeyMapsPtr = new LinkedList<Key *>();
-    LinkedList<Key *> customKeyMaps = *customKeyMapsPtr;
+    const uint8_t bufferSize = 8;
+    uint8_t *buf; // Keyboard report buffer.
 
-    uint8_t buf[8] ={ 0 }; // Keyboard report buffer.
+    uint16_t eepromAdress = 0;
+    uint16_t nextFreeEepromAdress = 0;
 
-    unsigned int eepromAdress = 0;
-    unsigned int nextFreeEepromAdress = 0;
+    EditMode editmode = EditMode(normalKeyCount, true);
 
-    EditMode editmode = EditMode(true);
-
-    const float longPressDuration = 4000;
+    const unsigned long longPressDuration = 2000;
 
 public:
     /**
      * @brief Construct a new Controller object and sets up the Controllers initial keymap and the keymap used for special functions.
      * 
-     * @param _defaultKeyMap The keymap to be used as the default keymap.
+     * @param _defaultKeymap The keymap to be used as the default keymap.
      * @param amountOfDefaultKeys The amount of keys inside the default keymap.
      * @param _specialKeys The keymap to be used for special function keys.
-     * @param amountOfSpecialKey The amount of keys inside the specialKeys keymap.
+     * @param amountOfSpecialKeys The amount of keys inside the specialKeys keymap.
      */
-    Controller(Key *_defaultKeyMap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKey) 
-        : defaultKeyMap(_defaultKeyMap)
-        , normalKeyCount(amountOfDefaultKeys)
-        , specialKeys(_specialKeys)
-        , specialKeyCount(amountOfSpecialKey)
-    {
-    }
+    Controller(BareKeyboardKey *_defaultKeymap, int amountOfDefaultKeys, SpecialKey *_specialKeys, int amountOfSpecialKeys);
+    Controller(const Controller& other);
+    ~Controller();
+    void operator=(const Controller&) = delete;
 
     /**
      * @brief Sets up the controller by loading the keymaps from memory and configuring the corresponding Arduino pin for each key.
@@ -66,7 +69,7 @@ public:
      *
      * @param keyMapList The list of keymaps to be saved.
      */
-    void SaveKeyMapsToMemory(LinkedList<Key *> keyMapList);
+    void SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList);
 
     /**
      * @brief If present on the EEPROM, Loads a list of keymaps from memory
@@ -74,7 +77,7 @@ public:
      *
      * @param keyMapList The keyMap list to store the result.
      */
-    void LoadKeymapsFromMemoryIntoList(LinkedList<Key *> &keyMapList);
+    void LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keyMapList); // NOTE: Refactored to BareKeyboardKeys
 
     /**
      * @brief Retrieves the saved BareKeyboardKeys stored in the EEPROM.
@@ -87,7 +90,7 @@ public:
      * @return true If we succesfully retrieved the array of keys.
      * @return false If we were unable to find any valid packet.
      */
-    bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey *&payloadAsBareKeys, unsigned int &amountOfKeys, unsigned int &packetAdress, unsigned int &packetSize);
+    bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, uint16_t *amountOfKeys, uint16_t *packetAdress, uint16_t *packetSize);
 
     /**
      * @brief Finds and retrieves a DataPacket stored on the EEPROM.
@@ -98,7 +101,7 @@ public:
      * @return true The DataPacket was succesfully found and retrieved.
      * @return false The DataPacket was not found or the DataPackets found were corrupt.
      */
-    bool RetrieveDataPacketFromMemory(DataPacket &packet, unsigned int &packetSize, unsigned int &packetAdress, unsigned int startAdress = 0);
+    bool RetrieveDataPacketFromMemory(DataPacket *packet, uint16_t *packetSize, uint16_t *packetAdress, uint16_t startAdress = 0);
 
     /**
      * @brief Converts a DataPacket payload into an array of BareKeyboardKeys.
@@ -109,22 +112,22 @@ public:
     void ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result);
 
     /**
-     * @brief Populates the provided keymap list using the BareKeyboardKeys.
+     * @brief Populates the provided keymap list using the BareKeyboardKey array.
      * 
-     * @param keys The keys to be inserted into the list.
-     * @param amountOfKeys The amount of keys to be inserted.
+     * @param keys The array of keys to be inserted into the list.
+     * @param amountOfKeys The amount of keys in the "keys" array.
      * @param keymapList The list in which the keys will be inserted.
      */
-    void ParseBareKeyboardKeysIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<Key *> &keymapList);
+    void ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> *keymapList);
 
     /**
-     * @brief Determines whether a key is valid (i.e can be used) or not.
+     * @brief Determines whether a pin is valid (i.e can be used) or not.
      * 
-     * @param key The key to be validated.
-     * @return true The key is valid.
-     * @return false The key is invalid or corrupt.
+     * @param pin The pin to be validated.
+     * @return true The pin is valid.
+     * @return false The pin is invalid or corrupt.
      */
-    bool IsKeyValid(IKey key);
+    bool IsKeyValid(const IKey &pin);
 
     /**
      * @brief Switches to the next keyMap configuration in the list
@@ -137,12 +140,17 @@ public:
     void CycleKeyMap();
 
     /**
-     * @brief Changes the current keymap to the keymap specified at
-     * the given index (in the available keyMaps).
-     *
-     * @param index The index of the keymap to be switched to.
+     * @brief Equips the current keymap with the provided keymaps configuration.
+     * 
+     * @param keyMap A pointer to the keymap we want to equip.
      */
-    void ChangeKeyMap(Key *keyMap);
+    void ChangeKeyMap(BareKeyboardKey *keyMap);
+
+    /**
+     * @brief Updates the equipped custom keymap with the pin and keycode from the currentKeyMap.
+     */
+    void UpdateCurrentCustomKeymap();
+    
     /**
      * @brief Switches to the built in default keyMap.
      */
@@ -154,16 +162,49 @@ public:
     void SendKeyInfo();
 
     /**
+     * @brief Sets the buffer to only zeroes. Thus, removing all keyboard events from the buffer.
+     */
+    void WipeKeyboardEventBuffer();
+
+    /**
+     * @brief Transmits the buffer data to the connected device through the serial port.
+     */
+    void SendKeyboardEvent();
+
+    /**
      * @brief Executes the corresponding special function when a special key is pressed.
      */
     void ExecuteSpecialCommands();
 
-    // TODO: Document all functions
+    /**
+     * @brief Toggles into or out of editmode for the controller.
+     * Note: If no custom keymap exist when entering editmode, a keymap will be created automatically.
+     */
     void ToggleEditMode();
 
+    /**
+     * @brief Saves the current setup of custom keymaps to memory.
+     * Note: Will wait for the EEPROM to finish writing before continuing.
+     */
     void SaveControllerSettings();
+
+    /**
+     * @brief Deletes the currently selected keymap. 
+     * Note: Can only delete custom keymaps. Cannot be used on default keymap.
+     */
     void DeleteCurrentKeyMap();
+
+    /**
+     * @brief Creates a new keymap and adds it to the list of custom keymaps.
+     * 
+     * @return true The keymap was successfully created.
+     * @return false The keymap couldn't be created due to insufficient amount of free space or an error occured.
+     */
     bool CreateNewKeyMap();
+
+    /**
+     * @brief Quickly blinks the builtin led 5 times to indicate that something went wrong.
+     */
     void SignalErrorToUser();
 };
 
