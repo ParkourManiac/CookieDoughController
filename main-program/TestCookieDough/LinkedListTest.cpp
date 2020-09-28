@@ -12,7 +12,7 @@ void NodeConstructor_NoArguments_InitializesWithADefaultObjectAsValueAndNextIsNu
     ASSERT_TEST(node.value == expectedValue && node.next == expectedNext);
 }
 
-void NodeConstructor_NoArguments_InitializesValueAndNextWithPovidedArguments()
+void NodeConstructor_WithArguments_InitializesValueAndNextWithPovidedArguments()
 {
     int expectedValue = 15;
     Node<int> next = Node<int>();
