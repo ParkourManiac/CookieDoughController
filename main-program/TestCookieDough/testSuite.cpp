@@ -725,12 +725,6 @@ void DataPacket_ByDefault_StxIsTwo();
 void DataPacket_ByDefault_EtxIsThree();
 void DataPacket_ByDefault_ActiveIsTrue();
 void CalculateCRC_UsesAlgorithCRC32();
-void TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime();
-void TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime();
-void TestIfOverwriteReferenceVectorIsWorking_Works();
-void TestIfOverwriteReferenceVectorResettingIsWorking_ResetsBetweenTests();
-void TestIfOverwriteReferenceIsWorking_Works();
-void TestIfOverwriteReferenceResettingIsWorking_ResetsBetweenTests();
 void SavePacketToEEPROM_SavesStxToFirstGivenAdress();
 void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket();
 void SavePacketToEEPROM_PacketIsCorrectlyPutDown();
@@ -886,6 +880,12 @@ void CheckIsEmptyWhenNotEmpty_ReturnsFalse();
 void CheckIsEmptyAfterInsertingItem_ReturnsFalse();
 void CheckIsEmptyAfterBecomingEmpty_ReturnsTrue();
 void CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse();
+void TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime();
+void TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime();
+void TestIfOverwriteReferenceVectorIsWorking_Works();
+void TestIfOverwriteReferenceVectorResettingIsWorking_ResetsBetweenTests();
+void TestIfOverwriteReferenceIsWorking_Works();
+void TestIfOverwriteReferenceResettingIsWorking_ResetsBetweenTests();
 
 void RunTests() 
 {
@@ -931,12 +931,6 @@ void RunTests()
 	RUN_TEST(DataPacket_ByDefault_EtxIsThree);
 	RUN_TEST(DataPacket_ByDefault_ActiveIsTrue);
 	RUN_TEST(CalculateCRC_UsesAlgorithCRC32);
-	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime);
-	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime);
-	RUN_TEST(TestIfOverwriteReferenceVectorIsWorking_Works);
-	RUN_TEST(TestIfOverwriteReferenceVectorResettingIsWorking_ResetsBetweenTests);
-	RUN_TEST(TestIfOverwriteReferenceIsWorking_Works);
-	RUN_TEST(TestIfOverwriteReferenceResettingIsWorking_ResetsBetweenTests);
 	RUN_TEST(SavePacketToEEPROM_SavesStxToFirstGivenAdress);
 	RUN_TEST(SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket);
 	RUN_TEST(SavePacketToEEPROM_PacketIsCorrectlyPutDown);
@@ -1092,5 +1086,11 @@ void RunTests()
 	RUN_TEST(CheckIsEmptyAfterInsertingItem_ReturnsFalse);
 	RUN_TEST(CheckIsEmptyAfterBecomingEmpty_ReturnsTrue);
 	RUN_TEST(CheckIsEmptyAfterAddingMultipleItemsThenRemovingOne_ReturnsFalse);
+	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime);
+	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime);
+	RUN_TEST(TestIfOverwriteReferenceVectorIsWorking_Works);
+	RUN_TEST(TestIfOverwriteReferenceVectorResettingIsWorking_ResetsBetweenTests);
+	RUN_TEST(TestIfOverwriteReferenceIsWorking_Works);
+	RUN_TEST(TestIfOverwriteReferenceResettingIsWorking_ResetsBetweenTests);
 }
 
