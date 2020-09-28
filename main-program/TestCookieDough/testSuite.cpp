@@ -422,6 +422,36 @@ uint32_t & EEPROMClass::get(int idx, uint32_t & t)
 	}
 }
 
+uint8_t  EEPROMClass_get_return_o3;
+std::vector<uint8_t > EEPROMClass_get_return_o3_v;
+unsigned int EEPROMClass_get_invocations_o3 = 0;
+int EEPROMClass_get_param_idx_o3;
+std::vector<int> EEPROMClass_get_param_idx_o3_v;
+uint8_t  EEPROMClass_get_param_t_o3;
+std::vector<uint8_t > EEPROMClass_get_param_t_o3_v;
+uint8_t  EEPROMClass_get_param_t_o3_r;
+std::vector<uint8_t > EEPROMClass_get_param_t_o3_vr;
+uint8_t & EEPROMClass::get(int idx, uint8_t & t)
+{
+	EEPROMClass_get_invocations_o3++;
+	EEPROMClass_get_param_idx_o3 = (int)idx;
+	EEPROMClass_get_param_idx_o3_v.push_back((int)idx);
+	EEPROMClass_get_param_t_o3 = (uint8_t &)t;
+	EEPROMClass_get_param_t_o3_v.push_back((uint8_t &)t);
+
+	if(EEPROMClass_get_param_t_o3_vr.size() < EEPROMClass_get_invocations_o3) t = (uint8_t &)EEPROMClass_get_param_t_o3_r;
+	else t = (uint8_t &)EEPROMClass_get_param_t_o3_vr.at(EEPROMClass_get_invocations_o3-1);
+
+	if(EEPROMClass_get_return_o3_v.size() < EEPROMClass_get_invocations_o3)
+	{
+		return EEPROMClass_get_return_o3;
+	}
+	else
+	{
+		return EEPROMClass_get_return_o3_v.at(EEPROMClass_get_invocations_o3-1);
+	}
+}
+
 uint8_t EEPROMClass_put_return_o1;
 std::vector<uint8_t> EEPROMClass_put_return_o1_v;
 unsigned int EEPROMClass_put_invocations_o1 = 0;
@@ -619,6 +649,15 @@ void ResetMocks()
 	EEPROMClass_get_invocations_o2 = 0;
 	EEPROMClass_get_return_o2 = uint32_t();
 	EEPROMClass_get_return_o2_v.clear();
+	EEPROMClass_get_param_idx_o3 = int();
+	EEPROMClass_get_param_idx_o3_v.clear();
+	EEPROMClass_get_param_t_o3 = uint8_t();
+	EEPROMClass_get_param_t_o3_v.clear();
+	EEPROMClass_get_param_t_o3_r = uint8_t();
+	EEPROMClass_get_param_t_o3_vr.clear();
+	EEPROMClass_get_invocations_o3 = 0;
+	EEPROMClass_get_return_o3 = uint8_t();
+	EEPROMClass_get_return_o3_v.clear();
 	EEPROMClass_put_param_idx_o1 = int();
 	EEPROMClass_put_param_idx_o1_v.clear();
 	EEPROMClass_put_param_t_o1 = uint8_t();
@@ -682,8 +721,9 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCust
 void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_UpdatesTheSelectedCustomKeymap();
 void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_DoesNotChangeTheOtherKeymaps();
 void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket();
-void DataPacket_StxIsTwo();
-void DataPacket_EtxIsThree();
+void DataPacket_ByDefault_StxIsTwo();
+void DataPacket_ByDefault_EtxIsThree();
+void DataPacket_ByDefault_ActiveIsTrue();
 void CalculateCRC_UsesAlgorithCRC32();
 void TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime();
 void TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime();
@@ -696,8 +736,11 @@ void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket();
 void SavePacketToEEPROM_PacketIsCorrectlyPutDown();
 void SavePacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse();
 void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData();
-void ParsePacketFromEEPROM_ReturnsCorrectPackage();
+void ParsePacketFromEEPROM_ReturnsCorrectPacket();
 void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse();
+void IsPacketActive_PacketsActiveFlagIsOne_ReturnsTrue();
+void IsPacketActive_PacketsActiveFlagIsZero_ReturnsFalse();
+void IsPacketActive_PacketsActiveFlagIsNotOne_ReturnsFalse();
 void EditMode_Constructor_SetsCorrectValues();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
@@ -782,7 +825,7 @@ void UpdatePinStatesForKeyMap_UpdatesStateForAllPins();
 void UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works();
 void UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works();
 void NodeConstructor_NoArguments_InitializesWithADefaultObjectAsValueAndNextIsNullptr();
-void NodeConstructor_NoArguments_InitializesValueAndNextWithPovidedArguments();
+void NodeConstructor_WithArguments_InitializesValueAndNextWithPovidedArguments();
 void LinkedListConstructor_NoArguments_HeadAndTailAreSetToNullptrAndLengthIsZero();
 void LinkedListCopyConstructor_ItemsArePlacedInTheSameOrder();
 void LinkedListCopyConstructor_MakesACopyOfAllItems();
@@ -884,8 +927,9 @@ void RunTests()
 	RUN_TEST(UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_UpdatesTheSelectedCustomKeymap);
 	RUN_TEST(UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeymapIsSelected_DoesNotChangeTheOtherKeymaps);
 	RUN_TEST(Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket);
-	RUN_TEST(DataPacket_StxIsTwo);
-	RUN_TEST(DataPacket_EtxIsThree);
+	RUN_TEST(DataPacket_ByDefault_StxIsTwo);
+	RUN_TEST(DataPacket_ByDefault_EtxIsThree);
+	RUN_TEST(DataPacket_ByDefault_ActiveIsTrue);
 	RUN_TEST(CalculateCRC_UsesAlgorithCRC32);
 	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentValuesEachTime);
 	RUN_TEST(TestIfVectorTestsAreWorking_ShouldReturnDifferentParametersEachTime);
@@ -898,8 +942,11 @@ void RunTests()
 	RUN_TEST(SavePacketToEEPROM_PacketIsCorrectlyPutDown);
 	RUN_TEST(SavePacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse);
 	RUN_TEST(SavePacketToEEPROM_AdaptsSizeOfPacketToFitData);
-	RUN_TEST(ParsePacketFromEEPROM_ReturnsCorrectPackage);
+	RUN_TEST(ParsePacketFromEEPROM_ReturnsCorrectPacket);
 	RUN_TEST(ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse);
+	RUN_TEST(IsPacketActive_PacketsActiveFlagIsOne_ReturnsTrue);
+	RUN_TEST(IsPacketActive_PacketsActiveFlagIsZero_ReturnsFalse);
+	RUN_TEST(IsPacketActive_PacketsActiveFlagIsNotOne_ReturnsFalse);
 	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
@@ -984,7 +1031,7 @@ void RunTests()
 	RUN_TEST(UpdatePinStatesForKeyMap_KeymapUsesDatatypeKey_Works);
 	RUN_TEST(UpdatePinStatesForKeyMap_KeymapUsesDatatypeSpecialKey_Works);
 	RUN_TEST(NodeConstructor_NoArguments_InitializesWithADefaultObjectAsValueAndNextIsNullptr);
-	RUN_TEST(NodeConstructor_NoArguments_InitializesValueAndNextWithPovidedArguments);
+	RUN_TEST(NodeConstructor_WithArguments_InitializesValueAndNextWithPovidedArguments);
 	RUN_TEST(LinkedListConstructor_NoArguments_HeadAndTailAreSetToNullptrAndLengthIsZero);
 	RUN_TEST(LinkedListCopyConstructor_ItemsArePlacedInTheSameOrder);
 	RUN_TEST(LinkedListCopyConstructor_MakesACopyOfAllItems);

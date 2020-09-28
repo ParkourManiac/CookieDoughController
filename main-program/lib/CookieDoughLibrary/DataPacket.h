@@ -9,6 +9,7 @@
 struct DataPacket
 {
     uint8_t stx = 0x02;
+    uint8_t active = 0x01;
     uint16_t payloadLength = 0;
     uint32_t crc = 0;
     uint8_t *payload = nullptr; // Todo: Allocate array of one uint8_t in constructor. Deallocate in destructor.
@@ -40,6 +41,15 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
  * @return false When we were unsuccessful in saving the DataPacket to the eeprom.
  */
 bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t *packetSize);
+
+/**
+ * @brief Checks wether the DataPackets "active" flag is considered active or inactive.
+ * 
+ * @param activeFlag The value of the "active" flag of the DataPacket object.
+ * @return true The DataPacket is active.
+ * @return false The DataPacket is not active
+ */
+bool IsPacketActive(const uint8_t activeFlag);
 
 /**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).

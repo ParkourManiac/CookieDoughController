@@ -10,17 +10,18 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuc
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
 
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
-    DataPacket *resultPtr = new DataPacket(); 
-    DataPacket result = *resultPtr;
+    DataPacket result;
+    result.payload = new uint8_t[1];
     uint16_t packetSize;
     bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
 
     ASSERT_TEST(resultBool == true &&
                 packet.stx == result.stx &&
+                packet.active == result.active &&
                 packet.payloadLength == result.payloadLength &&
                 packet.crc == result.crc &&
                 *(reinterpret_cast<uint16_t*>(packet.payload)) == data && // TODO: Is this the correct way to retrieve the data?
                 packet.etx == result.etx &&
-                packetSize == 10);
-    delete(resultPtr);
+                packetSize == Helper_CalculateSizeOfPacketOnEEPROM(packet));
+    delete[](result.payload);
 }

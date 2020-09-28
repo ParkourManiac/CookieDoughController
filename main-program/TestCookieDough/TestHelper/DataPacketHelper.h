@@ -12,4 +12,11 @@
  */
 void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(DataPacket expectedPacket);
 
+/**
+ * @brief Calculates the expected size in bytes the packet will occupy on the EEPROM.
+ * 
+ * @param expectedPacket The packet to be used for calculating the size.
+ */
+uint16_t Helper_CalculateSizeOfPacketOnEEPROM(DataPacket expectedPacket);
+
 #endif

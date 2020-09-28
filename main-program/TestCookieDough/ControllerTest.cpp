@@ -140,7 +140,7 @@ void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeys
     packet.payload = dataPtr;
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
-    unsigned int expectedPacketSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(packet.payload[0]) * packet.payloadLength + sizeof(packet.etx);
+    unsigned int expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     uint16_t amountOfKeys, packetAdress, packetSize;
@@ -220,8 +220,8 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
     // Prepare packets to be returned.
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(defectPacket);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(validPacket);
-    unsigned int expectedDefectPacketSize = sizeof(defectPacket.stx) + sizeof(defectPacket.payloadLength) + sizeof(defectPacket.crc) + sizeof(defectPacket.payload[0]) * defectPacket.payloadLength + sizeof(defectPacket.etx);
-    unsigned int expectedValidPacketSize = sizeof(validPacket.stx) + sizeof(validPacket.payloadLength) + sizeof(validPacket.crc) + sizeof(validPacket.payload[0]) * validPacket.payloadLength + sizeof(validPacket.etx);
+    unsigned int expectedDefectPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(defectPacket);
+    unsigned int expectedValidPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(validPacket);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     uint16_t amountOfKeys, packetAdress, packetSize;
@@ -265,12 +265,13 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
     ASSERT_TEST(
         resultBool == true &&
         packet.stx == result.stx &&
+        packet.active == result.active &&
         packet.payloadLength == result.payloadLength &&
         packet.crc == result.crc &&
         *(reinterpret_cast<uint16_t *>(packet.payload)) == data && // TODO: Is this the correct way to retrieve the data?
         packet.etx == result.etx &&
         packetAdress == 2 &&
-        packetSize == 10);
+        packetSize == Helper_CalculateSizeOfPacketOnEEPROM(packet));
 
     delete(resultPtr);
 }
@@ -941,7 +942,7 @@ void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
     packet.payloadLength = payloadLength;
     packet.payload = expectedDataPtr;
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-    unsigned int packetSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + payloadLength + sizeof(packet.etx);
+    unsigned int packetSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps); // TODO: Watch gdb tutorial https://www.youtube.com/watch?v=bWH-nL7v5F4
@@ -992,7 +993,7 @@ void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEe
     packet.payloadLength = payloadLength;
     packet.payload = expectedDataPtr;
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-    unsigned int packetSize = sizeof(packet.stx) + sizeof(packet.payloadLength) + sizeof(packet.crc) + payloadLength + sizeof(packet.etx);
+    unsigned int packetSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);

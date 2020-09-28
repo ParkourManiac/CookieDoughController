@@ -14,6 +14,11 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
         return false;
     currentAdress += sizeof(packet->stx);
 
+    EEPROM.get(currentAdress, packet->active);
+    if (IsPacketActive(packet->active) == false) // TODO: TEST THIS IF STATEMENT
+        return false;
+    currentAdress += sizeof(packet->active);
+
     EEPROM.get(currentAdress, packet->payloadLength);
     // PAYLOAD LENGTH: If the payload is larger than what fits on the eeprom...
     if (packet->payloadLength > (EEPROM.length() - 8))
@@ -38,7 +43,7 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
 
     // Fill adress of packet->payload with the payload from eeprom.
     delete[](packet->payload);
-    packet->payload = new uint8_t[packet->payloadLength]; // Note: Is there a way to avoid using new here?
+    packet->payload = new uint8_t[packet->payloadLength];
     for (unsigned int i = 0; i < packet->payloadLength; i++)
     {
         packet->payload[i] = payloadFromEEPROM[i];
@@ -79,6 +84,10 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
     // Write packet.
     EEPROM.put(currentAdress, packet.stx);
     currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.stx));
+
+    EEPROM.put(currentAdress, packet.active);
+    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.active));
+
     EEPROM.put(currentAdress, packet.payloadLength);
     currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.payloadLength));
     EEPROM.put(currentAdress, packet.crc);
@@ -123,6 +132,12 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
     }
 
 }
+
+bool IsPacketActive(const uint8_t activeFlag)
+{
+    return activeFlag == 0x01;
+}
+
 
 uint32_t CalculateCRC(uint8_t *data, uint16_t length)
 {
