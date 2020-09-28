@@ -29,12 +29,12 @@ void setup()
     // Without this delay the serial port sends a few weird null letters in serial monitor when initially connected.
     delay(1000);
 
-    controller.Setup(); // SRAM: -209
+    controller.Setup();
 }
 
 void loop()
 {
-    controller.Update(); // SRAM: -327
+    controller.Update();
 
     // DEBUG
     if(millis() % 1000 == 0) {
