@@ -16,19 +16,24 @@ struct DataPacket
     uint8_t etx = 0x03;
 
     DataPacket();
-    DataPacket(uint8_t *_payload, uint16_t _payloadLength);
-    // DataPacket(const DataPacket &other);
+    DataPacket(const uint8_t *_payload, const uint16_t _payloadLength);
+    DataPacket(const DataPacket &other);
     void operator=(const DataPacket &other) = delete;
-    // ~DataPacket();
-
-
-    // template<class T>
-    // DataPacket(const T &data) //: DataPacket(reinterpret_cast<uint8_t*>(&data), sizeof(data))
-    // {
-    //     // TODO: Set up packet info.
-    // }
-    
+    ~DataPacket();
 };
+
+/**
+ * @brief Converts any type of data into a DataPacket.
+ * 
+ * @tparam T The type of the data passed into the function.
+ * @param data The data to be converted into a payload.
+ * @return DataPacket The data represented as a DataPacket.
+ */
+template<class T>
+DataPacket DataToPacket(const T &data)
+{
+    return DataPacket(reinterpret_cast<const uint8_t*>(&data), sizeof(data));
+}
 
 /**
  * @brief Reads and parses a DataPacket from the eeprom.

@@ -8,7 +8,7 @@ DataPacket::DataPacket()
 {
 }
 
-DataPacket::DataPacket(uint8_t *data, uint16_t dataSize)
+DataPacket::DataPacket(const uint8_t *data, const uint16_t dataSize)
     : payloadLength(dataSize)
     , payload(new uint8_t[this->payloadLength])
 {
@@ -19,15 +19,18 @@ DataPacket::DataPacket(uint8_t *data, uint16_t dataSize)
     crc = CalculateCRC(payload, payloadLength);
 }
 
-// DataPacket::DataPacket(const DataPacket &other) : DataPacket()
-// {
-//     // TODO
-// }
+DataPacket::DataPacket(const DataPacket &other) : DataPacket(other.payload, other.payloadLength)
+{
+    stx = other.stx;
+    active = other.active;
+    crc = other.crc;
+    etx = other.etx;
+}
 
-// DataPacket::~DataPacket()
-// {
-//     // TODO
-// }
+DataPacket::~DataPacket()
+{
+    delete[](payload);
+}
 
 bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packetSize)
 {

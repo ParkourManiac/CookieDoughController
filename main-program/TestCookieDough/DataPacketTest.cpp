@@ -117,18 +117,88 @@ void DataPacket_Constructor_WithArguments_SetsUpPacketCorrectly()
     );
 }
 
-// void DataPacket_CopyConstructor_CopiesValuesAndPayload()
-// {
-//     DataPacket result;
-//     uint16_t expectedData = 123321;
-//     DataPacket other;
-//     other.payloadLength = sizeof(expectedData);
-//     delete[](other.payload);
-//     other.payload = // TODO
+void DataPacket_CopyConstructor_CopiesValuesAndPayload()
+{
+    uint16_t data = 15666;
+    DataPacket other = DataPacket(reinterpret_cast<uint8_t*>(&data), sizeof(data));
+    other.active = 0x13;
 
-// }
-// void DataPacket_CopyConstructor_PayloadIsACopyAndIndependent() // TODO
-// void DataPacket_Destructor_DeallocatesSpaceForPayload(); // TODO
+    DataPacket result = DataPacket(other);
+
+    ASSERT_TEST(
+        result.stx == other.stx &&
+        result.active == other.active &&
+        result.payloadLength == other.payloadLength &&
+        result.crc == other.crc &&
+        result.payload[0] == other.payload[0] &&
+        result.payload[1] == other.payload[1] &&
+        result.etx == other.etx
+    );
+}
+
+void DataPacket_CopyConstructor_PayloadIsCopiedAndIndependent()
+{
+    uint16_t data = 15666;
+    DataPacket other = DataPacket(reinterpret_cast<uint8_t*>(&data), sizeof(data));
+    DataPacket expected = DataPacket(reinterpret_cast<uint8_t*>(&data), sizeof(data));
+    other.active = 0x13;
+    expected.active = 0x13;
+
+    DataPacket result = DataPacket(other);
+    other.active = 0x00;
+    other.payloadLength = 0;
+    other.payload[0] = 0;
+    other.payload[1] = 0;
+    other.crc = 0;
+
+    ASSERT_TEST(
+        result.stx == expected.stx &&
+        result.active == expected.active &&
+        result.payloadLength == expected.payloadLength &&
+        result.crc == expected.crc &&
+        result.payload[0] == expected.payload[0] &&
+        result.payload[1] == expected.payload[1] &&
+        result.etx == expected.etx
+    );
+}
+
+void DataToPacket_TakesInDataOfTypeT_ConvertsItCorrectlyIntoADataPacket()
+{
+    uint16_t data = 65530;
+    uint8_t *expectedDataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket expectedPacket = DataPacket(expectedDataPtr, sizeof(data));
+
+    DataPacket result = DataToPacket(data);
+
+    ASSERT_TEST(
+        result.stx == expectedPacket.stx &&
+        result.active == expectedPacket.active &&
+        result.payloadLength == expectedPacket.payloadLength &&
+        result.crc == expectedPacket.crc &&
+        result.payload[0] == expectedPacket.payload[0] &&
+        result.payload[1] == expectedPacket.payload[1] &&
+        result.etx == expectedPacket.etx
+    );
+}
+
+void DataToPacket_TakesInDataOfTypeBool_CanHandleDifferentTypes()
+{
+    bool data = false;
+    uint8_t *expectedDataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket expectedPacket = DataPacket(expectedDataPtr, sizeof(data));
+
+    DataPacket result = DataToPacket(data);
+
+    ASSERT_TEST(
+        result.stx == expectedPacket.stx &&
+        result.active == expectedPacket.active &&
+        result.payloadLength == expectedPacket.payloadLength &&
+        result.crc == expectedPacket.crc &&
+        result.payload[0] == expectedPacket.payload[0] &&
+        result.payload[1] == expectedPacket.payload[1] &&
+        result.etx == expectedPacket.etx
+    );
+}
 
 void DataPacket_ByDefault_StxIsTwo()
 {
