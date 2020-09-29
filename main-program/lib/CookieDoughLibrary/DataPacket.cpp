@@ -136,14 +136,11 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
     // // DEBUG
 
     // Verify that package can be read from memory correctly.
-    DataPacket *dataPtr = new DataPacket();
-    dataPtr->payload = new uint8_t[1];
+    DataPacket result;
     uint16_t _sizeOfPacket;
-    bool success = ParsePacketFromEEPROM(adress, dataPtr, &_sizeOfPacket);
-    if (!success || packet.crc != dataPtr->crc)
+    bool success = ParsePacketFromEEPROM(adress, &result, &_sizeOfPacket);
+    if (!success || packet.crc != result.crc)
     {
-        delete[](dataPtr->payload);
-        delete(dataPtr);
         return false; // Throw: Something went wrong when writing.
     } else
     {
@@ -152,11 +149,8 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
         DEBUG_PRINT(*packetSize); // DEBUG
         DEBUG_PRINT(F("\n"));
         DEBUG(delay(100)); // DEBUG
-        delete[](dataPtr->payload);
-        delete(dataPtr);
         return true; // Package saved successfully.
     }
-
 }
 
 bool IsPacketActive(const uint8_t activeFlag)

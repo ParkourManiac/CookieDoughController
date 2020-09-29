@@ -24,5 +24,13 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(DataPacket expectedPacke
 uint16_t Helper_CalculateSizeOfPacketOnEEPROM(DataPacket packet) 
 {
     uint16_t payloadSize = packet.payloadLength * sizeof(packet.payload[0]);
-    return static_cast<uint16_t>(sizeof(packet.stx) + sizeof(packet.active) + sizeof(packet.payloadLength) + sizeof(packet.crc) + payloadSize + sizeof(packet.etx));
+    uint16_t sizeOfPacket = static_cast<uint16_t>(
+        sizeof(packet.stx) + 
+        sizeof(packet.active) + 
+        sizeof(packet.payloadLength) + 
+        sizeof(packet.crc) + 
+        payloadSize + 
+        sizeof(packet.etx)
+    );
+    return sizeOfPacket;
 }

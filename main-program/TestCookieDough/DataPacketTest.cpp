@@ -191,18 +191,14 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
     uint16_t data = 42;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     uint16_t adress = 20;
-    DataPacket packet;
-    packet.payloadLength = sizeof(data);
-    packet.payload = dataPtr;
-    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-    unsigned int expectedStxAdress, expectedActiveFlagAdress, expectedPayloadLengthAdress, expectedCRCAdress, expectedPayloadAdress, expectedEtxAdress, expectedPacketSize;
-    expectedStxAdress = static_cast<int>(adress);
-    expectedActiveFlagAdress = expectedStxAdress + sizeof(packet.stx);
-    expectedPayloadLengthAdress = expectedActiveFlagAdress + sizeof(packet.active);
-    expectedCRCAdress = expectedPayloadLengthAdress + sizeof(packet.payloadLength);
-    expectedPayloadAdress = expectedCRCAdress + sizeof(packet.crc);
-    expectedEtxAdress = expectedPayloadAdress + sizeof(data);
-    expectedPacketSize = sizeof(packet.stx) + sizeof(packet.active) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data) + sizeof(packet.etx);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    unsigned int expectedStxAdress = static_cast<int>(adress), 
+                 expectedActiveFlagAdress = expectedStxAdress + sizeof(packet.stx), 
+                 expectedPayloadLengthAdress = expectedActiveFlagAdress + sizeof(packet.active), 
+                 expectedCRCAdress = expectedPayloadLengthAdress + sizeof(packet.payloadLength), 
+                 expectedPayloadAdress = expectedCRCAdress + sizeof(packet.crc), 
+                 expectedEtxAdress = expectedPayloadAdress + sizeof(data), 
+                 expectedPacketSize = sizeof(packet.stx) + sizeof(packet.active) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data) + sizeof(packet.etx);
     // This ensures that ParsePacketFromEEPROM returns true
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
@@ -259,16 +255,38 @@ void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
                 EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == dataPtr[1]);
 }
 
+void ParsePacketFromEEPROM_DataPacketDoesNotNeedToBeManuallyAllocatedBeforePassedToFunciton_DoesNotCrash()
+{
+    uint16_t data = 123;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+
+    DataPacket result;
+    uint16_t packetSize;
+    bool didNotCrash = false;
+    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+    didNotCrash = true;
+
+    ASSERT_TEST(
+        resultBool == true &&
+        result.payload[0] == packet.payload[0] &&
+        result.payload[1] == packet.payload[1] &&
+        didNotCrash == true
+    );
+}
+
 void ParsePacketFromEEPROM_ReturnsCorrectPacket() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
 {
     uint16_t adress = 13;
     uint16_t data = 421;
-    DataPacket expectedPacket; // packet.active is active by default.
-    expectedPacket.payloadLength = sizeof(data);
-    expectedPacket.payload = reinterpret_cast<uint8_t*>(&data);
-    expectedPacket.crc = CalculateCRC(expectedPacket.payload, expectedPacket.payloadLength);
-    uint16_t expectedPacketSize = sizeof(expectedPacket.stx) + sizeof(expectedPacket.active) + sizeof(expectedPacket.payloadLength) + 
-                                    sizeof(expectedPacket.crc) + sizeof(data) + sizeof(expectedPacket.etx);
+    DataPacket expectedPacket = DataPacket(reinterpret_cast<uint8_t*>(&data), sizeof(data)); // packet.active is active by default.
+    uint16_t expectedPacketSize = sizeof(expectedPacket.stx) + 
+                                  sizeof(expectedPacket.active) + 
+                                  sizeof(expectedPacket.payloadLength) + 
+                                  sizeof(expectedPacket.crc) + 
+                                  sizeof(data) + 
+                                  sizeof(expectedPacket.etx);
 
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o3_vr.push_back(expectedPacket.active);
@@ -280,70 +298,57 @@ void ParsePacketFromEEPROM_ReturnsCorrectPacket() // TODO: bad test. Locks the o
     EEPROMClass_read_return_v.push_back(expectedPacket.payload[1]);
 
     DataPacket result;
-    result.payload = new uint8_t[1];
     uint16_t packetSizeResult;
     bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSizeResult);
 
-    ASSERT_TEST(resultBool == true &&
-                expectedPacket.stx == result.stx &&
-                IsPacketActive(result.active) &&
-                expectedPacket.active == result.active && 
-                expectedPacket.payloadLength == result.payloadLength &&
-                expectedPacket.crc == result.crc &&
-                expectedPacket.payload[0] == result.payload[0] &&
-                expectedPacket.payload[1] == result.payload[1] &&
-                expectedPacket.etx == result.etx &&
-                expectedPacketSize == packetSizeResult);
-    delete[](result.payload);
+    ASSERT_TEST(
+        resultBool == true &&
+        expectedPacket.stx == result.stx &&
+        IsPacketActive(result.active) &&
+        expectedPacket.active == result.active && 
+        expectedPacket.payloadLength == result.payloadLength &&
+        expectedPacket.crc == result.crc &&
+        expectedPacket.payload[0] == result.payload[0] &&
+        expectedPacket.payload[1] == result.payload[1] &&
+        expectedPacket.etx == result.etx &&
+        expectedPacketSize == packetSizeResult
+    );
 }
 
 void ParsePacketFromEEPROM_ReturnsFalseWhenAValidPacketIsNotActive()
 {
     uint64_t data = 123211321;
-    DataPacket packet;
-    packet.payloadLength = sizeof(data);
-    packet.payload = reinterpret_cast<uint8_t *>(&data);
-    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    DataPacket packet = DataPacket(reinterpret_cast<uint8_t *>(&data), sizeof(data));
     packet.active = 0x00;
 
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
     DataPacket result;
-    result.payload = new uint8_t[1];
     uint16_t packetSize;
     bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
 
     ASSERT_TEST(resultBool == false);
-    delete[](result.payload);
 }
 
 void ParsePacketFromEEPROM_ReturnsTrueWhenAValidPacketIsActive()
 {
     uint64_t data = 123211321;
-    DataPacket packet; // packet.active is set to be active by default.
-    packet.payloadLength = sizeof(data);
-    packet.payload = reinterpret_cast<uint8_t *>(&data);
-    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    DataPacket packet = DataPacket(reinterpret_cast<uint8_t *>(&data), sizeof(data)); // packet.active is set to be active by default.
 
     Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
 
     DataPacket result;
-    result.payload = new uint8_t[1];
     uint16_t packetSize;
     bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
 
     ASSERT_TEST(resultBool == true);
-    delete[](result.payload);
 }
 
 void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
 {
     uint16_t adress = 13;
     uint16_t data = 421;
-    DataPacket expectedPacket;
-    expectedPacket.payloadLength = sizeof(data);
-    expectedPacket.payload = reinterpret_cast<uint8_t*>(&data);
-    expectedPacket.crc = CalculateCRC(expectedPacket.payload, expectedPacket.payloadLength);
+    DataPacket expectedPacket = DataPacket(reinterpret_cast<uint8_t*>(&data), sizeof(data));
 
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
@@ -354,12 +359,10 @@ void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad t
     EEPROMClass_read_return_v.push_back(expectedPacket.payload[1]);
  
     DataPacket result;
-    result.payload = new uint8_t[1];
     uint16_t packetSize;
     bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSize);
 
     ASSERT_TEST(resultBool == false);
-    delete[](result.payload);
 }
 
 void IsPacketActive_PacketsActiveFlagIsOne_ReturnsTrue() 

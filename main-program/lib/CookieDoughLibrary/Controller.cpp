@@ -169,8 +169,7 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *ke
 bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, uint16_t *amountOfKeys, uint16_t *packetAdress, uint16_t *packetSize)
 {
     *amountOfKeys = *packetAdress = *packetSize = 0;
-    DataPacket *dataPtr = new DataPacket();
-    DataPacket packet = *dataPtr;
+    DataPacket packet;
 
     bool foundValidPacket = false;
     while (!foundValidPacket)
@@ -214,8 +213,7 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsB
         }
         DEBUG_PRINT(F("\n"));
     }
-
-    delete (dataPtr);
+    
     return true;
 }
 
