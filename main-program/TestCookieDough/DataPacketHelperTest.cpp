@@ -25,3 +25,22 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuc
                 packetSize == Helper_CalculateSizeOfPacketOnEEPROM(packet));
     delete[](result.payload);
 }
+
+void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromRecievesInactiveFlag() {
+    uint16_t data = 1337;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet;
+    packet.payloadLength = sizeof(data);
+    packet.payload = dataPtr;
+    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    packet.active = 0x00;
+
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    DataPacket result;
+    result.payload = new uint8_t[1];
+    uint16_t packetSize;
+    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+
+    ASSERT_TEST(resultBool == false);
+    delete[](result.payload);
+}

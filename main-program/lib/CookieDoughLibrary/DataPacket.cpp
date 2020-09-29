@@ -3,6 +3,32 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 
+DataPacket::DataPacket()
+    :payload(new uint8_t[1])
+{
+}
+
+DataPacket::DataPacket(uint8_t *data, uint16_t dataSize)
+    : payloadLength(dataSize)
+    , payload(new uint8_t[this->payloadLength])
+{
+    for(int i = 0; i < payloadLength; i++) 
+    {
+        payload[i] = uint8_t(data[i]);
+    }
+    crc = CalculateCRC(payload, payloadLength);
+}
+
+// DataPacket::DataPacket(const DataPacket &other) : DataPacket()
+// {
+//     // TODO
+// }
+
+// DataPacket::~DataPacket()
+// {
+//     // TODO
+// }
+
 bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packetSize)
 {
     *packetSize = 0;

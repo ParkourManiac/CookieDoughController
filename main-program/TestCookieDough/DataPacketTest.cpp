@@ -65,6 +65,71 @@ extern std::vector<uint8_t > EEPROMClass_get_param_t_o3_vr;
 extern uint16_t EEPROMClass_length_return;
 extern unsigned int EEPROMClass_length_invocations;
 
+
+void DataPacket_Constructor_NoArguments_AllocatesSpaceForPayload()
+{
+    DataPacket packet;
+
+    bool result = packet.payload;
+
+    ASSERT_TEST(result == true);
+}
+
+void DataPacket_Constructor_WithArguments_CopiesDataIntoPayload()
+{
+    uint16_t data = 58;
+    uint16_t dataSize = sizeof(data);
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+
+    DataPacket packet = DataPacket(dataPtr, dataSize);
+
+    bool packetContainsCorrectData = (
+        dataPtr[0] == packet.payload[0] &&
+        dataPtr[1] == packet.payload[1]
+    );
+    data = 33;
+    dataSize = sizeof(data);
+    dataPtr = reinterpret_cast<uint8_t*>(&data);
+    bool packetDataIsNotConnectedToProvidedData = (
+        dataPtr[0] != packet.payload[0] ||
+        dataPtr[1] != packet.payload[1]
+    );
+    ASSERT_TEST(packetContainsCorrectData && packetDataIsNotConnectedToProvidedData);
+}
+
+void DataPacket_Constructor_WithArguments_SetsUpPacketCorrectly()
+{
+    uint16_t data = 58;
+    uint16_t dataSize = sizeof(data);
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+
+    DataPacket packet = DataPacket(dataPtr, dataSize);
+
+    bool packetContainsCorrectData = (
+        dataPtr[0] == packet.payload[0] &&
+        dataPtr[1] == packet.payload[1]
+    );
+    ASSERT_TEST(
+        packetContainsCorrectData &&
+        IsPacketActive(packet.active) &&
+        packet.crc == CalculateCRC(dataPtr, dataSize) &&
+        packet.payloadLength == dataSize
+    );
+}
+
+// void DataPacket_CopyConstructor_CopiesValuesAndPayload()
+// {
+//     DataPacket result;
+//     uint16_t expectedData = 123321;
+//     DataPacket other;
+//     other.payloadLength = sizeof(expectedData);
+//     delete[](other.payload);
+//     other.payload = // TODO
+
+// }
+// void DataPacket_CopyConstructor_PayloadIsACopyAndIndependent() // TODO
+// void DataPacket_Destructor_DeallocatesSpaceForPayload(); // TODO
+
 void DataPacket_ByDefault_StxIsTwo()
 {
     DataPacket packet;
@@ -198,7 +263,7 @@ void ParsePacketFromEEPROM_ReturnsCorrectPacket() // TODO: bad test. Locks the o
 {
     uint16_t adress = 13;
     uint16_t data = 421;
-    DataPacket expectedPacket;
+    DataPacket expectedPacket; // packet.active is active by default.
     expectedPacket.payloadLength = sizeof(data);
     expectedPacket.payload = reinterpret_cast<uint8_t*>(&data);
     expectedPacket.crc = CalculateCRC(expectedPacket.payload, expectedPacket.payloadLength);
@@ -221,6 +286,7 @@ void ParsePacketFromEEPROM_ReturnsCorrectPacket() // TODO: bad test. Locks the o
 
     ASSERT_TEST(resultBool == true &&
                 expectedPacket.stx == result.stx &&
+                IsPacketActive(result.active) &&
                 expectedPacket.active == result.active && 
                 expectedPacket.payloadLength == result.payloadLength &&
                 expectedPacket.crc == result.crc &&
@@ -228,6 +294,45 @@ void ParsePacketFromEEPROM_ReturnsCorrectPacket() // TODO: bad test. Locks the o
                 expectedPacket.payload[1] == result.payload[1] &&
                 expectedPacket.etx == result.etx &&
                 expectedPacketSize == packetSizeResult);
+    delete[](result.payload);
+}
+
+void ParsePacketFromEEPROM_ReturnsFalseWhenAValidPacketIsNotActive()
+{
+    uint64_t data = 123211321;
+    DataPacket packet;
+    packet.payloadLength = sizeof(data);
+    packet.payload = reinterpret_cast<uint8_t *>(&data);
+    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    packet.active = 0x00;
+
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+
+    DataPacket result;
+    result.payload = new uint8_t[1];
+    uint16_t packetSize;
+    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+
+    ASSERT_TEST(resultBool == false);
+    delete[](result.payload);
+}
+
+void ParsePacketFromEEPROM_ReturnsTrueWhenAValidPacketIsActive()
+{
+    uint64_t data = 123211321;
+    DataPacket packet; // packet.active is set to be active by default.
+    packet.payloadLength = sizeof(data);
+    packet.payload = reinterpret_cast<uint8_t *>(&data);
+    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+
+    DataPacket result;
+    result.payload = new uint8_t[1];
+    uint16_t packetSize;
+    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+
+    ASSERT_TEST(resultBool == true);
     delete[](result.payload);
 }
 

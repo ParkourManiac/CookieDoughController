@@ -12,8 +12,22 @@ struct DataPacket
     uint8_t active = 0x01;
     uint16_t payloadLength = 0;
     uint32_t crc = 0;
-    uint8_t *payload = nullptr; // Todo: Allocate array of one uint8_t in constructor. Deallocate in destructor.
+    uint8_t *payload; // Todo: Allocate array of one uint8_t in constructor. Deallocate in destructor.
     uint8_t etx = 0x03;
+
+    DataPacket();
+    DataPacket(uint8_t *_payload, uint16_t _payloadLength);
+    // DataPacket(const DataPacket &other);
+    void operator=(const DataPacket &other) = delete;
+    // ~DataPacket();
+
+
+    // template<class T>
+    // DataPacket(const T &data) //: DataPacket(reinterpret_cast<uint8_t*>(&data), sizeof(data))
+    // {
+    //     // TODO: Set up packet info.
+    // }
+    
 };
 
 /**
