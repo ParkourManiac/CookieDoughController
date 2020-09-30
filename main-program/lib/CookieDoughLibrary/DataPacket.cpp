@@ -105,10 +105,7 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
     uint16_t currentAdress = adress;
 
     // Create packet.
-    DataPacket packet;
-    packet.payload = data;
-    packet.payloadLength = dataSize;
-    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    DataPacket packet = DataPacket(data, dataSize);
 
     // Write packet.
     EEPROM.put(currentAdress, packet.stx);
