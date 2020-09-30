@@ -71,6 +71,15 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
 bool IsPacketActive(const uint8_t activeFlag);
 
 /**
+ * @brief Deactivates a packet present on the EEPROM.
+ * 
+ * @param adress The adress of the packet to be deactivated.
+ * @return true The packet was successfully deactivated.
+ * @return false The adress does not contain a packet.
+ */
+bool DeactivatePacket(uint16_t adress);
+
+/**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
  * 
  * @param data The data we want to calculate a CRC checksum for.

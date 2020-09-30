@@ -158,6 +158,40 @@ bool IsPacketActive(const uint8_t activeFlag)
     return activeFlag == 0x01;
 }
 
+bool DeactivatePacket(uint16_t adress)
+{
+    uint16_t currentAdress = adress;
+    DataPacket packetTemplate;
+    uint16_t adressOfActiveFlag = static_cast<uint16_t>(adress + sizeof(packetTemplate.stx));
+    uint8_t deactivatedFlag = 0x00;
+
+    uint8_t stx = EEPROM.read(currentAdress);
+    if(stx != packetTemplate.stx) 
+    {
+        return false;
+    }
+    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packetTemplate.stx));
+    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packetTemplate.active));
+
+    uint16_t payloadLength;
+    EEPROM.get(currentAdress, payloadLength);
+    currentAdress = static_cast<uint16_t>(
+        currentAdress +
+        sizeof(packetTemplate.payloadLength) +
+        sizeof(packetTemplate.crc) + 
+        sizeof(packetTemplate.payload[0]) * packetTemplate.payloadLength
+    );
+
+    uint8_t etx = EEPROM.read(currentAdress);
+    if(etx != packetTemplate.etx)
+    {
+        return false;
+    }
+
+    EEPROM.put(adressOfActiveFlag, deactivatedFlag);
+    return true;
+}
+
 
 uint32_t CalculateCRC(uint8_t *data, uint16_t length)
 {

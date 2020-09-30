@@ -465,64 +465,94 @@ void IsPacketActive_PacketsActiveFlagIsNotOne_ReturnsFalse()
     ASSERT_TEST(result == false);
 }
 
-
-
-
-
-// TODO: Fullfill these tests
-
-// void DeactivatePacket_OverritesCorrectByteWithADeactivatedFlag() // Todo: Fake valid packet on eeprom. Use info below...
-// {
-//     uint16_t adress = 23;
-//     uint16_t deactivatedFlag = 0x00;
-//     DataPacket packet;
-//     uint16_t expectedOverwrittenAdress = adress + sizeof(packet.stx);
-
-//     DeactivatePacket(adress);
-
-//     ASSERT_TEST(
-//         EEPROMClass_put_param_idx_o1_v[0] == expectedOverwrittenAdress &&
-//         EEPROMClass_put_param_t_o1_v[0] == deactivatedFlag
-//     );
-// }
-
-// void DeactivatePacket_DeactivatesPacketSuccessfully_ReturnsTrue() // Todo: Fake valid packet on eeprom. Use info below...
-// {
-//     uint16_t adress = 23;
-//     uint16_t deactivatedFlag = 0x00;
-
-//     bool result = DeactivatePacket(adress);
-
-//     ASSERT_TEST(
-//         result == true &&
-//         EEPROMClass_put_param_idx_o1_v[0] == expectedOverwrittenAdress &&
-//         EEPROMClass_put_param_t_o1_v[0] == deactivatedFlag
-//     );
-// }
-
-// void DeactivatePacket_AdressDoesNotPointToStx_ReturnsFalse()
-// {
-//     uint16_t adress = 23;
-//     uint16_t deactivatedFlag = 0x00;
-//     EEPROMClass_read_return_v.push_back(0x00);
-
-//     bool result = DeactivatePacket(adress);
-
-//     ASSERT_TEST(result == false);
-// }
-
-//void DeactivatePacket_AdressDoesNotPointToStx_DoesNotWriteToEEPROM() // Invocations == 0
-
-
-// TODO:
-// void DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_ReturnsFalse();
-// void DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_DoesNotWriteToEEPROM(); // Invocations == 0
-
-
-/*
-// TODO: TO make DeactivatePacket succeed, do this:
+void DeactivatePacket_OverritesCorrectByteWithADeactivatedFlag()
+{
+    uint16_t adress = 23;
+    uint16_t deactivatedFlag = 0x00;
     DataPacket expectedPacket;
+    uint16_t expectedOverwrittenAdress = static_cast<uint16_t>(adress + sizeof(expectedPacket.stx));
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
-    EEPROMClass_read_return_v.push_back(exptedPacket.etx);
-*/
+    EEPROMClass_read_return_v.push_back(expectedPacket.etx);
+
+    DeactivatePacket(adress);
+
+    ASSERT_TEST(
+        EEPROMClass_put_param_idx_o1_v[0] == expectedOverwrittenAdress &&
+        EEPROMClass_put_param_t_o1_v[0] == deactivatedFlag
+    );
+}
+
+void DeactivatePacket_DeactivatesPacketSuccessfully_ReturnsTrue()
+{
+    uint16_t adress = 23;
+    uint16_t deactivatedFlag = 0x00;
+    DataPacket expectedPacket;
+    uint16_t expectedOverwrittenAdress = static_cast<uint16_t>(adress + sizeof(expectedPacket.stx));
+    EEPROMClass_read_return_v.push_back(expectedPacket.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
+    EEPROMClass_read_return_v.push_back(expectedPacket.etx);
+
+    bool result = DeactivatePacket(adress);
+
+    ASSERT_TEST(
+        result == true &&
+        EEPROMClass_put_param_idx_o1_v[0] == expectedOverwrittenAdress &&
+        EEPROMClass_put_param_t_o1_v[0] == deactivatedFlag
+    );
+}
+
+void DeactivatePacket_AdressDoesNotPointToStx_ReturnsFalse()
+{
+    uint16_t adress = 23;
+    EEPROMClass_read_return_v.push_back(0x00);
+
+    bool result = DeactivatePacket(adress);
+
+    ASSERT_TEST(result == false);
+}
+
+void DeactivatePacket_AdressDoesNotPointToStx_DoesNotWriteToEEPROM()
+{
+    uint16_t adress = 23;
+    EEPROMClass_read_return_v.push_back(0x00);
+
+    bool result = DeactivatePacket(adress);
+
+    ASSERT_TEST(
+        result == false &&
+        EEPROMClass_put_invocations_o1 == 0
+    );
+}
+
+
+void DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_ReturnsFalse()
+{
+    uint16_t adress = 23;
+    DataPacket packet;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(0x00);
+
+    bool result = DeactivatePacket(adress);
+
+    ASSERT_TEST(
+        result == false
+    );
+}
+
+void DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_DoesNotWriteToEEPROM()
+{
+    uint16_t adress = 23;
+    DataPacket packet;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(0x00);
+
+    bool result = DeactivatePacket(adress);
+
+    ASSERT_TEST(
+        result == false &&
+        EEPROMClass_put_invocations_o1 == 0
+    );
+}
