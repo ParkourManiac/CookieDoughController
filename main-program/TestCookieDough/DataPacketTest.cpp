@@ -189,6 +189,11 @@ void DataToPacket_TakesInDataOfTypeBool_CanHandleDifferentTypes()
 
     DataPacket result = DataToPacket(data);
 
+    std::cout << "\n";
+    std::cout << *expectedDataPtr << "\n";
+    std::cout << static_cast<int>(result.payload[0]) << ":" << static_cast<int>(expectedPacket.payload[0]) << "\n";
+    std::cout << static_cast<int>(result.payload[1]) << ":" << static_cast<int>(expectedPacket.payload[1]) << "\n";
+
     ASSERT_TEST(
         result.stx == expectedPacket.stx &&
         result.active == expectedPacket.active &&

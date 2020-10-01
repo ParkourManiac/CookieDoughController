@@ -11,7 +11,7 @@
  * @param expectedPacket The packet to be returned through the ParsePacketFromEEPROM function.
  * @param eepromSize The size of the eeprom. Note: Leaving this at 0 will let the function assign a eepromSize automatically that fits the provided packet.
  */
-void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(DataPacket expectedPacket, uint16_t eepromSize = 0);
+void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(const DataPacket &expectedPacket, uint16_t eepromSize = 0);
 
 /**
  * @brief Calculates the expected size in bytes the packet will occupy on the EEPROM.
