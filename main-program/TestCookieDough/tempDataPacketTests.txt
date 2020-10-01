@@ -1,0 +1,84 @@
+extern std::vector<uint16_t> EEPROMClass_length_return_v;
+
+void SavePacketToEEPROM_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
+{
+    uint32_t data = 888;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    unsigned int expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
+    uint16_t eepromSize = static_cast<uint16_t>(expectedPacketSize + 5);
+    uint16_t adress = static_cast<uint16_t>(eepromSize - (expectedPacketSize / 2));
+    // This ensures that ParsePacketFromEEPROM returns true
+    EEPROMClass_length_return_v.push_back(static_cast<uint16_t>(Helper_CalculateSizeOfPacketOnEEPROM(packet) + 100));
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet, eepromSize);
+
+    uint16_t packetSize;
+    bool resultBool = SavePacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetSize == expectedPacketSize
+    );
+}
+
+void SavePacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketBetweenEndAndStartOfEEPROM() // TODO: Modify test. Review that test works in theory.
+{
+    uint32_t data = 888;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    unsigned int expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
+    uint16_t eepromSize = static_cast<uint16_t>(expectedPacketSize + 5);
+    uint16_t adress = static_cast<uint16_t>(eepromSize - (expectedPacketSize / 2));
+    unsigned int expectedStxAdress = static_cast<int>(adress),
+                 expectedActiveFlagAdress = (expectedStxAdress + sizeof(packet.stx)) % eepromSize,
+                 expectedPayloadLengthAdress = (expectedActiveFlagAdress + sizeof(packet.active)) % eepromSize,
+                 expectedCRCAdress = (expectedPayloadLengthAdress + sizeof(packet.payloadLength)) % eepromSize,
+                 expectedPayloadAdress = (expectedCRCAdress + sizeof(packet.crc)) % eepromSize,
+                 expectedEtxAdress = (expectedPayloadAdress + sizeof(data)) % eepromSize;
+    // This ensures that ParsePacketFromEEPROM returns true
+    EEPROMClass_length_return_v.push_back(static_cast<uint16_t>(Helper_CalculateSizeOfPacketOnEEPROM(packet) + 100));
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet, eepromSize);
+
+    uint16_t packetSize;
+    bool resultBool = SavePacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
+
+    std::cout << packetSize << "\n";
+    std::cout << resultBool << "\n";
+
+    ASSERT_TEST(
+        resultBool == true && 
+        EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(expectedStxAdress) && EEPROMClass_put_param_t_o1_v[0] == packet.stx &&
+        EEPROMClass_put_param_idx_o1_v[1] == static_cast<int>(expectedActiveFlagAdress) && EEPROMClass_put_param_t_o1_v[1] == packet.active &&
+        EEPROMClass_put_param_idx_o2_v[0] == static_cast<int>(expectedPayloadLengthAdress) && EEPROMClass_put_param_t_o2_v[0] == packet.payloadLength &&
+        EEPROMClass_put_param_idx_o3_v[0] == static_cast<int>(expectedCRCAdress) && EEPROMClass_put_param_t_o3_v[0] == CalculateCRC(packet.payload, packet.payloadLength) &&
+        EEPROMClass_update_param_idx_v[0] == static_cast<int>(expectedPayloadAdress)     && EEPROMClass_update_param_val_v[0] == dataPtr[0] &&
+        EEPROMClass_update_param_idx_v[1] == static_cast<int>(expectedPayloadAdress) + 1 && EEPROMClass_update_param_val_v[1] == dataPtr[1] &&
+        EEPROMClass_update_param_idx_v[2] == static_cast<int>(expectedPayloadAdress) + 2 && EEPROMClass_update_param_val_v[2] == dataPtr[2] &&
+        EEPROMClass_update_param_idx_v[3] == static_cast<int>(expectedPayloadAdress) + 3 && EEPROMClass_update_param_val_v[3] == dataPtr[3] &&
+        EEPROMClass_put_param_idx_o1_v[2] == static_cast<int>(expectedEtxAdress) && EEPROMClass_put_param_t_o1_v[2] == packet.etx &&
+        packetSize == expectedPacketSize
+    );
+}
+
+// void SavePacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketOnDataTypeBiggerThan1Byte_SuccessfullySplitsPacketWithoutLoosingData(); // Note: Can't be tested. 
+
+void ParsePacketFromEEPROM_PacketIsSplitBetweenEndAndStartOfEEPROM_ReturnsCorrectPacketSize() // TODO: Check that this test is correct.
+{
+    uint32_t data = 888;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    unsigned int expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
+    uint16_t eepromSize = static_cast<uint16_t>(expectedPacketSize + 5);
+    uint16_t adress = static_cast<uint16_t>(eepromSize - (expectedPacketSize / 2));
+    // This ensures that ParsePacketFromEEPROM returns true
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet, eepromSize);
+
+    DataPacket result;
+    uint16_t packetSizeResult;
+    bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSizeResult);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        expectedPacketSize == packetSizeResult
+    );
+}
