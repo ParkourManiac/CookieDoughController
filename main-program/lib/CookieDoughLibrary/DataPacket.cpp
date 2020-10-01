@@ -10,7 +10,7 @@ DataPacket::DataPacket()
 
 DataPacket::DataPacket(const uint8_t *data, const uint16_t dataSize)
     : payloadLength(dataSize)
-    , payload(new uint8_t[this->payloadLength])
+    , payload(new uint8_t[dataSize])
 {
     for(int i = 0; i < payloadLength; i++) 
     {
