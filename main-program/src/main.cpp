@@ -56,6 +56,8 @@ void loop()
     //     delete[] (payload);
     // }
 
+// TODO: Learn how to use CMake and try using it in the project.
+// TODO: Learn how to use clang-tidy and use it in the project. https://llvm.org/
 // TODO: When in doubt: Use assert().
 // TODO: __attribute__((packed)) on the structs that need to be saved to eeprom.
 // TODO: Research POD type. Plain-Old-datatype. (Serialization for c++).
