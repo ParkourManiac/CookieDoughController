@@ -35,21 +35,31 @@ DataPacket::~DataPacket()
 bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packetSize)
 {
     *packetSize = 0;
-    unsigned int currentAdress = adress;
+    uint32_t offset = 0;
+    uint32_t currentAdress = 0;
+    uint16_t sizeOfEeprom = EEPROM.length();
+
+    if(adress >= sizeOfEeprom)
+    {
+        DEBUG_PRINT(F("ERROR: Tried to read packet from outside of the eeproms range. Adress was out of range."));
+        return false;
+    }
 
     // STX: If the first value is not equal to the stx...
-    uint8_t stx = EEPROM.read(currentAdress);
+    uint8_t stx = EEPROM.read(adress);
     if (stx != packet->stx)
         return false;
-    currentAdress += sizeof(packet->stx);
+    offset += sizeof(packet->stx);
 
+    currentAdress = (adress + offset) % sizeOfEeprom;
     EEPROM.get(currentAdress, packet->active);
     if (IsPacketActive(packet->active) == false) // TODO: TEST THIS IF STATEMENT
         return false;
-    currentAdress += sizeof(packet->active);
+    offset += sizeof(packet->active);
 
+    // PAYLOAD LENGTH: 
+    currentAdress = (adress + offset) % sizeOfEeprom;
     EEPROM.get(currentAdress, packet->payloadLength);
-    // PAYLOAD LENGTH: If the payload is larger than what fits on the eeprom...
     uint16_t packetSizeExcludingPayload = static_cast<uint16_t>(
         sizeof(packet->stx) +
         sizeof(packet->active) +
@@ -57,25 +67,31 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
         sizeof(packet->crc) +
         sizeof(packet->etx)
     );
-    if (packet->payloadLength > (EEPROM.length() - packetSizeExcludingPayload))
+    // If the payload is larger than what fits on the eeprom...
+    if (packet->payloadLength > (sizeOfEeprom - packetSizeExcludingPayload))
         return false;
-    currentAdress += sizeof(packet->payloadLength);
+    offset += sizeof(packet->payloadLength);
+
 
     // CRC
+    currentAdress = (adress + offset) % sizeOfEeprom;
     EEPROM.get(currentAdress, packet->crc);
-    currentAdress += sizeof(packet->crc);
+    offset += sizeof(packet->crc);
 
     // ETX: If the packet does not end with the etx...
+    currentAdress = (adress + offset) % sizeOfEeprom;
     if (EEPROM.read(currentAdress + packet->payloadLength) != packet->etx)
         return false;
 
     // PAYLOAD: Retrieve payload as an uint8_t array.
+    currentAdress = (adress + offset) % sizeOfEeprom;
     uint8_t *payloadFromEEPROM = new uint8_t[packet->payloadLength];
     for (unsigned int i = 0; i < packet->payloadLength; i++)
     {
         payloadFromEEPROM[i] = EEPROM.read(currentAdress + i);
     }
-    currentAdress += packet->payloadLength * sizeof(packet->payload[0]);
+    offset += packet->payloadLength * sizeof(packet->payload[0]);
+
 
     // Fill adress of packet->payload with the payload from eeprom.
     delete[](packet->payload);
@@ -100,9 +116,9 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
     if (packet->crc != payloadCRC)
         return false;
 
-    // ETX: Move adress to end of packet and assign packet size.
-    currentAdress += sizeof(packet->etx);
-    *packetSize = static_cast<uint16_t>(currentAdress - adress);
+    // ETX: Move offset to end of packet and assign it to packet size.
+    offset += sizeof(packet->etx);
+    *packetSize = static_cast<uint16_t>(offset);
     return true;
 }
 
@@ -115,7 +131,7 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
 
     if(adress >= sizeOfEeprom)
     {
-        DEBUG_PRINT(F("ERROR: Tried to save packet outside of eeprom. Adress out of range."));
+        DEBUG_PRINT(F("ERROR: Tried to save the packet outside of the eeproms range. Adress out of range."));
         return false;
     }
 
