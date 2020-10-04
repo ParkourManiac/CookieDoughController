@@ -45,4 +45,13 @@ check: # TODO: Unsure if this actually works. Might not be configured correctly.
 		-D "DEBUG_PRINT(VALUE)= " \
 		./src/* \
 		./lib/CookieDoughLibrary/*
-	
+
+# TODO: Why is it linting the visual studio library???
+# TODO: Complete this command
+tidy: TestCookieDough
+	python $^/generateTestSuite.py TestCookieDough && \
+	clang-tidy --checks=* $^/test.cpp -- 
+		# -ITestCookieDough/Fakes -extra-args=-std=$(STD-VERSION) $(ALLOC-TRACKER) -g -D "private=public" \
+		# -D "TEST_ENVIRONMENT" \
+		# -D "DEBUG(VALUE)= " \
+		# -D "DEBUG_PRINT(VALUE)= "
