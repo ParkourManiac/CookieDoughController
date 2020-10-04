@@ -7,17 +7,17 @@ extern std::vector<uint16_t> EEPROMClass_length_return_v;
 extern std::vector<uint32_t > EEPROMClass_get_param_t_o2_vr;
 extern std::vector<uint8_t > EEPROMClass_get_param_t_o3_vr;
 
-void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(const DataPacket &expectedPacket, uint16_t eepromSize)
+void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(uint16_t adress, const DataPacket &expectedPacket, uint16_t eepromSize)
 {
     if(eepromSize == 0)
     {
-        eepromSize = static_cast<uint16_t>(Helper_CalculateSizeOfPacketOnEEPROM(expectedPacket) + 100);
+        eepromSize = static_cast<uint16_t>(adress + Helper_CalculateSizeOfPacketOnEEPROM(expectedPacket) + 10);
     }
 
+    EEPROMClass_length_return_v.push_back(eepromSize);
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o3_vr.push_back(expectedPacket.active);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
-    EEPROMClass_length_return_v.push_back(eepromSize);
     EEPROMClass_get_param_t_o2_vr.push_back(expectedPacket.crc);
     EEPROMClass_read_return_v.push_back(expectedPacket.etx);
     for (int i = 0; i < expectedPacket.payloadLength; i++) 
@@ -36,7 +36,7 @@ void Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(uint16_
     }
 
     EEPROMClass_length_return_v.push_back(eepromSize);
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(expectedPacket, eepromSize);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(adress, expectedPacket, eepromSize);
 }
 
 uint16_t Helper_CalculateSizeOfPacketOnEEPROM(DataPacket packet) 

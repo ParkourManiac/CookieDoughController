@@ -6,7 +6,7 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuc
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
     DataPacket result;
     uint16_t packetSize;
     bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
@@ -29,7 +29,7 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_SetEepromSizeByHandToFit
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet, static_cast<uint16_t>(65535u));
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet, static_cast<uint16_t>(65535u));
     DataPacket result;
     uint16_t packetSize;
     bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
@@ -54,7 +54,7 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_UsingHighAdress_EepromLe
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
     uint16_t adress = 10000;
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(adress, packet);
     DataPacket result;
     uint16_t packetSize;
     bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSize);
@@ -66,8 +66,9 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_SetEepromSizeByHandToNot
     uint16_t data = 1337;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    uint16_t eepromSize = 1;
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet, 1);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet, eepromSize);
     DataPacket result;
     uint16_t packetSize;
     bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
@@ -81,7 +82,7 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromRec
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
     packet.active = 0x00;
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
     DataPacket result;
     uint16_t packetSize;
     bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);

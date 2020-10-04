@@ -8,10 +8,11 @@
  * the ParsePacketFromEEPROM function will successfully return the provided DataPacket. 
  * 
  * 
+ * @param adress The adress from which the packet will be read.
  * @param expectedPacket The packet to be returned through the ParsePacketFromEEPROM function.
  * @param eepromSize The size of the eeprom. Note: Leaving this at 0 will let the function assign a eepromSize automatically that fits the provided packet.
  */
-void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(const DataPacket &expectedPacket, uint16_t eepromSize = 0);
+void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(uint16_t adress, const DataPacket &expectedPacket, uint16_t eepromSize = 0);
 
 /**
  * @brief Sets up the behaviour of the mocked EEPROM functions so that

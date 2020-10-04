@@ -110,7 +110,7 @@ void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndRetur
     packet.payloadLength = templateDataSize;
     packet.payload = dataPtr;
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     uint16_t amountOfKeys, packetAdress, packetSize;
@@ -138,7 +138,7 @@ void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeys
     };
     uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
     unsigned int expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
@@ -170,7 +170,7 @@ void RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse()
     };
     uint8_t *defectDataPtr = reinterpret_cast<uint8_t *>(&defectData);
     DataPacket defectPacket = DataPacket(defectDataPtr, sizeof(defectData));
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(defectPacket);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, defectPacket);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     uint16_t amountOfKeys, packetAdress, packetSize;
@@ -208,10 +208,10 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
     uint8_t *validDataPtr = reinterpret_cast<uint8_t *>(&validData);
     DataPacket validPacket = DataPacket(validDataPtr, sizeof(validData));
     // Prepare packets to be returned.
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(defectPacket);
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(validPacket);
     unsigned int expectedDefectPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(defectPacket);
     unsigned int expectedValidPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(validPacket);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, defectPacket);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(static_cast<uint16_t>(expectedDefectPacketSize), validPacket);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     uint16_t amountOfKeys, packetAdress, packetSize;
@@ -233,15 +233,18 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
     EEPROMClass_read_return_v.push_back(0);
     EEPROMClass_length_return_v.push_back(1000);
     EEPROMClass_length_return_v.push_back(1000);
+    EEPROMClass_length_return_v.push_back(1000);
     // Makes the function fail to find a packet on the second adress.
     EEPROMClass_read_return_v.push_back(0);
+    EEPROMClass_length_return_v.push_back(1000);
     EEPROMClass_length_return_v.push_back(1000);
     EEPROMClass_length_return_v.push_back(1000);
     // Makes the function find a packet on the third adress. (Index 2 in EEPROM)
     uint16_t data = 1337;
     uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    uint16_t expectedAdress = 2;
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(expectedAdress, packet);
 
     DataPacket result;
     uint16_t resultPacketSize, packetAdress;
@@ -256,7 +259,7 @@ void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPa
         packet.payload[0] == result.payload[0] && 
         packet.payload[1] == result.payload[1] && 
         packet.etx == result.etx &&
-        packetAdress == 2 &&
+        packetAdress == expectedAdress &&
         Helper_CalculateSizeOfPacketOnEEPROM(packet) == resultPacketSize
     );
 }
@@ -276,6 +279,9 @@ void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtSta
 {
     uint16_t expectedStartAdress = 25;
     Controller controller = SetUpController();
+    DataPacket empty;
+    empty.payload[0] = 0;
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(expectedStartAdress, empty);
     
     DataPacket result;
     uint16_t packetSize, packetAdress;
@@ -433,7 +439,7 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
     };
     uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
     controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
@@ -473,7 +479,7 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
     };
     uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
     controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
@@ -515,8 +521,9 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
     // Set up defect packet.
     uint8_t *defectDataPtr = reinterpret_cast<uint8_t *>(&defectData);
     DataPacket defectPacket = DataPacket(defectDataPtr, sizeof(defectData));
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(defectPacket);
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(validPacket);
+    uint16_t validPacketAdress = Helper_CalculateSizeOfPacketOnEEPROM(defectPacket);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, defectPacket);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(validPacketAdress, validPacket);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
     controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
