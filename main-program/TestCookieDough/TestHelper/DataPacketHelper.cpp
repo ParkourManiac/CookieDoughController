@@ -26,6 +26,19 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(const DataPacket &expect
     }
 }
 
+void Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t eepromSize)
+{
+    DataPacket expectedPacket = DataPacket(data, dataSize);
+
+    if(eepromSize == 0)
+    {
+        eepromSize = static_cast<uint16_t>(adress + Helper_CalculateSizeOfPacketOnEEPROM(expectedPacket) + 10);
+    }
+
+    EEPROMClass_length_return_v.push_back(eepromSize);
+    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(expectedPacket, eepromSize);
+}
+
 uint16_t Helper_CalculateSizeOfPacketOnEEPROM(DataPacket packet) 
 {
     uint16_t payloadSize = packet.payloadLength * sizeof(packet.payload[0]);
@@ -39,3 +52,5 @@ uint16_t Helper_CalculateSizeOfPacketOnEEPROM(DataPacket packet)
     );
     return sizeOfPacket;
 }
+
+// TODO: Add adress to ParsePacket helper?

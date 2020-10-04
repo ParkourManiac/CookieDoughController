@@ -14,6 +14,17 @@
 void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(const DataPacket &expectedPacket, uint16_t eepromSize = 0);
 
 /**
+ * @brief Sets up the behaviour of the mocked EEPROM functions so that
+ * the SavePacketToEEPROM function will return true. 
+ * 
+ * @param adress The adress where the packet will be saved.
+ * @param data The data that will be saved.
+ * @param dataSize The size of the data that will be saved.
+ * @param eepromSize The size of the eeprom. Note: Leaving this at 0 will let the function assign a eepromSize automatically that fits the provided packet.
+ */
+void Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t eepromSize = 0);
+
+/**
  * @brief Calculates the expected size in bytes the packet will occupy on the EEPROM.
  * 
  * @param expectedPacket The packet to be used for calculating the size.

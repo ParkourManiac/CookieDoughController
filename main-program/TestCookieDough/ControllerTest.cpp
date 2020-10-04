@@ -11,6 +11,8 @@ extern std::vector<uint8_t> EEPROMClass_read_return_v;
 extern std::vector<int> EEPROMClass_read_param_idx_v;
 
 extern std::vector<uint16_t> EEPROMClass_length_return_v;
+extern uint16_t EEPROMClass_length_return;
+
 
 extern uint8_t *Serial__write_param_buffer;
 extern size_t Serial__write_param_size;
@@ -822,6 +824,7 @@ void SaveKeyMapsToMemory_PutsDownKeysAsBareKeyboardArrayIntoEEPROM()
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);
+    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.eepromAdress, expectedDataPtr, static_cast<uint16_t>(payloadLength));
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -872,7 +875,7 @@ void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
     // Setup mocked packet to return so that the function succeeds.
     DataPacket packet = DataPacket(expectedDataPtr, payloadLength);
     unsigned int packetSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.eepromAdress, packet.payload, packet.payloadLength);
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -920,7 +923,7 @@ void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEe
     // Setup mocked packet to return so that the function succeeds.
     DataPacket packet = DataPacket(expectedDataPtr, payloadLength);
     unsigned int packetSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(packet);
+    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.eepromAdress, packet.payload, packet.payloadLength);
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -976,6 +979,7 @@ void ToggleEditMode_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWit
 
 void SaveControllerSettings_CurrentKeymapHasBeenEdited_UpdatesTheEquippedCustomKeymapWithTheValuesPresentInCurrentKeymap()
 {
+    EEPROMClass_length_return = 1024;
     Controller controller = SetUpController();
     BareKeyboardKey customKeymap[genericNormalKeyCount] = {
         BareKeyboardKey(2, 0),

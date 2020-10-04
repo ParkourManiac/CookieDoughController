@@ -50,7 +50,14 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
 
     EEPROM.get(currentAdress, packet->payloadLength);
     // PAYLOAD LENGTH: If the payload is larger than what fits on the eeprom...
-    if (packet->payloadLength > (EEPROM.length() - 8))
+    uint16_t packetSizeExcludingPayload = static_cast<uint16_t>(
+        sizeof(packet->stx) +
+        sizeof(packet->active) +
+        sizeof(packet->payloadLength) +
+        sizeof(packet->crc) +
+        sizeof(packet->etx)
+    );
+    if (packet->payloadLength > (EEPROM.length() - packetSizeExcludingPayload))
         return false;
     currentAdress += sizeof(packet->payloadLength);
 
@@ -102,29 +109,45 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
 bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t *packetSize) 
 {
     *packetSize = 0;
-    uint16_t currentAdress = adress;
+    uint32_t offset = 0;
+    uint32_t currentAdress = 0;
+    uint16_t sizeOfEeprom = EEPROM.length();
+
+    if(adress >= sizeOfEeprom)
+    {
+        DEBUG_PRINT(F("ERROR: Tried to save packet outside of eeprom. Adress out of range."));
+        return false;
+    }
 
     // Create packet.
     DataPacket packet = DataPacket(data, dataSize);
 
     // Write packet.
-    EEPROM.put(currentAdress, packet.stx);
-    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.stx));
+    EEPROM.put(adress, packet.stx);
+    offset = sizeof(packet.stx);
 
+    currentAdress = (adress + offset) % sizeOfEeprom;
     EEPROM.put(currentAdress, packet.active);
-    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.active));
+    offset += sizeof(packet.active);
 
+    currentAdress = (adress + offset) % sizeOfEeprom;
     EEPROM.put(currentAdress, packet.payloadLength);
-    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.payloadLength));
+    offset += sizeof(packet.payloadLength);
+
+    currentAdress = (adress + offset) % sizeOfEeprom;
     EEPROM.put(currentAdress, packet.crc);
-    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.crc));
+    offset += sizeof(packet.crc);
+
+    currentAdress = (adress + offset) % sizeOfEeprom;
     for (uint16_t i = 0; i < packet.payloadLength; i++)
     {
         EEPROM.update(currentAdress + i, packet.payload[i]);
     }
-    currentAdress = static_cast<uint16_t>(currentAdress + (packet.payloadLength * sizeof(packet.payload[0])));
+    offset += (packet.payloadLength * sizeof(packet.payload[0]));
+
+    currentAdress = (adress + offset) % sizeOfEeprom;
     EEPROM.put(currentAdress, packet.etx);
-    currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packet.etx));
+    offset += sizeof(packet.etx);
 
     // // DEBUG
     // DEBUG_PRINT(F("Putting down: "));
@@ -144,7 +167,7 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
         return false; // Throw: Something went wrong when writing.
     } else
     {
-        *packetSize = static_cast<uint16_t>(currentAdress - adress);
+        *packetSize = static_cast<uint16_t>(offset);
         DEBUG_PRINT(F("Size of packet: ")); // DEBUG
         DEBUG_PRINT(*packetSize); // DEBUG
         DEBUG_PRINT(F("\n"));
