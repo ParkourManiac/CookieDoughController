@@ -1,15 +1,15 @@
 #include "../test.h"
 #include "TestHelper/DataPacketHelper.h"
 
-void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket() {
+void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket() {
     uint16_t data = 1337;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet);
     DataPacket result;
     uint16_t packetSize;
-    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+    bool resultBool = ReadDataPacketOnEEPROM(0, &result, &packetSize);
 
     ASSERT_TEST(
         resultBool == true &&
@@ -24,15 +24,15 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuc
     );
 }
 
-void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_SetEepromSizeByHandToFitThePacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket() {
+void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_SetEepromSizeByHandToFitThePacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket() {
     uint16_t data = 1337;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet, static_cast<uint16_t>(65535u));
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet, static_cast<uint16_t>(65535u));
     DataPacket result;
     uint16_t packetSize;
-    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+    bool resultBool = ReadDataPacketOnEEPROM(0, &result, &packetSize);
 
     ASSERT_TEST(
         resultBool == true &&
@@ -47,58 +47,58 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_SetEepromSizeByHandToFit
     );
 }
 
-void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_UsingHighAdress_EepromLengthIsSetToFitPacket()
+void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_UsingHighAdress_EepromLengthIsSetToFitPacket()
 {
     uint16_t data = 123;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
     uint16_t adress = 10000;
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(adress, packet);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet);
     DataPacket result;
     uint16_t packetSize;
-    bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSize);
+    bool resultBool = ReadDataPacketOnEEPROM(adress, &result, &packetSize);
 
     ASSERT_TEST(resultBool == true);
 }
 
-void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_SetEepromSizeByHandToNotFitThePacket_ParsePacketFromEEPROMFails() {
+void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_SetEepromSizeByHandToNotFitThePacket_ReadDataPacketOnEEPROMFails() {
     uint16_t data = 1337;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
     uint16_t eepromSize = 1;
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet, eepromSize);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet, eepromSize);
     DataPacket result;
     uint16_t packetSize;
-    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+    bool resultBool = ReadDataPacketOnEEPROM(0, &result, &packetSize);
 
     ASSERT_TEST(resultBool == false);
 }
 
-void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket_ParsePacketFromEepromRecievesInactiveFlag() {
+void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_ParsePacketFromEepromRecievesInactiveFlag() {
     uint16_t data = 1337;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
     packet.active = 0x00;
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet);
     DataPacket result;
     uint16_t packetSize;
-    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+    bool resultBool = ReadDataPacketOnEEPROM(0, &result, &packetSize);
 
     ASSERT_TEST(resultBool == false);
 }
 
-void Helper_SavePacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_SavePacketToEEPROMReturnsTrueAndReturnsCorrectPacketSize()
+void Helper_SaveDataPacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_SaveDataPacketToEEPROMReturnsTrueAndReturnsCorrectPacketSize()
 {
     uint16_t data = 123;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
 
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, dataPtr, sizeof(data));
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, dataPtr, sizeof(data));
     uint16_t packetSize;
-    bool resultBool = SavePacketToEEPROM(0, dataPtr, sizeof(data), &packetSize);
+    bool resultBool = SaveDataPacketToEEPROM(0, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(
         resultBool == true &&
@@ -106,54 +106,54 @@ void Helper_SavePacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_SavePa
     );
 }
 
-void Helper_SavePacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_SetEepromSizeByHandToNotFitPacket_ReturnsFalse()
+void Helper_SaveDataPacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_SetEepromSizeByHandToNotFitPacket_ReturnsFalse()
 {
     uint16_t data = 123;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     uint16_t eepromSize = 1;
 
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, dataPtr, sizeof(data), eepromSize);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, dataPtr, sizeof(data), eepromSize);
     uint16_t packetSize;
-    bool resultBool = SavePacketToEEPROM(0, dataPtr, sizeof(data), &packetSize);
+    bool resultBool = SaveDataPacketToEEPROM(0, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(resultBool == false);
 }
 
-void Helper_SavePacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_SetEepromSizeByHandToFitPacket_ReturnsTrue()
+void Helper_SaveDataPacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_SetEepromSizeByHandToFitPacket_ReturnsTrue()
 {
     uint16_t data = 123;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
     uint16_t eepromSize = static_cast<uint16_t>(Helper_CalculateSizeOfPacketOnEEPROM(packet) + 10);
 
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, dataPtr, sizeof(data), eepromSize);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, dataPtr, sizeof(data), eepromSize);
     uint16_t packetSize;
-    bool resultBool = SavePacketToEEPROM(0, dataPtr, sizeof(data), &packetSize);
+    bool resultBool = SaveDataPacketToEEPROM(0, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(resultBool == true);
 }
 
-void Helper_SavePacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_WeProvideNoEepromSize_SetsEepromSizeAutomaticallyToFitOurPacket()
+void Helper_SaveDataPacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_WeProvideNoEepromSize_SetsEepromSizeAutomaticallyToFitOurPacket()
 {
     uint16_t data = 123;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
 
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, dataPtr, sizeof(data));
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, dataPtr, sizeof(data));
     uint16_t packetSize;
-    bool resultBool = SavePacketToEEPROM(0, dataPtr, sizeof(data), &packetSize);
+    bool resultBool = SaveDataPacketToEEPROM(0, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(resultBool == true);
 }
 
-void Helper_SavePacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_UsingHighAdress_EepromLengthIsSetToFitPacket()
+void Helper_SaveDataPacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_UsingHighAdress_EepromLengthIsSetToFitPacket()
 {
     uint16_t data = 123;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     uint16_t adress = 10000;
 
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, dataPtr, sizeof(data));
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, dataPtr, sizeof(data));
     uint16_t packetSize;
-    bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
+    bool resultBool = SaveDataPacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(resultBool == true);
 }

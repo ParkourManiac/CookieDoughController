@@ -233,34 +233,34 @@ void CalculateCRC_UsesAlgorithCRC32()
     ASSERT_TEST(result == 1119744540);
 }
 
-void SavePacketToEEPROM_SavesStxToFirstGivenAdress()
+void SaveDataPacketToEEPROM_SavesStxToFirstGivenAdress()
 {
     uint8_t data = 42;
     uint16_t adress = 20;
     uint16_t packetSize;
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, &data, sizeof(data));
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, &data, sizeof(data));
 
-    SavePacketToEEPROM(adress, &data, sizeof(data), &packetSize);
+    SaveDataPacketToEEPROM(adress, &data, sizeof(data), &packetSize);
 
     ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(adress));
 }
 
-void SavePacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
+void SaveDataPacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
 {
     DataPacket packet;
     uint8_t data = 42;
     uint16_t adress = 20;
     uint16_t packetSize;
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, &data, sizeof(data));
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, &data, sizeof(data));
 
 
-    SavePacketToEEPROM(adress, &data, sizeof(data), &packetSize);
+    SaveDataPacketToEEPROM(adress, &data, sizeof(data), &packetSize);
     unsigned int expectedEtxPosition = adress + sizeof(packet.stx) + sizeof(packet.active) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
 
     ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[2] == static_cast<int>(expectedEtxPosition) && EEPROMClass_put_param_t_o1_v[2] == packet.etx);
 }
 
-void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
+void SaveDataPacketToEEPROM_PacketIsCorrectlyPutDown()
 {
     uint16_t data = 42;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
@@ -273,12 +273,12 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
                  expectedPayloadAdress = expectedCRCAdress + sizeof(packet.crc), 
                  expectedEtxAdress = expectedPayloadAdress + sizeof(data), 
                  expectedPacketSize = sizeof(packet.stx) + sizeof(packet.active) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data) + sizeof(packet.etx);
-    // This ensures that ParsePacketFromEEPROM returns true
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, dataPtr, sizeof(data));
+    // This ensures that ReadDataPacketOnEEPROM returns true
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, dataPtr, sizeof(data));
 
 
     uint16_t packetSize;
-    bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
+    bool resultBool = SaveDataPacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(resultBool == true && 
                 EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(expectedStxAdress) && EEPROMClass_put_param_t_o1_v[0] == packet.stx &&
@@ -291,7 +291,7 @@ void SavePacketToEEPROM_PacketIsCorrectlyPutDown()
                 packetSize == expectedPacketSize);
 }
 
-void SavePacketToEEPROM_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
+void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
 {
     uint32_t data = 888;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
@@ -299,11 +299,11 @@ void SavePacketToEEPROM_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
     uint16_t expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
     uint16_t eepromSize = static_cast<uint16_t>(expectedPacketSize + 5);
     uint16_t adress = static_cast<uint16_t>(eepromSize - (expectedPacketSize / 2));
-    // This ensures that SavePacketToEEPROM returns true
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
+    // This ensures that SaveDataPacketToEEPROM returns true
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
 
     uint16_t packetSize;
-    bool resultBool = SavePacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
+    bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
 
     ASSERT_TEST(
         resultBool == true &&
@@ -311,7 +311,7 @@ void SavePacketToEEPROM_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
     );
 }
 
-void SavePacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketBetweenEndAndStartOfEEPROM()
+void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketBetweenEndAndStartOfEEPROM()
 {
     uint32_t data = 888;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
@@ -329,11 +329,11 @@ void SavePacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketBetweenEndAndSta
                  expectedPayloadAdressPart1 = (expectedPayloadAdress + 1) % eepromSize,
                  expectedPayloadAdressPart2 = (expectedPayloadAdress + 2) % eepromSize,
                  expectedPayloadAdressPart3 = (expectedPayloadAdress + 3) % eepromSize;
-    // This ensures that SavePacketToEEPROM returns true.
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
+    // This ensures that SaveDataPacketToEEPROM returns true.
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
 
     uint16_t packetSize;
-    bool resultBool = SavePacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
+    bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
 
     ASSERT_TEST(
         resultBool == true && 
@@ -351,16 +351,16 @@ void SavePacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketBetweenEndAndSta
 }
 
 
-void SavePacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse()
+void SaveDataPacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse()
 {
     uint16_t data = 42;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     uint16_t adress = 20;
     DataPacket packet;
 
-    // This ensure that SavePacketToEEPROM and ParsePacketFromEEPROM knows the size of the eeprom.
+    // This ensure that SaveDataPacketToEEPROM and ReadDataPacketOnEEPROM knows the size of the eeprom.
     EEPROMClass_length_return = sizeof(data) + 20;
-    // This ensures that ParsePacketFromEEPROM returns false
+    // This ensures that ReadDataPacketOnEEPROM returns false
     EEPROMClass_read_return_v.push_back(packet.stx);
     EEPROMClass_read_return_v.push_back(packet.active);
     EEPROMClass_get_param_t_o1_vr.push_back(sizeof(data));
@@ -370,12 +370,12 @@ void SavePacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse()
     EEPROMClass_read_return_v.push_back(dataPtr[1]);
 
     uint16_t packetSize;
-    bool resultBool = SavePacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
+    bool resultBool = SaveDataPacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(resultBool == false);
 }
 
-void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
+void SaveDataPacketToEEPROM_AdaptsSizeOfPacketToFitData()
 {
     DataPacket packet;
     uint16_t data = 42;
@@ -383,38 +383,38 @@ void SavePacketToEEPROM_AdaptsSizeOfPacketToFitData()
     uint16_t adress = 20;
     uint16_t packetSize;
     int expectedPayloadAdress = static_cast<int>(adress + sizeof(packet.stx) + sizeof(packet.active) + sizeof(packet.payloadLength) + sizeof(packet.crc));
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, dataPtr, sizeof(data));
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, dataPtr, sizeof(data));
 
-    SavePacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
+    SaveDataPacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
 
     ASSERT_TEST(EEPROMClass_update_param_idx_v[0] == expectedPayloadAdress && EEPROMClass_update_param_val_v[0] == dataPtr[0] &&
                 EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == dataPtr[1]);
 }
 
-void SavePacketToEEPROM_AdressIsOutsideOfEEPROMsRange_ReturnsFalse()
+void SaveDataPacketToEEPROM_AdressIsOutsideOfEEPROMsRange_ReturnsFalse()
 {
     uint32_t data = 8409;
     DataPacket packet = DataToPacket(data);
     uint16_t eepromSize, adress;
     eepromSize = adress = 1024;
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
 
     uint16_t packetSize;
-    bool resultBool = SavePacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
+    bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
 
     ASSERT_TEST(resultBool == false);
 }
 
-void SavePacketToEEPROM_AdressIsOutsideOfEEPROMsRange_DoesNotWriteAnythingToEEPROM()
+void SaveDataPacketToEEPROM_AdressIsOutsideOfEEPROMsRange_DoesNotWriteAnythingToEEPROM()
 {
     uint32_t data = 8409;
     DataPacket packet = DataToPacket(data);
     uint16_t eepromSize, adress;
     eepromSize = adress = 1024;
-    Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
 
     uint16_t packetSize;
-    SavePacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
+    SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
 
     ASSERT_TEST(
         EEPROMClass_put_invocations_o1 == 0 &&
@@ -425,17 +425,17 @@ void SavePacketToEEPROM_AdressIsOutsideOfEEPROMsRange_DoesNotWriteAnythingToEEPR
 }
 
 
-void ParsePacketFromEEPROM_DataPacketDoesNotNeedToBeManuallyAllocatedBeforePassedToFunciton_DoesNotCrash()
+void ReadDataPacketOnEEPROM_DataPacketDoesNotNeedToBeManuallyAllocatedBeforePassedToFunciton_DoesNotCrash()
 {
     uint16_t data = 123;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet);
 
     DataPacket result;
     uint16_t packetSize;
     bool didNotCrash = false;
-    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+    bool resultBool = ReadDataPacketOnEEPROM(0, &result, &packetSize);
     didNotCrash = true;
 
     ASSERT_TEST(
@@ -446,7 +446,7 @@ void ParsePacketFromEEPROM_DataPacketDoesNotNeedToBeManuallyAllocatedBeforePasse
     );
 }
 
-void ParsePacketFromEEPROM_ReturnsCorrectPacket() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
+void ReadDataPacketOnEEPROM_ReturnsCorrectPacket() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
 {
     uint16_t adress = 13;
     uint16_t data = 421;
@@ -469,7 +469,7 @@ void ParsePacketFromEEPROM_ReturnsCorrectPacket() // TODO: bad test. Locks the o
 
     DataPacket result;
     uint16_t packetSizeResult;
-    bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSizeResult);
+    bool resultBool = ReadDataPacketOnEEPROM(adress, &result, &packetSizeResult);
 
     ASSERT_TEST(
         resultBool == true &&
@@ -485,7 +485,7 @@ void ParsePacketFromEEPROM_ReturnsCorrectPacket() // TODO: bad test. Locks the o
     );
 }
 
-void ParsePacketFromEEPROM_PacketIsSplitBetweenEndAndStartOfEEPROM_ReturnsCorrectPacketSize()
+void ReadDataPacketOnEEPROM_PacketIsSplitBetweenEndAndStartOfEEPROM_ReturnsCorrectPacketSize()
 {
     uint32_t data = 888;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
@@ -493,12 +493,12 @@ void ParsePacketFromEEPROM_PacketIsSplitBetweenEndAndStartOfEEPROM_ReturnsCorrec
     unsigned int expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
     uint16_t eepromSize = static_cast<uint16_t>(expectedPacketSize + 5);
     uint16_t adress = static_cast<uint16_t>(eepromSize - (expectedPacketSize / 2));
-    // This ensures that ParsePacketFromEEPROM returns true
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    // This ensures that ReadDataPacketOnEEPROM returns true
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
 
     DataPacket result;
     uint16_t packetSizeResult;
-    bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSizeResult);
+    bool resultBool = ReadDataPacketOnEEPROM(adress, &result, &packetSizeResult);
 
     ASSERT_TEST(
         resultBool == true &&
@@ -506,7 +506,7 @@ void ParsePacketFromEEPROM_PacketIsSplitBetweenEndAndStartOfEEPROM_ReturnsCorrec
     );
 }
 
-void ParsePacketFromEEPROM_PacketIsSplitBetweenEndAndStartOfEEPROM_SuccessfullyReadsPacket()
+void ReadDataPacketOnEEPROM_PacketIsSplitBetweenEndAndStartOfEEPROM_SuccessfullyReadsPacket()
 {
     uint32_t data = 888;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
@@ -524,12 +524,12 @@ void ParsePacketFromEEPROM_PacketIsSplitBetweenEndAndStartOfEEPROM_SuccessfullyR
                  expectedPayloadAdressPart1 = (expectedPayloadAdress + 1) % eepromSize,
                  expectedPayloadAdressPart2 = (expectedPayloadAdress + 2) % eepromSize,
                  expectedPayloadAdressPart3 = (expectedPayloadAdress + 3) % eepromSize;
-    // This ensures that ParsePacketFromEEPROM returns true
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(adress, expectedPacket, eepromSize);
+    // This ensures that ReadDataPacketOnEEPROM returns true
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, expectedPacket, eepromSize);
 
     DataPacket result;
     uint16_t packetSizeResult;
-    bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSizeResult);
+    bool resultBool = ReadDataPacketOnEEPROM(adress, &result, &packetSizeResult);
 
     ASSERT_TEST(
         resultBool == true &&
@@ -546,36 +546,36 @@ void ParsePacketFromEEPROM_PacketIsSplitBetweenEndAndStartOfEEPROM_SuccessfullyR
     );
 }
 
-void ParsePacketFromEEPROM_ReturnsFalseWhenAValidPacketIsNotActive()
+void ReadDataPacketOnEEPROM_ReturnsFalseWhenAValidPacketIsNotActive()
 {
     uint64_t data = 123211321;
     DataPacket packet = DataPacket(reinterpret_cast<uint8_t *>(&data), sizeof(data));
     packet.active = 0x00;
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet);
 
     DataPacket result;
     uint16_t packetSize;
-    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+    bool resultBool = ReadDataPacketOnEEPROM(0, &result, &packetSize);
 
     ASSERT_TEST(resultBool == false);
 }
 
-void ParsePacketFromEEPROM_ReturnsTrueWhenAValidPacketIsActive()
+void ReadDataPacketOnEEPROM_ReturnsTrueWhenAValidPacketIsActive()
 {
     uint64_t data = 123211321;
     DataPacket packet = DataPacket(reinterpret_cast<uint8_t *>(&data), sizeof(data)); // packet.active is set to be active by default.
 
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(0, packet);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet);
 
     DataPacket result;
     uint16_t packetSize;
-    bool resultBool = ParsePacketFromEEPROM(0, &result, &packetSize);
+    bool resultBool = ReadDataPacketOnEEPROM(0, &result, &packetSize);
 
     ASSERT_TEST(resultBool == true);
 }
 
-void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
+void ReadDataPacketOnEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad test. Locks the order the mocked functions will be called. Rewrite with different framework?
 {
     uint16_t adress = 13;
     uint16_t data = 421;
@@ -591,22 +591,22 @@ void ParsePacketFromEEPROM_EepromReturnsFaultyData_ReturnsFalse() // TODO: bad t
  
     DataPacket result;
     uint16_t packetSize;
-    bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSize);
+    bool resultBool = ReadDataPacketOnEEPROM(adress, &result, &packetSize);
 
     ASSERT_TEST(resultBool == false);
 }
 
-void ParsePacketFromEEPROM_AdressIsOutOfEEPROMsRange_ReturnsFalse()
+void ReadDataPacketOnEEPROM_AdressIsOutOfEEPROMsRange_ReturnsFalse()
 {
     uint32_t data = 544;
     DataPacket packet = DataToPacket(data);
     uint16_t adress, eepromSize;
     eepromSize = adress = 1024;
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
 
     DataPacket result;
     uint16_t packetSize;
-    bool resultBool = ParsePacketFromEEPROM(adress, &result, &packetSize);
+    bool resultBool = ReadDataPacketOnEEPROM(adress, &result, &packetSize);
 
     ASSERT_TEST(resultBool == false);
 }
@@ -733,4 +733,4 @@ void DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_DoesNotWriteToEEPR
     );
 }
 
-// void SavePacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketOnDataTypeBiggerThan1Byte_SuccessfullySplitsPacketWithoutLoosingData(); // Note: Can't be tested. Would test the eeprom library. 
+// void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketOnDataTypeBiggerThan1Byte_SuccessfullySplitsPacketWithoutLoosingData(); // Note: Can't be tested. Would test the eeprom library. 

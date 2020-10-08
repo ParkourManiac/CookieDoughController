@@ -96,7 +96,7 @@ void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     // // DEBUG
     uint16_t packetSize;
     // TODO: Change this to write to nextFreeEepromAdress and invalidate the old one at eepromAdress.
-    bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, &packetSize);
+    bool success = SaveDataPacketToEEPROM(eepromAdress, dataPtr, serializedSize, &packetSize);
     if (success)
     {
         DEBUG_PRINT(F("Settings saved!\n")); // DEBUG
@@ -224,7 +224,7 @@ bool Controller::RetrieveDataPacketFromMemory(DataPacket *packet, uint16_t *pack
     bool foundPacket = false;
     do
     {
-        foundPacket = ParsePacketFromEEPROM(*packetAdress, packet, packetSize);
+        foundPacket = ReadDataPacketOnEEPROM(*packetAdress, packet, packetSize);
         if (!foundPacket)
         {
             *packetAdress = static_cast<uint16_t>(*packetAdress + 1);

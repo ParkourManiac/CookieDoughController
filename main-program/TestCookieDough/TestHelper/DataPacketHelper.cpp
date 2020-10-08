@@ -7,7 +7,7 @@ extern std::vector<uint16_t> EEPROMClass_length_return_v;
 extern std::vector<uint32_t > EEPROMClass_get_param_t_o2_vr;
 extern std::vector<uint8_t > EEPROMClass_get_param_t_o3_vr;
 
-void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(uint16_t adress, const DataPacket &expectedPacket, uint16_t eepromSize)
+void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(uint16_t adress, const DataPacket &expectedPacket, uint16_t eepromSize)
 {
     if(eepromSize == 0)
     {
@@ -26,7 +26,7 @@ void Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(uint16_t adress, const D
     }
 }
 
-void Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t eepromSize)
+void Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t eepromSize)
 {
     DataPacket expectedPacket = DataPacket(data, dataSize);
 
@@ -36,7 +36,7 @@ void Helper_SavePacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(uint16_
     }
 
     EEPROMClass_length_return_v.push_back(eepromSize);
-    Helper_ParsePacketFromEEPROM_PrepareToReturnPacket(adress, expectedPacket, eepromSize);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, expectedPacket, eepromSize);
 }
 
 uint16_t Helper_CalculateSizeOfPacketOnEEPROM(DataPacket packet) 

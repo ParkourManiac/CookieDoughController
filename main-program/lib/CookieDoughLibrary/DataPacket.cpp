@@ -32,7 +32,7 @@ DataPacket::~DataPacket()
     delete[](payload);
 }
 
-bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packetSize)
+bool ReadDataPacketOnEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packetSize)
 {
     *packetSize = 0;
     uint32_t offset = 0;
@@ -122,7 +122,7 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
     return true;
 }
 
-bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t *packetSize) 
+bool SaveDataPacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t *packetSize) 
 {
     *packetSize = 0;
     uint32_t offset = 0;
@@ -177,7 +177,7 @@ bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint1
     // Verify that package can be read from memory correctly.
     DataPacket result;
     uint16_t _sizeOfPacket;
-    bool success = ParsePacketFromEEPROM(adress, &result, &_sizeOfPacket);
+    bool success = ReadDataPacketOnEEPROM(adress, &result, &_sizeOfPacket);
     if (!success || packet.crc != result.crc)
     {
         return false; // Throw: Something went wrong when writing.

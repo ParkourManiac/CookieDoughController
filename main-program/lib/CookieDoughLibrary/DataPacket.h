@@ -46,7 +46,7 @@ DataPacket DataToPacket(const T &data)
  * @return true When we successfully parsed the DataPacket from the eeprom.
  * @return false When the adress couldn't be parsed as a DataPacket.
  */
-bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packetSize);
+bool ReadDataPacketOnEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packetSize);
 
 /**
  * @brief Saves the given data as a DataPacket on the eeprom.
@@ -59,7 +59,7 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
  * @return true When we successfully saved the DataPacket to the eeprom.
  * @return false When we were unsuccessful in saving the DataPacket to the eeprom.
  */
-bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t *packetSize);
+bool SaveDataPacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t *packetSize);
 
 /**
  * @brief Checks wether the DataPackets "active" flag is considered active or inactive.

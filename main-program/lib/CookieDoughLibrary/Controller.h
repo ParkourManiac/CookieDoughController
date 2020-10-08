@@ -27,7 +27,7 @@ private:
 
     unsigned int customKeyMapIndex = 0;
     LinkedList<BareKeyboardKey *> *customKeyMapsPtr;
-    LinkedList<BareKeyboardKey *> customKeyMaps;
+    LinkedList<BareKeyboardKey *> customKeyMaps; // TODO: Consider making into a reference variable?
 
     const uint8_t bufferSize = 8;
     uint8_t *buf; // Keyboard report buffer.
