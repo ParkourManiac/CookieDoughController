@@ -866,5 +866,181 @@ void FindFirstDataPacketOnEEPROM_NoPacketIsPresent_ReturnsFalse()
     ASSERT_TEST(resultBool == false);
 }
 
+void FindFirstDataPacketOnEEPROM_PacketIsPresentOnEEPROMButStartAdressIsOutOfRange_ReturnsFalse()
+{
+    uint16_t eepromSize = 40;
+    uint16_t startAdress = eepromSize;
+    EEPROMClass_length_return = eepromSize;
+    uint8_t data = 22;
+    DataPacket expectedPacket = DataToPacket(data);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, expectedPacket, eepromSize);
+
+    DataPacket result;
+    uint16_t packetSize, packetAdress;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+
+    ASSERT_TEST(resultBool == false);
+}
+
+void DeactivateAllPacketsOnEEPROM_OnePacketIsPresent_OverwritesPacketWithADeactivatedFlag()
+{
+    uint32_t data = 2020;
+    DataPacket packet = DataToPacket(data);
+    uint16_t expectedAdress = 0;
+    uint16_t expectedOverwrittenAdress = static_cast<uint16_t>(expectedAdress + sizeof(packet.stx));
+    uint8_t deactivatedFlag = 0x00;
+    uint16_t eepromSize = 50;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress, packet, eepromSize);
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    bool resultBool = DeactivateAllPacketsOnEEPROM();
+
+    ASSERT_TEST(
+        EEPROMClass_put_param_idx_o1_v[0] == expectedOverwrittenAdress &&
+        EEPROMClass_put_param_t_o1_v[0] == deactivatedFlag
+    );
+}
+
+void DeactivateAllPacketsOnEEPROM_OverwritesPacketWithADeactivatedFlag_ReturnsTrue()
+{
+    uint32_t data = 2020;
+    DataPacket packet = DataToPacket(data);
+    uint16_t expectedAdress = 0;
+    uint16_t expectedOverwrittenAdress = static_cast<uint16_t>(expectedAdress + sizeof(packet.stx));
+    uint8_t deactivatedFlag = 0x00;
+    uint16_t eepromSize = 50;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress, packet, eepromSize);
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    bool resultBool = DeactivateAllPacketsOnEEPROM();
+
+    ASSERT_TEST(
+        resultBool == true &&
+        EEPROMClass_put_param_idx_o1_v[0] == expectedOverwrittenAdress &&
+        EEPROMClass_put_param_t_o1_v[0] == deactivatedFlag
+    );
+}
+
+void DeactivateAllPacketsOnEEPROM_ADeactivatedPacketIsPresent_DoesNotOverwritePacket()
+{
+    uint8_t deactivatedFlag = 0x00;
+    uint16_t expectedAdress = 0;
+    uint32_t data = 2020;
+    DataPacket packet = DataToPacket(data);
+    packet.active = deactivatedFlag;
+    uint16_t eepromSize = 50;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress, packet, eepromSize);
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    bool resultBool = DeactivateAllPacketsOnEEPROM();
+
+    ASSERT_TEST(
+        EEPROMClass_put_invocations_o1 == 0
+    );
+}
+
+void DeactivateAllPacketsOnEEPROM_OnePacketIsPresentAfterGarbageData_OverwritesCorrectPositionWithADeactivatedFlag()
+{
+    uint32_t data = 2020;
+    DataPacket packet = DataToPacket(data);
+    uint16_t expectedAdress = 4;
+    uint16_t expectedOverwrittenAdress = static_cast<uint16_t>(expectedAdress + sizeof(packet.stx));
+    uint8_t deactivatedFlag = 0x00;
+    uint16_t eepromSize = 50;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(0x23);
+    EEPROMClass_read_return_v.push_back(0x60);
+    EEPROMClass_read_return_v.push_back(0x30);
+    EEPROMClass_read_return_v.push_back(0x71);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress, packet, eepromSize);
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    bool resultBool = DeactivateAllPacketsOnEEPROM();
+
+    ASSERT_TEST(
+        EEPROMClass_put_param_idx_o1_v[0] == expectedOverwrittenAdress &&
+        EEPROMClass_put_param_t_o1_v[0] == deactivatedFlag
+    );
+}
+
+void DeactivateAllPacketsOnEEPROM_MultiplePacketsArePresent_OverwritesAllPacketsWithADeactivatedFlag()
+{
+    uint8_t deactivatedFlag = 0x00;
+    // Set up packets
+    uint32_t data1 = 220,
+             data2 = 1010,
+             data3 = 303;
+    DataPacket packet1 = DataToPacket(data1);
+    DataPacket packet2 = DataToPacket(data2);
+    DataPacket packet3 = DataToPacket(data3);
+    uint16_t expectedAdress1 = 0,
+             expectedAdress2 = static_cast<uint16_t>(expectedAdress1 + Helper_CalculateSizeOfPacketOnEEPROM(packet1)),
+             expectedAdress3 = static_cast<uint16_t>(expectedAdress2 + Helper_CalculateSizeOfPacketOnEEPROM(packet2));
+    uint16_t expectedOverwrittenAdress1 = static_cast<uint16_t>(expectedAdress1 + sizeof(packet1.stx)),
+             expectedOverwrittenAdress2 = static_cast<uint16_t>(expectedAdress2 + sizeof(packet2.stx)),
+             expectedOverwrittenAdress3 = static_cast<uint16_t>(expectedAdress3 + sizeof(packet3.stx));
+    // Set up mocked behaviour
+    uint16_t eepromSize = static_cast<uint16_t>(expectedAdress3 + Helper_CalculateSizeOfPacketOnEEPROM(packet3) + 10);
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress1, packet1, eepromSize);
+    EEPROMClass_read_return_v.push_back(packet1.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet1.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet1.etx);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress2, packet2, eepromSize);
+    EEPROMClass_read_return_v.push_back(packet2.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet2.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet2.etx);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress3, packet3, eepromSize);
+    EEPROMClass_read_return_v.push_back(packet3.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet3.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet3.etx);
+
+    bool resultBool = DeactivateAllPacketsOnEEPROM();
+
+    ASSERT_TEST(
+        EEPROMClass_put_param_idx_o1_v[0] == expectedOverwrittenAdress1 &&
+        EEPROMClass_put_param_t_o1_v[0] == deactivatedFlag &&
+        EEPROMClass_put_param_idx_o1_v[1] == expectedOverwrittenAdress2 &&
+        EEPROMClass_put_param_t_o1_v[1] == deactivatedFlag &&
+        EEPROMClass_put_param_idx_o1_v[2] == expectedOverwrittenAdress3 &&
+        EEPROMClass_put_param_t_o1_v[2] == deactivatedFlag
+    );
+}
+
+void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_DoesNotWriteToEEPROM()
+{
+    uint8_t deactivatedFlag = 0x00;
+    uint16_t eepromSize = 50;
+    EEPROMClass_length_return = eepromSize;
+
+    bool resultBool = DeactivateAllPacketsOnEEPROM();
+
+    ASSERT_TEST(
+        EEPROMClass_put_invocations_o1 == 0
+    );
+}
+
+void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse()
+{
+    uint8_t deactivatedFlag = 0x00;
+    uint16_t eepromSize = 50;
+    EEPROMClass_length_return = eepromSize;
+
+    bool resultBool = DeactivateAllPacketsOnEEPROM();
+
+    ASSERT_TEST(resultBool == false);
+}
+
 // void FindFirstDataPacketOnEEPROM_TwoPacketsArePresent_StartAdressIsPutInBetweenPackages_FindsSecondPacketFirst(); // Note: can't be tested without somehow linking the idx to the output of the mocked function.
 // void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketOnDataTypeBiggerThan1Byte_SuccessfullySplitsPacketWithoutLoosingData(); // Note: Can't be tested. Would test the eeprom library. 

@@ -92,6 +92,14 @@ bool DeactivatePacket(uint16_t adress);
 bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint16_t *packetSize, uint16_t *packetAdress);
 
 /**
+ * @brief Deactivates all packets present on the EEPROM.
+ * 
+ * @return true Deactivated one or more packets
+ * @return false Couldn't deactivate any packets.
+ */
+bool DeactivateAllPacketsOnEEPROM();
+
+/**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
  * 
  * @param data The data we want to calculate a CRC checksum for.

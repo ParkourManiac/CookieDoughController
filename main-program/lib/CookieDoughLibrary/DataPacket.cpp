@@ -234,6 +234,8 @@ bool DeactivatePacket(uint16_t adress)
 bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint16_t *packetSize, uint16_t *packetAdress)
 {
     uint16_t eepromSize = EEPROM.length();
+    if(startAdress >= eepromSize) return false;
+
     uint16_t currentAdress = 0;
     for(int i = 0; i < eepromSize; i++)
     {
@@ -245,6 +247,25 @@ bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint1
         }
     }
     return false;
+}
+
+bool DeactivateAllPacketsOnEEPROM()
+{
+    bool hasDeactivatedAPacket = false;
+
+    uint16_t startAdress = 0;
+    DataPacket result;
+    uint16_t packetSize, packetAdress;
+    while(FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress))
+    {
+        if(DeactivatePacket(packetAdress))
+        {
+            hasDeactivatedAPacket = true;
+            startAdress = static_cast<uint16_t>((packetAdress + packetSize));
+        }
+    }
+    
+    return hasDeactivatedAPacket;
 }
 
 
