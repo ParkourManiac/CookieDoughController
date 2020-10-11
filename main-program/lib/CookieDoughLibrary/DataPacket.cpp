@@ -12,7 +12,7 @@ DataPacket::DataPacket(const uint8_t *data, const uint16_t dataSize)
     : payloadLength(dataSize)
     , payload(new uint8_t[dataSize])
 {
-    for(int i = 0; i < payloadLength; i++) 
+    for(uint16_t i = 0; i < payloadLength; i++) 
     {
         payload[i] = uint8_t(data[i]);
     }
@@ -237,7 +237,7 @@ bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint1
     if(startAdress >= eepromSize) return false;
 
     uint16_t currentAdress = 0;
-    for(int i = 0; i < eepromSize; i++)
+    for(uint16_t i = 0; i < eepromSize; i++)
     {
         currentAdress = static_cast<uint16_t>((startAdress + i) % eepromSize);
         if(ReadDataPacketOnEEPROM(currentAdress, result, packetSize)) 

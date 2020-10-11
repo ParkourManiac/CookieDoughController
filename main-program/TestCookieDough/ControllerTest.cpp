@@ -110,7 +110,9 @@ void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndRetur
     packet.payloadLength = templateDataSize;
     packet.payload = dataPtr;
     packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet, eepromSize);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     uint16_t amountOfKeys, packetAdress, packetSize;
@@ -138,7 +140,9 @@ void RetrieveBareKeyboardKeysFromMemory_FindsPacketAndReturnsTheBareKeyboardKeys
     };
     uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet, eepromSize);
     unsigned int expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
@@ -170,7 +174,9 @@ void RetrieveBareKeyboardKeysFromMemory_FindsDefectPacket_ReturnsFalse()
     };
     uint8_t *defectDataPtr = reinterpret_cast<uint8_t *>(&defectData);
     DataPacket defectPacket = DataPacket(defectDataPtr, sizeof(defectData));
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, defectPacket);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, defectPacket, eepromSize);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     uint16_t amountOfKeys, packetAdress, packetSize;
@@ -210,8 +216,10 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
     // Prepare packets to be returned.
     unsigned int expectedDefectPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(defectPacket);
     unsigned int expectedValidPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(validPacket);
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, defectPacket);
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(static_cast<uint16_t>(expectedDefectPacketSize), validPacket);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, defectPacket, eepromSize);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(static_cast<uint16_t>(expectedDefectPacketSize), validPacket, eepromSize);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     uint16_t amountOfKeys, packetAdress, packetSize;
@@ -224,70 +232,6 @@ void RetrieveBareKeyboardKeysFromMemory_EepromHasDefectPacketFollowedByValidPack
                 result[0].pin == validKey1.pin && result[0].keyCode == validKey1.keyCode &&
                 result[1].pin == validKey2.pin && result[1].keyCode == validKey2.keyCode);
     delete[](result);
-}
-
-void RetrieveDataPacketFromMemory_DataPacketIsPresentOnEEPROM_RetrievesTheDataPacketAndReturnsTrue()
-{
-    Controller controller = SetUpController();
-    // Makes the function fail to find a packet on the first adress.
-    EEPROMClass_read_return_v.push_back(0);
-    EEPROMClass_length_return_v.push_back(1000);
-    EEPROMClass_length_return_v.push_back(1000);
-    EEPROMClass_length_return_v.push_back(1000);
-    // Makes the function fail to find a packet on the second adress.
-    EEPROMClass_read_return_v.push_back(0);
-    EEPROMClass_length_return_v.push_back(1000);
-    EEPROMClass_length_return_v.push_back(1000);
-    EEPROMClass_length_return_v.push_back(1000);
-    // Makes the function find a packet on the third adress. (Index 2 in EEPROM)
-    uint16_t data = 1337;
-    uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
-    DataPacket packet = DataPacket(dataPtr, sizeof(data));
-    uint16_t expectedAdress = 2;
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress, packet);
-
-    DataPacket result;
-    uint16_t resultPacketSize, packetAdress;
-    bool resultBool = controller.RetrieveDataPacketFromMemory(&result, &resultPacketSize, &packetAdress);
-
-    ASSERT_TEST(
-        resultBool == true &&
-        packet.stx == result.stx &&
-        packet.active == result.active &&
-        packet.payloadLength == result.payloadLength &&
-        packet.crc == result.crc &&
-        packet.payload[0] == result.payload[0] && 
-        packet.payload[1] == result.payload[1] && 
-        packet.etx == result.etx &&
-        packetAdress == expectedAdress &&
-        Helper_CalculateSizeOfPacketOnEEPROM(packet) == resultPacketSize
-    );
-}
-
-void RetrieveDataPacketFromMemory_EepromIsEmpty_ReturnsFalse()
-{
-    Controller controller = SetUpController();
-
-    DataPacket result;
-    uint16_t packetSize, packetAdress;
-    bool resultBool = controller.RetrieveDataPacketFromMemory(&result, &packetSize, &packetAdress);
-
-    ASSERT_TEST(resultBool == false);
-}
-
-void RetrieveDataPacketFromMemory_StartAdressIsGiven_BeginsLookingForPacketAtStartAdress()
-{
-    uint16_t expectedStartAdress = 25;
-    Controller controller = SetUpController();
-    DataPacket empty;
-    empty.payload[0] = 0;
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedStartAdress, empty);
-    
-    DataPacket result;
-    uint16_t packetSize, packetAdress;
-    controller.RetrieveDataPacketFromMemory(&result, &packetSize, &packetAdress, expectedStartAdress);
-
-    ASSERT_TEST(EEPROMClass_read_param_idx_v[0] == static_cast<int>(expectedStartAdress));
 }
 
 void ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload_DoesNotCrash()
@@ -439,7 +383,9 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
     };
     uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet, eepromSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
     controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
@@ -479,7 +425,9 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
     };
     uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet, eepromSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
     controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
@@ -522,8 +470,10 @@ void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymapsFollowedByValidKeymaps_
     uint8_t *defectDataPtr = reinterpret_cast<uint8_t *>(&defectData);
     DataPacket defectPacket = DataPacket(defectDataPtr, sizeof(defectData));
     uint16_t validPacketAdress = Helper_CalculateSizeOfPacketOnEEPROM(defectPacket);
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, defectPacket);
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(validPacketAdress, validPacket);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, defectPacket, eepromSize);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(validPacketAdress, validPacket, eepromSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
     controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);

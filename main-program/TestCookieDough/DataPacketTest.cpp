@@ -776,14 +776,19 @@ void FindFirstDataPacketOnEEPROM_PacketIsPresentAfterGarbageData_FindsPacket()
     Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress, expectedPacket, eepromSize);
 
     DataPacket result;
-    uint16_t packetSize, packetAdress;
-    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+    uint16_t resultPacketSize, resultPacketAdress;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &resultPacketSize, &resultPacketAdress);
 
     ASSERT_TEST(
         resultBool == true &&
+        resultPacketAdress == expectedAdress &&
+        result.stx == expectedPacket.stx &&
+        result.active == expectedPacket.active &&
+        result.payloadLength == expectedPacket.payloadLength &&
+        result.crc == expectedPacket.crc &&
         result.payload[0] == expectedPacket.payload[0] && 
-        packetSize == expectedPacketSize &&
-        packetAdress == expectedAdress
+        result.etx == expectedPacket.etx &&
+        resultPacketSize == expectedPacketSize
     );
 }
 

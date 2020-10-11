@@ -113,7 +113,7 @@ void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     delete[] (serializedKeyMaps);
 }
 
-void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keymapList) // Refactored to BareKeyboardKey.
+void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keymapList)
 {
     uint16_t packetAdress, packetSize, amountOfKeys;
     BareKeyboardKey *payloadAsBareKeys = new BareKeyboardKey[1];
@@ -175,7 +175,7 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsB
     while (!foundValidPacket)
     {
         uint16_t startAdress = *packetAdress;
-        bool foundPacket = RetrieveDataPacketFromMemory(&packet, packetSize, packetAdress, startAdress);
+        bool foundPacket = FindFirstDataPacketOnEEPROM(startAdress, &packet, packetSize, packetAdress);
         if (!foundPacket)
             return false;
 
@@ -215,30 +215,6 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsB
     }
     
     return true;
-}
-
-bool Controller::RetrieveDataPacketFromMemory(DataPacket *packet, uint16_t *packetSize, uint16_t *packetAdress, uint16_t startAdress)
-{
-    *packetAdress = startAdress;
-    *packetSize = 0;
-    bool foundPacket = false;
-    do
-    {
-        foundPacket = ReadDataPacketOnEEPROM(*packetAdress, packet, packetSize);
-        if (!foundPacket)
-        {
-            *packetAdress = static_cast<uint16_t>(*packetAdress + 1);
-            if (*packetAdress >= EEPROM.length())
-            {
-                DEBUG_PRINT(F("Failed to read data from memory!\n")); // DEBUG
-                DEBUG(delay(100));                                         // DEBUG
-
-                return false;
-            }
-        }
-    } while (!foundPacket && *packetAdress < EEPROM.length());
-
-    return foundPacket;
 }
 
 void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result)
