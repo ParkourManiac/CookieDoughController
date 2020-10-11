@@ -234,13 +234,13 @@ bool DeactivatePacket(uint16_t adress)
 bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint16_t *packetSize, uint16_t *packetAdress)
 {
     uint16_t eepromSize = EEPROM.length();
-    uint32_t currentAdress = 0;
+    uint16_t currentAdress = 0;
     for(int i = 0; i < eepromSize; i++)
     {
-        currentAdress = (startAdress + i) % eepromSize;
+        currentAdress = static_cast<uint16_t>((startAdress + i) % eepromSize);
         if(ReadDataPacketOnEEPROM(currentAdress, result, packetSize)) 
         {
-            *packetAdress = static_cast<uint16_t>(currentAdress);
+            *packetAdress = currentAdress;
             return true;
         }
     }
