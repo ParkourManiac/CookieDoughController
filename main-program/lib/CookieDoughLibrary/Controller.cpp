@@ -96,11 +96,12 @@ void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     // // DEBUG
     uint16_t packetSize;
     // TODO: Change this to write to nextPacketAdress and invalidate the old one at currentPacketAdress.
-    bool success = SaveDataPacketToEEPROM(currentPacketAdress, dataPtr, serializedSize, &packetSize);
+    bool success = SaveDataPacketToEEPROM(nextPacketAdress, dataPtr, serializedSize, &packetSize);
     if (success)
     {
         DEBUG_PRINT(F("Settings saved!\n")); // DEBUG
         DEBUG(delay(100)); // DEBUG
+        currentPacketAdress = nextPacketAdress;
         nextPacketAdress = static_cast<uint16_t>(currentPacketAdress + packetSize);
     } else 
     {
