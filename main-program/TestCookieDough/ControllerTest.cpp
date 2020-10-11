@@ -402,6 +402,72 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
     );
 }
 
+void LoadKeymapsFromMemoryIntoList_LoadsKeymap_SetsEepromAdressToTheLoadedPacketsAdress()
+{
+    Controller controller = SetUpController();
+    controller.eepromAdress = 0;
+    BareKeyboardKey data[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 4), 
+        BareKeyboardKey(3, 26), 
+        BareKeyboardKey(4, 22), 
+        BareKeyboardKey(5, 7),
+    };
+    DataPacket packet = DataToPacket(data);
+    uint16_t packetAdress = 2,
+             expectedEepromAdress = packetAdress,
+             eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(13);
+    EEPROMClass_read_return_v.push_back(9);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(packetAdress, packet, eepromSize);
+
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
+    controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
+    BareKeyboardKey *result = nullptr;
+    if (resultingKeymaps.IsEmpty() == false)
+    {
+        result = *(resultingKeymaps[0]);
+    }
+
+    ASSERT_TEST(
+        controller.eepromAdress == expectedEepromAdress &&
+        resultingKeymaps.IsEmpty() == false
+    );
+}
+
+void LoadKeymapsFromMemoryIntoList_LoadsKeymap_SetsNextFreeEepromAdressToAFreeAdressAfterTheEndOfTheLoadedPacket()
+{
+    Controller controller = SetUpController();
+    controller.nextFreeEepromAdress = 0;
+    BareKeyboardKey data[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 4), 
+        BareKeyboardKey(3, 26), 
+        BareKeyboardKey(4, 22), 
+        BareKeyboardKey(5, 7),
+    };
+    DataPacket packet = DataToPacket(data);
+    uint16_t packetAdress = 2,
+             expectedNextFreeEepromAdress = static_cast<uint16_t>(packetAdress + Helper_CalculateSizeOfPacketOnEEPROM(packet)),
+             eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(13);
+    EEPROMClass_read_return_v.push_back(9);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(packetAdress, packet, eepromSize);
+
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
+    controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
+    BareKeyboardKey *result = nullptr;
+    if (resultingKeymaps.IsEmpty() == false)
+    {
+        result = *(resultingKeymaps[0]);
+    }
+
+    ASSERT_TEST(
+        controller.nextFreeEepromAdress == expectedNextFreeEepromAdress &&
+        resultingKeymaps.IsEmpty() == false
+    );
+}
+
 void LoadKeymapsFromMemoryIntoList_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
 {
     const int normalKeyCount = 4;
