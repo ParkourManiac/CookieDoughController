@@ -733,4 +733,138 @@ void DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_DoesNotWriteToEEPR
     );
 }
 
+void FindFirstDataPacketOnEEPROM_TakesInAStartAdress_BeginsLookingAtTheGivenAdress()
+{
+    uint16_t startAdress = 13;
+    uint16_t eepromSize = 100;
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacket result;
+    uint16_t packetSize, packetAdress;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+
+    ASSERT_TEST(EEPROMClass_read_param_idx_v[0] == startAdress);
+}
+
+void FindFirstDataPacketOnEEPROM_FindsPacket_ReturnsTrue()
+{
+    uint16_t startAdress = 2;
+    uint16_t eepromSize = 40;
+    EEPROMClass_length_return = eepromSize;
+    uint8_t data = 22;
+    DataPacket expectedPacket = DataToPacket(data);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(startAdress, expectedPacket, eepromSize);
+
+    DataPacket result;
+    uint16_t packetSize, packetAdress;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+
+    ASSERT_TEST(resultBool == true);
+}
+
+void FindFirstDataPacketOnEEPROM_PacketIsPresentAfterGarbageData_FindsPacket()
+{
+    uint8_t data = 22;
+    DataPacket expectedPacket = DataToPacket(data);
+    uint16_t expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(expectedPacket);
+    uint16_t startAdress = 2;
+    uint16_t expectedAdress = static_cast<uint16_t>(startAdress + 2);
+    uint16_t eepromSize = 40;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(13);
+    EEPROMClass_read_return_v.push_back(9);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress, expectedPacket, eepromSize);
+
+    DataPacket result;
+    uint16_t packetSize, packetAdress;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        result.payload[0] == expectedPacket.payload[0] && 
+        packetSize == expectedPacketSize &&
+        packetAdress == expectedAdress
+    );
+}
+
+void FindFirstDataPacketOnEEPROM_PacketIsPresentAfterGarbageData_FindsPacketOnCorrectAdress()
+{
+    uint8_t data = 22;
+    DataPacket expectedPacket = DataToPacket(data);
+    uint16_t startAdress = 2;
+    uint16_t expectedAdress = static_cast<uint16_t>(startAdress + 2);
+    uint16_t eepromSize = 40;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(13);
+    EEPROMClass_read_return_v.push_back(9);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress, expectedPacket, eepromSize);
+
+    DataPacket result;
+    uint16_t packetSize, packetAdress;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetAdress == expectedAdress
+    );
+}
+
+void FindFirstDataPacketOnEEPROM_FindsPacket_ReturnsCorrectPacketSize()
+{
+    uint16_t startAdress = 2;
+    uint16_t eepromSize = 40;
+    EEPROMClass_length_return = eepromSize;
+    uint8_t data = 22;
+    DataPacket expectedPacket = DataToPacket(data);
+    uint16_t expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(expectedPacket);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(startAdress, expectedPacket, eepromSize);
+
+    DataPacket result;
+    uint16_t packetSize, packetAdress;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetSize == expectedPacketSize
+    );
+}
+
+void FindFirstDataPacketOnEEPROM_NoPacketIsPresent_LooksAtEveryPositionOfTheEeprom()
+{
+    uint16_t startAdress = 3,
+            secondAdress = 0,
+            thirdAdress = 1,
+            fourthAdress = 2;
+    uint16_t eepromSize = 4;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return = 0x00;
+
+    DataPacket result;
+    uint16_t packetSize, packetAdress;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+
+    ASSERT_TEST(
+        EEPROMClass_read_param_idx_v[0] == startAdress &&
+        EEPROMClass_read_param_idx_v[1] == secondAdress &&
+        EEPROMClass_read_param_idx_v[2] == thirdAdress &&
+        EEPROMClass_read_param_idx_v[3] == fourthAdress &&
+        EEPROMClass_read_invocations == eepromSize
+    );
+}
+
+void FindFirstDataPacketOnEEPROM_NoPacketIsPresent_ReturnsFalse()
+{
+    uint16_t startAdress = 3;
+    uint16_t eepromSize = 4;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return = 0x00;
+
+    DataPacket result;
+    uint16_t packetSize, packetAdress;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+
+    ASSERT_TEST(resultBool == false);
+}
+
+// void FindFirstDataPacketOnEEPROM_TwoPacketsArePresent_StartAdressIsPutInBetweenPackages_FindsSecondPacketFirst(); // Note: can't be tested without somehow linking the idx to the output of the mocked function.
 // void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketOnDataTypeBiggerThan1Byte_SuccessfullySplitsPacketWithoutLoosingData(); // Note: Can't be tested. Would test the eeprom library. 

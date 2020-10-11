@@ -80,6 +80,18 @@ bool IsPacketActive(const uint8_t activeFlag);
 bool DeactivatePacket(uint16_t adress);
 
 /**
+ * @brief Tries to find and return the first DataPacket it finds on the EEPROM.
+ * 
+ * @param startAdress The starting point of the search.
+ * @param result The packet that is found.
+ * @param packetSize The size of the found packet.
+ * @param packetAdress The adress of the found packet.
+ * @return true Successfully found a packet.
+ * @return false Could not find a packet on the eeprom.
+ */
+bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint16_t *packetSize, uint16_t *packetAdress);
+
+/**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
  * 
  * @param data The data we want to calculate a CRC checksum for.
