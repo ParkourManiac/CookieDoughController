@@ -405,7 +405,7 @@ void LoadKeymapsFromMemoryIntoList_CorrectlyLoadsKeymapIntoList()
 void LoadKeymapsFromMemoryIntoList_LoadsKeymap_SetsEepromAdressToTheLoadedPacketsAdress()
 {
     Controller controller = SetUpController();
-    controller.eepromAdress = 0;
+    controller.currentPacketAdress = 0;
     BareKeyboardKey data[genericNormalKeyCount] = {
         BareKeyboardKey(2, 4), 
         BareKeyboardKey(3, 26), 
@@ -430,7 +430,7 @@ void LoadKeymapsFromMemoryIntoList_LoadsKeymap_SetsEepromAdressToTheLoadedPacket
     }
 
     ASSERT_TEST(
-        controller.eepromAdress == expectedEepromAdress &&
+        controller.currentPacketAdress == expectedEepromAdress &&
         resultingKeymaps.IsEmpty() == false
     );
 }
@@ -438,7 +438,7 @@ void LoadKeymapsFromMemoryIntoList_LoadsKeymap_SetsEepromAdressToTheLoadedPacket
 void LoadKeymapsFromMemoryIntoList_LoadsKeymap_SetsNextFreeEepromAdressToAFreeAdressAfterTheEndOfTheLoadedPacket()
 {
     Controller controller = SetUpController();
-    controller.nextFreeEepromAdress = 0;
+    controller.nextPacketAdress = 0;
     BareKeyboardKey data[genericNormalKeyCount] = {
         BareKeyboardKey(2, 4), 
         BareKeyboardKey(3, 26), 
@@ -463,7 +463,7 @@ void LoadKeymapsFromMemoryIntoList_LoadsKeymap_SetsNextFreeEepromAdressToAFreeAd
     }
 
     ASSERT_TEST(
-        controller.nextFreeEepromAdress == expectedNextFreeEepromAdress &&
+        controller.nextPacketAdress == expectedNextFreeEepromAdress &&
         resultingKeymaps.IsEmpty() == false
     );
 }
@@ -847,7 +847,7 @@ void SaveKeyMapsToMemory_PutsDownKeysAsBareKeyboardArrayIntoEEPROM()
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.eepromAdress, expectedDataPtr, static_cast<uint16_t>(payloadLength));
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.currentPacketAdress, expectedDataPtr, static_cast<uint16_t>(payloadLength));
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -893,12 +893,12 @@ void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);
-    controller.eepromAdress = 0;
-    controller.nextFreeEepromAdress = 0;
+    controller.currentPacketAdress = 0;
+    controller.nextPacketAdress = 0;
     // Setup mocked packet to return so that the function succeeds.
     DataPacket packet = DataPacket(expectedDataPtr, payloadLength);
     unsigned int packetSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.eepromAdress, packet.payload, packet.payloadLength);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.currentPacketAdress, packet.payload, packet.payloadLength);
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -914,7 +914,7 @@ void SaveKeyMapsToMemory_UpdatesNextFreeEepromAdressOfController()
 
     ASSERT_TEST(
         success == true &&
-        controller.nextFreeEepromAdress == controller.eepromAdress + packetSize);
+        controller.nextPacketAdress == controller.currentPacketAdress + packetSize);
     delete[](expectedData);
 }
 
@@ -941,12 +941,12 @@ void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEe
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);
-    controller.eepromAdress = 0;
-    controller.nextFreeEepromAdress = 1337;
+    controller.currentPacketAdress = 0;
+    controller.nextPacketAdress = 1337;
     // Setup mocked packet to return so that the function succeeds.
     DataPacket packet = DataPacket(expectedDataPtr, payloadLength);
     unsigned int packetSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.eepromAdress, packet.payload, packet.payloadLength);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.currentPacketAdress, packet.payload, packet.payloadLength);
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -962,7 +962,7 @@ void SaveKeyMapsToMemory_NextFreeEepromAdressIsSetToWeirdValue_UpdatesNextFreeEe
 
     ASSERT_TEST(
         success == true &&
-        controller.nextFreeEepromAdress == controller.eepromAdress + packetSize);
+        controller.nextPacketAdress == controller.currentPacketAdress + packetSize);
     delete[](expectedData);
 }
 

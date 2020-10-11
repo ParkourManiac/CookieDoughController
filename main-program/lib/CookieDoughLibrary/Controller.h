@@ -32,8 +32,8 @@ private:
     const uint8_t bufferSize = 8;
     uint8_t *buf; // Keyboard report buffer.
 
-    uint16_t eepromAdress = 0;
-    uint16_t nextFreeEepromAdress = 0;
+    uint16_t currentPacketAdress = 0;
+    uint16_t nextPacketAdress = 0;
 
     EditMode editmode = EditMode(normalKeyCount, true);
 
