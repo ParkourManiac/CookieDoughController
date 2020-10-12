@@ -71,11 +71,10 @@ void Controller::Update()
     }
 }
 
-void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList)
+bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList)
 {
     const int keyCount = keymapList.length * normalKeyCount;
     BareKeyboardKey *serializedKeyMaps = new BareKeyboardKey[keyCount];
-    uint16_t serializedSize = static_cast<uint16_t>(sizeof(serializedKeyMaps[0]) * keyCount);
     for (unsigned int i = 0; i < keymapList.length; i++)
     {
         for (int j = 0; j < normalKeyCount; j++)
@@ -86,9 +85,11 @@ void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     }
 
     uint8_t *dataPtr = reinterpret_cast<uint8_t *>(serializedKeyMaps);
+    uint16_t dataSize = static_cast<uint16_t>(sizeof(serializedKeyMaps[0]) * keyCount);
     // // DEBUG
     // DEBUG_PRINT(F("Passed in: "));
-    // for(int i = 0; i < serializedSize; i++) {
+    // for(int i = 0; i < dataSize; i++) 
+    // {
     //     DEBUG_PRINT(dataPtr[i], HEX);
     // }
     // DEBUG_PRINT(F("\n"));
@@ -96,11 +97,12 @@ void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     // // DEBUG
     uint16_t packetSize;
     // TODO: Change this to write to nextPacketAdress and invalidate the old one at currentPacketAdress.
-    bool success = SaveDataPacketToEEPROM(nextPacketAdress, dataPtr, serializedSize, &packetSize);
+    bool success = SaveDataPacketToEEPROM(nextPacketAdress, dataPtr, dataSize, &packetSize);
     if (success)
     {
         DEBUG_PRINT(F("Settings saved!\n")); // DEBUG
         DEBUG(delay(100)); // DEBUG
+        DeactivatePacket(currentPacketAdress);
         currentPacketAdress = nextPacketAdress;
         nextPacketAdress = static_cast<uint16_t>(currentPacketAdress + packetSize);
     } else 
@@ -112,6 +114,7 @@ void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     }
 
     delete[] (serializedKeyMaps);
+    return success;
 }
 
 void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keymapList)

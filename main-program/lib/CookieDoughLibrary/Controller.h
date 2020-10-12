@@ -65,11 +65,13 @@ public:
 
     /**
      * @brief Saves a list of keymaps to memory.
-     * Note: Will overwrite existing keymaps on the eeprom.
+     * Note: Will overwrite any data already present on the eeprom.
      *
      * @param keyMapList The list of keymaps to be saved.
+     * @return true The keymaps were successfully saved to the EEPROM.
+     * @return false Failed to save the keymaps.
      */
-    void SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList);
+    bool SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList);
 
     /**
      * @brief If present on the EEPROM, Loads a list of keymaps from memory
