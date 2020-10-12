@@ -131,7 +131,7 @@ bool SaveDataPacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, u
 
     if(adress >= sizeOfEeprom)
     {
-        DEBUG_PRINT(F("ERROR: Tried to save the packet outside of the eeproms range. Adress out of range."));
+        DEBUG_PRINT(F("ERROR: Tried to save the packet outside of the eeproms range. Adress out of range. \n"));
         return false;
     }
 
@@ -212,8 +212,7 @@ bool DeactivatePacket(uint16_t adress)
     currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packetTemplate.stx));
     currentAdress = static_cast<uint16_t>(currentAdress + sizeof(packetTemplate.active));
 
-    uint16_t payloadLength;
-    EEPROM.get(currentAdress, payloadLength);
+    EEPROM.get(currentAdress, packetTemplate.payloadLength);
     currentAdress = static_cast<uint16_t>(
         currentAdress +
         sizeof(packetTemplate.payloadLength) +

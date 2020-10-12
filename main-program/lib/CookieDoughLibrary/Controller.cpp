@@ -47,12 +47,33 @@ void Controller::Setup()
     // }
     // // DEBUG
 
+    // DEBUG
+    // DeactivateAllPacketsOnEEPROM();
+    // bool resultBool = DeactivatePacket(42); // 42
+    // if(resultBool) {
+    //     DEBUG_PRINT(F("Successfully deactivated packet \n"));
+    // } else {
+    //     DEBUG_PRINT(F("Failed to deactivate packet \n"));
+    // }
+    // DEBUG
+
+    DEBUG(
+        DEBUG_PRINT(F("|"));
+        for(unsigned int i = 0; i < EEPROM.length(); i++)
+        {
+            uint8_t current = EEPROM.read(i);
+            DEBUG_PRINT(current);
+            DEBUG_PRINT(F("|"));
+        }
+    )
+
     DEBUG_PRINT(F("\nChanging to default keymap.\n"));
     DEBUG(delay(100));
     ChangeKeyMap(defaultKeymap);
     LoadKeymapsFromMemoryIntoList(&customKeyMaps);
     ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount);
     ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount);
+    // nextPacketAdress = EEPROM.length() - 50; // DEBUG
 }
 
 void Controller::Update()
@@ -102,12 +123,15 @@ bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     {
         DEBUG_PRINT(F("Settings saved!\n")); // DEBUG
         DEBUG(delay(100)); // DEBUG
-        DeactivatePacket(currentPacketAdress);
+        if(currentPacketAdress != nextPacketAdress) 
+        {
+            DeactivatePacket(currentPacketAdress);
+        }
         currentPacketAdress = nextPacketAdress;
         nextPacketAdress = static_cast<uint16_t>(currentPacketAdress + packetSize);
     } else 
     {
-        DEBUG_PRINT(F("Failed to write data to memory!\n")); // DEBUG
+        DEBUG_PRINT(F("ERROR: Failed to write data to memory!\n")); // DEBUG
         DEBUG(delay(100)); // DEBUG
 
         // TODO: Implement error code.

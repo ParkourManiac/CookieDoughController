@@ -659,6 +659,28 @@ void DeactivatePacket_OverritesCorrectByteWithADeactivatedFlag()
     );
 }
 
+void DeactivatePacket_ReadsStxPayloadLengthAndEtxFromTheRightPlaces()
+{
+    uint16_t adress = 23;
+    uint16_t deactivatedFlag = 0x00;
+    uint32_t data = 5;
+    DataPacket expectedPacket = DataToPacket(data);
+    uint16_t expectedStxAdress = static_cast<uint16_t>(adress);
+    uint16_t expectedPayloadAdress = static_cast<uint16_t>(adress + sizeof(expectedPacket.stx) + sizeof(expectedPacket.active));
+    uint16_t expectedEtxAdress = static_cast<uint16_t>(adress + sizeof(expectedPacket.stx) + sizeof(expectedPacket.active) + sizeof(expectedPacket.payloadLength) + sizeof(expectedPacket.crc) + sizeof(data));
+    EEPROMClass_read_return_v.push_back(expectedPacket.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
+    EEPROMClass_read_return_v.push_back(expectedPacket.etx);
+
+    DeactivatePacket(adress);
+
+    ASSERT_TEST(
+        EEPROMClass_read_param_idx_v[0] == expectedStxAdress &&
+        EEPROMClass_get_param_idx_o1_v[0] == expectedPayloadAdress &&
+        EEPROMClass_read_param_idx_v[1] == expectedEtxAdress
+    );
+}
+
 void DeactivatePacket_DeactivatesPacketSuccessfully_ReturnsTrue()
 {
     uint16_t adress = 23;

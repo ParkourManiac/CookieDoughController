@@ -1045,6 +1045,47 @@ void SaveKeyMapsToMemory_PacketIsSavedSuccessfully_DeactivatesOldPacket()
     ASSERT_TEST(testHasSucceeded);
 }
 
+void SaveKeyMapsToMemory_CurrentPacketAdressAndNextPacketAdressAreTheSame_SuccessfullySavesPacket_DoesNotDeactivateTheSavedPacket()
+{
+    // Arrange
+    uint16_t deactivatedFlag = 0x00;
+    Controller controller = SetUpController();
+    BareKeyboardKey keymap1[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 1),
+        BareKeyboardKey(4, 2),
+        BareKeyboardKey(5, 3),
+    };
+    BareKeyboardKey expectedData[genericNormalKeyCount]
+    {
+        keymap1[0], keymap1[1], keymap1[2], keymap1[3]
+    };
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(keymap1);
+    DataPacket packet = DataToPacket(expectedData);
+    DataPacket oldPacket = DataToPacket(expectedData);
+    uint16_t sharedAdress = 13;
+    uint16_t expectedOverwrittenAdress = static_cast<uint16_t>(sharedAdress + sizeof(packet.stx));
+    controller.currentPacketAdress = sharedAdress;
+    controller.nextPacketAdress = sharedAdress;
+    // Setup mocked packet to return so that the function succeeds.
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.nextPacketAdress, packet.payload, packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(oldPacket.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(oldPacket.payloadLength);
+    EEPROMClass_read_return_v.push_back(oldPacket.etx);
+
+    // Act
+    bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
+
+    // Assert
+    bool testHasSucceeded = (EEPROMClass_put_param_idx_o1_v.size() > 3) ? (
+            resultBool == true &&
+            EEPROMClass_put_param_idx_o1_v.at(3) == static_cast<int>(expectedOverwrittenAdress) &&
+            EEPROMClass_put_param_t_o1_v.at(3) != deactivatedFlag
+        ) : resultBool == true;
+    ASSERT_TEST(testHasSucceeded);
+}
+
 void SaveKeyMapsToMemory_FailedToSavePacket_DoesNotDeactivateOldPacket()
 {
     // Arrange

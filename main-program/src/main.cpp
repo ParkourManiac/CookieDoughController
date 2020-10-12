@@ -36,12 +36,12 @@ void loop()
 {
     controller.Update();
 
-    // DEBUG
-    if(millis() % 1000 == 0) {
-        Serial.print(freeMemory());
-        Serial.print("\n");
-    } 
-    // DEBUG
+    // // DEBUG
+    // if(millis() % 1000 == 0) {
+    //     Serial.print(freeMemory());
+    //     Serial.print("\n");
+    // } 
+    // // DEBUG
 }
 
 // "If you run out of SRAM..." - https://www.arduino.cc/en/tutorial/memory
