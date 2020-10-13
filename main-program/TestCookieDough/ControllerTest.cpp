@@ -1028,7 +1028,9 @@ void SaveKeyMapsToMemory_PacketIsSavedSuccessfully_DeactivatesOldPacket()
     controller.currentPacketAdress = expectedOldPacketAdress;
     controller.nextPacketAdress = static_cast<uint16_t>(expectedOldPacketAdress + Helper_CalculateSizeOfPacketOnEEPROM(packet) + 10);
     // Setup mocked packet to return so that the function succeeds.
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.nextPacketAdress, packet.payload, packet.payloadLength);
+    uint16_t eepromSize = 1024;
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.nextPacketAdress, packet.payload, packet.payloadLength, eepromSize);
+    EEPROMClass_length_return = eepromSize;
     EEPROMClass_read_return_v.push_back(oldPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(oldPacket.payloadLength);
     EEPROMClass_read_return_v.push_back(oldPacket.etx);

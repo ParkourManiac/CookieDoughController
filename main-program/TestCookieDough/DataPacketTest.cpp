@@ -233,6 +233,54 @@ void CalculateCRC_UsesAlgorithCRC32()
     ASSERT_TEST(result == 1119744540);
 }
 
+void CyclicEepromAdress_TakesInAnAdressThatExceedsTheEepromsSize_WrapsBackToTheBeginningOfTheEeprom()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t adress = static_cast<uint16_t>(eepromSize + 13);
+    uint16_t expectedAdress = static_cast<uint16_t>((eepromSize + 13) % eepromSize);
+
+    uint16_t result = CyclicEepromAdress(adress);
+
+    ASSERT_TEST(result == expectedAdress);
+}
+
+void CyclicEepromAdress_AdressOvershootsEepromSizeWithOneStep_ReturnsTheFirstAdressOftheEeprom()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t adress = static_cast<uint16_t>(1023 + 1);
+    uint16_t expectedAdress = 0;
+
+    uint16_t result = CyclicEepromAdress(adress);
+
+    ASSERT_TEST(result == expectedAdress);
+}
+
+void CyclicEepromAdress_TakesInAnAdressThatExceedsTheEepromsSize_CalculatesTheNewAdressCorrectly()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t overshoot = 25;
+    uint16_t adress = static_cast<uint16_t>(1023 + overshoot);
+    uint16_t expectedAdress = static_cast<uint16_t>(overshoot - 1);
+
+    uint16_t result = CyclicEepromAdress(adress);
+
+    ASSERT_TEST(result == expectedAdress);
+}
+
+void CyclicEepromAdress_AdressIsWithinEepromsSize_AdressIsUnchanged()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t expectedAdress = 103;
+
+    uint16_t result = CyclicEepromAdress(expectedAdress);
+
+    ASSERT_TEST(result == expectedAdress);
+}
+
 void SaveDataPacketToEEPROM_SavesStxToFirstGivenAdress()
 {
     uint8_t data = 42;
@@ -647,6 +695,8 @@ void DeactivatePacket_OverritesCorrectByteWithADeactivatedFlag()
     uint16_t deactivatedFlag = 0x00;
     DataPacket expectedPacket;
     uint16_t expectedOverwrittenAdress = static_cast<uint16_t>(adress + sizeof(expectedPacket.stx));
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
     EEPROMClass_read_return_v.push_back(expectedPacket.etx);
@@ -668,6 +718,8 @@ void DeactivatePacket_ReadsStxPayloadLengthAndEtxFromTheRightPlaces()
     uint16_t expectedStxAdress = static_cast<uint16_t>(adress);
     uint16_t expectedPayloadAdress = static_cast<uint16_t>(adress + sizeof(expectedPacket.stx) + sizeof(expectedPacket.active));
     uint16_t expectedEtxAdress = static_cast<uint16_t>(adress + sizeof(expectedPacket.stx) + sizeof(expectedPacket.active) + sizeof(expectedPacket.payloadLength) + sizeof(expectedPacket.crc) + sizeof(data));
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
     EEPROMClass_read_return_v.push_back(expectedPacket.etx);
@@ -687,6 +739,8 @@ void DeactivatePacket_DeactivatesPacketSuccessfully_ReturnsTrue()
     uint16_t deactivatedFlag = 0x00;
     DataPacket expectedPacket;
     uint16_t expectedOverwrittenAdress = static_cast<uint16_t>(adress + sizeof(expectedPacket.stx));
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
     EEPROMClass_read_return_v.push_back(expectedPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
     EEPROMClass_read_return_v.push_back(expectedPacket.etx);
@@ -700,9 +754,52 @@ void DeactivatePacket_DeactivatesPacketSuccessfully_ReturnsTrue()
     );
 }
 
+void DeactivatePacket_StxIsAtTheEndAndActiveFlagIsOnTheStartOfEeprom_DeactivatesTheCorrectAdressAtTheBeginningOfTheEeprom() // TODO: FInish this test
+{
+    uint16_t eepromSize = 23;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t deactivatedFlag = 0x00;
+    uint32_t data = 15;
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = static_cast<uint16_t>(eepromSize - sizeof(packet.stx));
+    uint16_t expectedOverwrittenAdress = static_cast<uint16_t>((adress + sizeof(packet.stx)) % eepromSize);
+    uint16_t expectedStxAdress = static_cast<uint16_t>(adress);
+    uint16_t expectedPayloadAdress = static_cast<uint16_t>((adress + 
+                                                            sizeof(packet.stx) + 
+                                                            sizeof(packet.active)
+                                                            ) % eepromSize);
+    uint16_t expectedEtxAdress = static_cast<uint16_t>((adress + 
+                                                        sizeof(packet.stx) + 
+                                                        sizeof(packet.active) + 
+                                                        sizeof(packet.payloadLength) + 
+                                                        sizeof(packet.crc) + 
+                                                        sizeof(data)
+                                                        ) % eepromSize);
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    DeactivatePacket(adress);
+
+    std::cout << expectedStxAdress << "\n";
+    std::cout << expectedOverwrittenAdress << "\n";
+    std::cout << expectedPayloadAdress << "\n";
+    std::cout << expectedEtxAdress << "\n";
+
+    ASSERT_TEST(
+        EEPROMClass_read_param_idx_v[0] == expectedStxAdress &&
+        EEPROMClass_get_param_idx_o1_v[0] == expectedPayloadAdress &&
+        EEPROMClass_read_param_idx_v[1] == expectedEtxAdress &&
+        EEPROMClass_put_param_idx_o1_v[0] == expectedOverwrittenAdress &&
+        EEPROMClass_put_param_t_o1_v[0] == deactivatedFlag
+    );
+}
+
 void DeactivatePacket_AdressDoesNotPointToStx_ReturnsFalse()
 {
     uint16_t adress = 23;
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
     EEPROMClass_read_return_v.push_back(0x00);
 
     bool result = DeactivatePacket(adress);
@@ -713,6 +810,8 @@ void DeactivatePacket_AdressDoesNotPointToStx_ReturnsFalse()
 void DeactivatePacket_AdressDoesNotPointToStx_DoesNotWriteToEEPROM()
 {
     uint16_t adress = 23;
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
     EEPROMClass_read_return_v.push_back(0x00);
 
     bool result = DeactivatePacket(adress);
@@ -723,11 +822,33 @@ void DeactivatePacket_AdressDoesNotPointToStx_DoesNotWriteToEEPROM()
     );
 }
 
+void DeactivatePacket_AdressIsOutOfRangeOfEeprom_ReturnsFalseAndDoesNotWriteToEeprom()
+{
+    uint16_t eepromSize = 23;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t adress = eepromSize;
+    uint16_t deactivatedFlag = 0x00;
+    uint32_t data = 15;
+    DataPacket packet = DataToPacket(data);
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    bool resultBool = DeactivatePacket(adress);
+
+    ASSERT_TEST(
+        resultBool == false &&
+        EEPROMClass_put_invocations_o1 == 0
+    );
+}
+
 
 void DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_ReturnsFalse()
 {
     uint16_t adress = 23;
     DataPacket packet;
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
     EEPROMClass_read_return_v.push_back(packet.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
     EEPROMClass_read_return_v.push_back(0x00);
@@ -743,6 +864,8 @@ void DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_DoesNotWriteToEEPR
 {
     uint16_t adress = 23;
     DataPacket packet;
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
     EEPROMClass_read_return_v.push_back(packet.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
     EEPROMClass_read_return_v.push_back(0x00);
