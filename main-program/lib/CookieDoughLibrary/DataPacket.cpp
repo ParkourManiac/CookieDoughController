@@ -51,14 +51,14 @@ bool ReadDataPacketOnEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packe
         return false;
     offset += sizeof(packet->stx);
 
-    currentAdress = (adress + offset) % sizeOfEeprom;
+    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     EEPROM.get(currentAdress, packet->active);
-    if (IsPacketActive(packet->active) == false) // TODO: TEST THIS IF STATEMENT
+    if (IsPacketActive(packet->active) == false)
         return false;
     offset += sizeof(packet->active);
 
     // PAYLOAD LENGTH: 
-    currentAdress = (adress + offset) % sizeOfEeprom;
+    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     EEPROM.get(currentAdress, packet->payloadLength);
     uint16_t packetSizeExcludingPayload = static_cast<uint16_t>(
         sizeof(packet->stx) +
@@ -74,21 +74,22 @@ bool ReadDataPacketOnEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packe
 
 
     // CRC
-    currentAdress = (adress + offset) % sizeOfEeprom;
+    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     EEPROM.get(currentAdress, packet->crc);
     offset += sizeof(packet->crc);
 
     // ETX: If the packet does not end with the etx...
-    currentAdress = (adress + offset) % sizeOfEeprom;
+    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     if (EEPROM.read(currentAdress + packet->payloadLength) != packet->etx)
         return false;
 
     // PAYLOAD: Retrieve payload as an uint8_t array.
-    currentAdress = (adress + offset) % sizeOfEeprom;
+    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     uint8_t *payloadFromEEPROM = new uint8_t[packet->payloadLength];
     for (unsigned int i = 0; i < packet->payloadLength; i++)
     {
-        payloadFromEEPROM[i] = EEPROM.read(currentAdress + i);
+        uint16_t currentPayloadAdress = CyclicAdress(currentAdress + i, sizeOfEeprom);
+        payloadFromEEPROM[i] = EEPROM.read(currentPayloadAdress);
     }
     offset += packet->payloadLength * sizeof(packet->payload[0]);
 
@@ -142,26 +143,27 @@ bool SaveDataPacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, u
     EEPROM.put(adress, packet.stx);
     offset = sizeof(packet.stx);
 
-    currentAdress = (adress + offset) % sizeOfEeprom;
+    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     EEPROM.put(currentAdress, packet.active);
     offset += sizeof(packet.active);
 
-    currentAdress = (adress + offset) % sizeOfEeprom;
+    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     EEPROM.put(currentAdress, packet.payloadLength);
     offset += sizeof(packet.payloadLength);
 
-    currentAdress = (adress + offset) % sizeOfEeprom;
+    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     EEPROM.put(currentAdress, packet.crc);
     offset += sizeof(packet.crc);
 
-    currentAdress = (adress + offset) % sizeOfEeprom;
+    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     for (uint16_t i = 0; i < packet.payloadLength; i++)
     {
-        EEPROM.update(currentAdress + i, packet.payload[i]);
+        uint16_t currentPayloadAdress = CyclicAdress(currentAdress + i, sizeOfEeprom);
+        EEPROM.update(currentPayloadAdress, packet.payload[i]);
     }
     offset += (packet.payloadLength * sizeof(packet.payload[0]));
 
-    currentAdress = (adress + offset) % sizeOfEeprom;
+    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     EEPROM.put(currentAdress, packet.etx);
     offset += sizeof(packet.etx);
 
@@ -180,6 +182,7 @@ bool SaveDataPacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, u
     bool success = ReadDataPacketOnEEPROM(adress, &result, &_sizeOfPacket);
     if (!success || packet.crc != result.crc)
     {
+        DEBUG_PRINT(F("ERROR: Failed to save DataPacket."));
         return false; // Throw: Something went wrong when writing.
     } else
     {
@@ -207,34 +210,32 @@ bool DeactivatePacket(uint16_t adress)
 
     uint16_t currentAdress = adress;
     DataPacket packetTemplate;
-    uint16_t adressOfActiveFlag = static_cast<uint16_t>(
-        (adress + sizeof(packetTemplate.stx)) % eepromSize
+    uint16_t adressOfActiveFlag = CyclicAdress(
+            (adress + sizeof(packetTemplate.stx)
+        ), eepromSize
     );
     uint8_t deactivatedFlag = 0x00;
 
-    uint8_t stx = EEPROM.read(currentAdress);
+    uint8_t stx = EEPROM.read(adress);
     if(stx != packetTemplate.stx) 
     {
         return false;
     }
-    currentAdress = static_cast<uint16_t>(
-        (
+    currentAdress = CyclicAdress((
             currentAdress + 
             sizeof(packetTemplate.stx) + 
             sizeof(packetTemplate.active)
-        ) % eepromSize
+        ), eepromSize
     );
-
     EEPROM.get(currentAdress, packetTemplate.payloadLength);
-    currentAdress = static_cast<uint16_t>(
-        (
+
+    currentAdress = CyclicAdress((
             currentAdress +
             sizeof(packetTemplate.payloadLength) +
             sizeof(packetTemplate.crc) + 
             sizeof(packetTemplate.payload[0]) * packetTemplate.payloadLength
-        ) % eepromSize
+        ), eepromSize
     );
-
     uint8_t etx = EEPROM.read(currentAdress);
     if(etx != packetTemplate.etx)
     {
@@ -253,7 +254,7 @@ bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint1
     uint16_t currentAdress = 0;
     for(uint16_t i = 0; i < eepromSize; i++)
     {
-        currentAdress = static_cast<uint16_t>((startAdress + i) % eepromSize);
+        currentAdress = CyclicAdress(startAdress + i, eepromSize);
         if(ReadDataPacketOnEEPROM(currentAdress, result, packetSize)) 
         {
             *packetAdress = currentAdress;
@@ -282,17 +283,11 @@ bool DeactivateAllPacketsOnEEPROM()
     return hasDeactivatedAPacket;
 }
 
-// // TODO: Implement this in Controller.
-// uint16_t CyclicEepromAdress(uint16_t adress)
-// {
-//     // return adress % EEPROM.length();
-// }
-
-// TODO: Implement this
-// uint16_t CyclicAdress(uint16_t adress, uint16_t cyclicBufferSize)
-// {
-//     return adress % cyclicBufferSize;
-// }
+uint16_t CyclicAdress(uint32_t adress, uint16_t bufferSize)
+{
+    if(bufferSize == 0) return 0;
+    return static_cast<uint16_t>(adress % bufferSize);
+}
 
 uint32_t CalculateCRC(uint8_t *data, uint16_t length)
 {

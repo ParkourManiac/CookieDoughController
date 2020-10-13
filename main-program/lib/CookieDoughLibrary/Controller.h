@@ -32,6 +32,8 @@ private:
     const uint8_t bufferSize = 8;
     uint8_t *buf; // Keyboard report buffer.
 
+    const uint16_t storageSize;
+
     uint16_t currentPacketAdress = 0;
     uint16_t nextPacketAdress = 0;
 
@@ -62,6 +64,19 @@ public:
      * @brief The update loop of the controller. Handles everything from updating state to sending the keystrokes.
      */
     void Update();
+
+    /**
+     * @brief Prevents the provided adress from exceeding the last adress of the EEPROM,
+     * and converts the adress into a cyclic format. 
+     * 
+     * @param adress The adress to be made cyclic.
+     * @return uint16_t Returns the adress in a safe cyclic format. If the adress exceeds
+     * the last adress of the EEPROM, a new safe adress that wraps back to the start of the EEPROM
+     * will be returned. 
+     * If the adress does not exceed the EEPROMs last adress, the returned adress 
+     * will be equal to the provided adress.
+     */
+    uint16_t CyclicEepromAdress(uint32_t adress);
 
     /**
      * @brief Saves a list of keymaps to memory.

@@ -43,7 +43,25 @@ Controller SetUpController()
         SpecialKey(12, toggleDefaultKeyMap),
     };
 
+    EEPROMClass_length_return_v.push_back(1024);
+
     return Controller(defaultKeymap, genericNormalKeyCount, specialKeys, genericSpecialKeyCount);
+}
+
+void Controller_Constructor_ReadsSizeOfEEPROMAndSavesItToStorageSizeVariable()
+{
+    uint16_t expectedStorageSize = 1024;
+    EEPROMClass_length_return = expectedStorageSize;
+    BareKeyboardKey defaultKeymap[1] {
+        BareKeyboardKey(2, 80),
+    };
+    SpecialKey specialKeys[1] {
+        SpecialKey(12, toggleDefaultKeyMap),
+    };
+
+    Controller controller = Controller(defaultKeymap, 1, specialKeys, 1);
+    
+    ASSERT_TEST(controller.storageSize == expectedStorageSize);
 }
 
 void Controller_Constructor_CopiesProvidedKeymapsIntoClass()
@@ -100,6 +118,52 @@ void Controller_Constructor_AllocatesEnoughSpaceForPointers()
     didNotCrash = true;
 
     ASSERT_TEST(didNotCrash == true);
+}
+
+void CyclicEepromAdress_TakesInAnAdressThatExceedsTheEepromsSize_WrapsBackToTheBeginningOfTheEeprom()
+{
+    Controller controller = SetUpController();
+    uint16_t adress = static_cast<uint16_t>(controller.storageSize + 13);
+    uint16_t expectedAdress = static_cast<uint16_t>((controller.storageSize + 13) % controller.storageSize);
+
+    uint16_t result = controller.CyclicEepromAdress(adress);
+
+    ASSERT_TEST(result == expectedAdress);
+}
+
+void CyclicEepromAdress_AdressOvershootsEepromSizeWithOneStep_ReturnsTheFirstAdressOftheEeprom()
+{
+    Controller controller = SetUpController();
+    uint16_t lastAdressOfStorage = static_cast<uint16_t>(controller.storageSize - 1);
+    uint16_t adress = static_cast<uint16_t>(lastAdressOfStorage + 1);
+    uint16_t expectedAdress = 0;
+
+    uint16_t result = controller.CyclicEepromAdress(adress);
+
+    ASSERT_TEST(result == expectedAdress);
+}
+
+void CyclicEepromAdress_TakesInAnAdressThatExceedsTheEepromsSize_CalculatesTheNewAdressCorrectly()
+{
+    Controller controller = SetUpController();
+    uint16_t lastAdressOfStorage = static_cast<uint16_t>(controller.storageSize - 1);
+    uint16_t overshoot = 25;
+    uint16_t adress = static_cast<uint16_t>(lastAdressOfStorage + overshoot);
+    uint16_t expectedAdress = static_cast<uint16_t>(overshoot - 1);
+
+    uint16_t result = controller.CyclicEepromAdress(adress);
+
+    ASSERT_TEST(result == expectedAdress);
+}
+
+void CyclicEepromAdress_AdressIsWithinEepromsSize_AdressIsUnchanged()
+{
+    Controller controller = SetUpController();
+    uint16_t expectedAdress = static_cast<uint16_t>(controller.storageSize - 13);
+
+    uint16_t result = controller.CyclicEepromAdress(expectedAdress);
+
+    ASSERT_TEST(result == expectedAdress);
 }
 
 void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse()
@@ -355,7 +419,6 @@ void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
 {
     const int normalKeyCount = 4;
     BareKeyboardKey defaultKeymapConfiguration[normalKeyCount] = {
-        // Key map Arrow keys
         BareKeyboardKey(2, 0),
         BareKeyboardKey(3, 0),
         BareKeyboardKey(4, 0),
@@ -468,6 +531,54 @@ void LoadKeymapsFromMemoryIntoList_LoadsKeymap_SetsNextFreeEepromAdressToAFreeAd
 
     ASSERT_TEST(
         controller.nextPacketAdress == expectedNextFreeEepromAdress &&
+        resultingKeymaps.IsEmpty() == false
+    );
+}
+
+void LoadKeymapsFromMemoryIntoList_LoadsKeymapThatExceedsTheEepromsLastAdress_DoesNotUpdateNextPacketAdressWithAnAdressOutsideTheEeprom()
+{
+    uint16_t eepromSize = 60;
+    EEPROMClass_length_return = eepromSize;
+    const int normalKeyCount = 4;
+    BareKeyboardKey defaultKeymap[normalKeyCount] = {
+        BareKeyboardKey(2, 1),
+        BareKeyboardKey(3, 2),
+        BareKeyboardKey(4, 3),
+        BareKeyboardKey(5, 4),
+    };
+    const int specialKeyCount = 1;
+    SpecialKey specialKeys[specialKeyCount] {
+        SpecialKey(12, toggleDefaultKeyMap),
+    };
+    Controller controller(defaultKeymap, normalKeyCount, specialKeys, specialKeyCount);
+    controller.nextPacketAdress = 0;
+    BareKeyboardKey data[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 4), 
+        BareKeyboardKey(3, 26), 
+        BareKeyboardKey(4, 22), 
+        BareKeyboardKey(5, 7),
+    };
+    DataPacket packet = DataToPacket(data);
+    uint16_t packetSize = Helper_CalculateSizeOfPacketOnEEPROM(packet),
+             packetAdress = static_cast<uint16_t>(controller.storageSize - (packetSize / 2)),
+             expectedNextPacketAdress = CyclicAdress(packetAdress + packetSize, controller.storageSize);
+    // Push garbage so that the packet will be mocked at the right adress.
+    for(int i = 0; i < packetAdress; i++)
+    {
+        EEPROMClass_read_return_v.push_back(13);
+    }
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(packetAdress, packet, controller.storageSize);
+
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
+    controller.LoadKeymapsFromMemoryIntoList(&resultingKeymaps);
+    BareKeyboardKey *result = nullptr;
+    if (resultingKeymaps.IsEmpty() == false)
+    {
+        result = *(resultingKeymaps[0]);
+    }
+
+    ASSERT_TEST(
+        controller.nextPacketAdress == expectedNextPacketAdress &&
         resultingKeymaps.IsEmpty() == false
     );
 }
@@ -964,6 +1075,38 @@ void SaveKeyMapsToMemory_UpdatesNextPacketAdressWithAFreeAdress()
     controller.nextPacketAdress = adressToSavePacket;
     // Setup mocked packet to return so that the function succeeds.
     Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adressToSavePacket, packet.payload, packet.payloadLength);
+
+    bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        controller.nextPacketAdress == expectedNextPacketAdress
+    );
+}
+
+void SaveKeyMapsToMemory_SavedPacketExceedsTheLastAdressOfTheEeprom_DoesNotSetNextPacketAdressToAnAdressOutsideTheEeprom()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey keymap1[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 0),
+        BareKeyboardKey(3, 1),
+        BareKeyboardKey(4, 2),
+        BareKeyboardKey(5, 3),
+    };
+    BareKeyboardKey expectedData[genericNormalKeyCount]
+    {
+        keymap1[0], keymap1[1], keymap1[2], keymap1[3]
+    };
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(keymap1);
+    DataPacket packet = DataToPacket(expectedData);
+    uint16_t packetSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
+    uint16_t adressToSavePacket = static_cast<uint16_t>(controller.storageSize - (packetSize / 2));
+    uint16_t expectedNextPacketAdress = CyclicAdress(adressToSavePacket + packetSize, controller.storageSize);
+    controller.currentPacketAdress = 0;
+    controller.nextPacketAdress = adressToSavePacket;
+    // Setup mocked packet to return so that the function succeeds.
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adressToSavePacket, packet.payload, packet.payloadLength, controller.storageSize);
 
     bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 

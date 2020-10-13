@@ -233,50 +233,85 @@ void CalculateCRC_UsesAlgorithCRC32()
     ASSERT_TEST(result == 1119744540);
 }
 
-void CyclicEepromAdress_TakesInAnAdressThatExceedsTheEepromsSize_WrapsBackToTheBeginningOfTheEeprom()
+void CyclicAdress_TakesInAnAdressThatExceedsTheBufferSize_WrapsBackToTheBeginningOfTheBuffer()
 {
-    uint16_t eepromSize = 1024;
-    EEPROMClass_length_return = eepromSize;
-    uint16_t adress = static_cast<uint16_t>(eepromSize + 13);
-    uint16_t expectedAdress = static_cast<uint16_t>((eepromSize + 13) % eepromSize);
+    uint16_t bufferSize = 1024;
+    uint16_t adress = static_cast<uint16_t>(bufferSize + 13);
+    uint16_t expectedAdress = static_cast<uint16_t>(adress % bufferSize);
 
-    uint16_t result = CyclicEepromAdress(adress);
+    uint16_t result = CyclicAdress(adress, bufferSize);
 
     ASSERT_TEST(result == expectedAdress);
 }
 
-void CyclicEepromAdress_AdressOvershootsEepromSizeWithOneStep_ReturnsTheFirstAdressOftheEeprom()
+void CyclicAdress_AdressOvershootsLastBufferAdressWithOneStep_ReturnsTheFirstAdressOftheBuffer()
 {
-    uint16_t eepromSize = 1024;
-    EEPROMClass_length_return = eepromSize;
+    uint16_t bufferSize = 1024;
     uint16_t adress = static_cast<uint16_t>(1023 + 1);
     uint16_t expectedAdress = 0;
 
-    uint16_t result = CyclicEepromAdress(adress);
+    uint16_t result = CyclicAdress(adress, bufferSize);
 
     ASSERT_TEST(result == expectedAdress);
 }
 
-void CyclicEepromAdress_TakesInAnAdressThatExceedsTheEepromsSize_CalculatesTheNewAdressCorrectly()
+void CyclicAdress_TakesInAnAdressThatExceedsTheLastAdressOfTheBuffer_CalculatesTheNewAdressCorrectly()
 {
-    uint16_t eepromSize = 1024;
-    EEPROMClass_length_return = eepromSize;
+    uint16_t bufferSize = 1024;
     uint16_t overshoot = 25;
     uint16_t adress = static_cast<uint16_t>(1023 + overshoot);
     uint16_t expectedAdress = static_cast<uint16_t>(overshoot - 1);
 
-    uint16_t result = CyclicEepromAdress(adress);
+    uint16_t result = CyclicAdress(adress, bufferSize);
 
     ASSERT_TEST(result == expectedAdress);
 }
 
-void CyclicEepromAdress_AdressIsWithinEepromsSize_AdressIsUnchanged()
+void CyclicAdress_OvershootsWholeBufferMultipleTimes_ReturnsAdressWithinBuffersSize()
 {
-    uint16_t eepromSize = 1024;
-    EEPROMClass_length_return = eepromSize;
+    uint16_t bufferSize = 10;
+    uint16_t adress = 35;
+    uint16_t expectedAdress = 5;
+
+    uint16_t result = CyclicAdress(adress, bufferSize);
+
+    ASSERT_TEST(result == expectedAdress);
+}
+
+void CyclicAdress_CalculatesNewAdressDependingOnBufferSize_ReturnsCorrectAdress()
+{
+    uint16_t bufferSize1 = 10;
+    uint16_t bufferSize2 = 3;
+    uint16_t adress = 35;
+    uint16_t expectedAdress1 = 5;
+    uint16_t expectedAdress2 = 2;
+
+    uint16_t result1 = CyclicAdress(adress, bufferSize1);
+    uint16_t result2 = CyclicAdress(adress, bufferSize2);
+
+    ASSERT_TEST(
+        result1 == expectedAdress1 &&
+        result2 == expectedAdress2
+    );
+}
+
+void CyclicAdress_ProvidedAdressIsWithinBuffersSize_AdressIsUnchanged()
+{
+    uint16_t bufferSize = 1024;
     uint16_t expectedAdress = 103;
 
-    uint16_t result = CyclicEepromAdress(expectedAdress);
+    uint16_t result = CyclicAdress(expectedAdress, bufferSize);
+
+    ASSERT_TEST(result == expectedAdress);
+}
+
+void CyclicAdress_BufferSizeIsZero_ReturnsZero() 
+{
+    uint16_t bufferSize = 0,
+            adress = 13,
+            expectedAdress = 0;
+
+    uint16_t result = CyclicAdress(adress, bufferSize);
 
     ASSERT_TEST(result == expectedAdress);
 }
@@ -395,6 +430,42 @@ void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketBetweenEndAn
         EEPROMClass_update_param_idx_v[3] == static_cast<int>(expectedPayloadAdressPart3) && EEPROMClass_update_param_val_v[3] == dataPtr[3] &&
         EEPROMClass_put_param_idx_o1_v[2] == static_cast<int>(expectedEtxAdress) && EEPROMClass_put_param_t_o1_v[2] == packet.etx &&
         packetSize == expectedPacketSize
+    );
+}
+
+void SaveDataPacketToEEPROM_SplitsPacketOnPayload_PutsDownPayloadOnCorrectAdresses()
+{
+    uint32_t data = 888;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    uint16_t expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
+    uint16_t eepromSize = static_cast<uint16_t>(expectedPacketSize + 5);
+    uint16_t relativePayloadAdress = sizeof(packet.stx) + 
+                                     sizeof(packet.active) +
+                                     sizeof(packet.payloadLength) +
+                                     sizeof(packet.crc);
+    uint16_t adress = static_cast<uint16_t>(
+        eepromSize - (
+            relativePayloadAdress +
+            (sizeof(data) / 2)
+        )
+    );
+    uint16_t expectedPayloadAdressPart0 = static_cast<uint16_t>((adress + relativePayloadAdress + 0) % eepromSize),
+             expectedPayloadAdressPart1 = static_cast<uint16_t>((adress + relativePayloadAdress + 1) % eepromSize),
+             expectedPayloadAdressPart2 = static_cast<uint16_t>((adress + relativePayloadAdress + 2) % eepromSize),
+             expectedPayloadAdressPart3 = static_cast<uint16_t>((adress + relativePayloadAdress + 3) % eepromSize);
+    // This ensures that SaveDataPacketToEEPROM returns true.
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
+
+    uint16_t packetSize;
+    bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
+
+    ASSERT_TEST(
+        resultBool == true && 
+        EEPROMClass_update_param_idx_v[0] == static_cast<int>(expectedPayloadAdressPart0) && EEPROMClass_update_param_val_v[0] == dataPtr[0] &&
+        EEPROMClass_update_param_idx_v[1] == static_cast<int>(expectedPayloadAdressPart1) && EEPROMClass_update_param_val_v[1] == dataPtr[1] &&
+        EEPROMClass_update_param_idx_v[2] == static_cast<int>(expectedPayloadAdressPart2) && EEPROMClass_update_param_val_v[2] == dataPtr[2] &&
+        EEPROMClass_update_param_idx_v[3] == static_cast<int>(expectedPayloadAdressPart3) && EEPROMClass_update_param_val_v[3] == dataPtr[3]
     );
 }
 
@@ -594,6 +665,43 @@ void ReadDataPacketOnEEPROM_PacketIsSplitBetweenEndAndStartOfEEPROM_Successfully
     );
 }
 
+void ReadDataPacketOnEEPROM_PacketsPayloadIsSplitBetweenEndAndStartOfEEPROM_SuccessfullyReadsPayload()
+{
+    uint32_t data = 888;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket expectedPacket = DataPacket(dataPtr, sizeof(data));
+    uint16_t expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(expectedPacket);
+    uint16_t eepromSize = static_cast<uint16_t>(expectedPacketSize + 5);
+    uint16_t relativePayloadAdress = sizeof(expectedPacket.stx) + 
+                                     sizeof(expectedPacket.active) +
+                                     sizeof(expectedPacket.payloadLength) +
+                                     sizeof(expectedPacket.crc);
+    uint16_t adress = static_cast<uint16_t>(
+        eepromSize - (
+            relativePayloadAdress +
+            (sizeof(data) / 2)
+        )
+    );
+    uint16_t expectedPayloadAdressPart0 = static_cast<uint16_t>((adress + relativePayloadAdress + 0) % eepromSize),
+             expectedPayloadAdressPart1 = static_cast<uint16_t>((adress + relativePayloadAdress + 1) % eepromSize),
+             expectedPayloadAdressPart2 = static_cast<uint16_t>((adress + relativePayloadAdress + 2) % eepromSize),
+             expectedPayloadAdressPart3 = static_cast<uint16_t>((adress + relativePayloadAdress + 3) % eepromSize);
+    // This ensures that ReadDataPacketOnEEPROM returns true
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, expectedPacket, eepromSize);
+
+    DataPacket result;
+    uint16_t packetSizeResult;
+    bool resultBool = ReadDataPacketOnEEPROM(adress, &result, &packetSizeResult);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        EEPROMClass_read_param_idx_v[2] == static_cast<int>(expectedPayloadAdressPart0) && result.payload[0] == expectedPacket.payload[0] &&
+        EEPROMClass_read_param_idx_v[3] == static_cast<int>(expectedPayloadAdressPart1) && result.payload[1] == expectedPacket.payload[1] &&
+        EEPROMClass_read_param_idx_v[4] == static_cast<int>(expectedPayloadAdressPart2) && result.payload[2] == expectedPacket.payload[2] &&
+        EEPROMClass_read_param_idx_v[5] == static_cast<int>(expectedPayloadAdressPart3) && result.payload[3] == expectedPacket.payload[3]
+    );
+}
+
 void ReadDataPacketOnEEPROM_ReturnsFalseWhenAValidPacketIsNotActive()
 {
     uint64_t data = 123211321;
@@ -754,7 +862,7 @@ void DeactivatePacket_DeactivatesPacketSuccessfully_ReturnsTrue()
     );
 }
 
-void DeactivatePacket_StxIsAtTheEndAndActiveFlagIsOnTheStartOfEeprom_DeactivatesTheCorrectAdressAtTheBeginningOfTheEeprom() // TODO: FInish this test
+void DeactivatePacket_StxIsAtTheLastAdressAndActiveFlagIsOnTheFirstAdressOfEeprom_DeactivatesTheCorrectAdress()
 {
     uint16_t eepromSize = 23;
     EEPROMClass_length_return = eepromSize;
@@ -781,12 +889,8 @@ void DeactivatePacket_StxIsAtTheEndAndActiveFlagIsOnTheStartOfEeprom_Deactivates
 
     DeactivatePacket(adress);
 
-    std::cout << expectedStxAdress << "\n";
-    std::cout << expectedOverwrittenAdress << "\n";
-    std::cout << expectedPayloadAdress << "\n";
-    std::cout << expectedEtxAdress << "\n";
-
     ASSERT_TEST(
+        expectedOverwrittenAdress == 0 &&
         EEPROMClass_read_param_idx_v[0] == expectedStxAdress &&
         EEPROMClass_get_param_idx_o1_v[0] == expectedPayloadAdress &&
         EEPROMClass_read_param_idx_v[1] == expectedEtxAdress &&

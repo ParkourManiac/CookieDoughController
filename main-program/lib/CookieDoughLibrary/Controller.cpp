@@ -13,6 +13,7 @@ Controller::Controller(BareKeyboardKey *_defaultKeymap, int amountOfDefaultKeys,
     , customKeyMapsPtr(new LinkedList<BareKeyboardKey *>())
     , customKeyMaps(*(this->customKeyMapsPtr))
     , buf(new uint8_t[this->bufferSize]{ 0 })
+    , storageSize(EEPROM.length())
 {
     for(int i = 0; i < normalKeyCount; i++) 
     {
@@ -45,27 +46,20 @@ void Controller::Setup()
     // for(unsigned int i = 0; i < EEPROM.length(); i++) {
     //     EEPROM.write(i, 0);
     // }
-    // // DEBUG
-
+    // DEBUG
     // DEBUG
     // DeactivateAllPacketsOnEEPROM();
-    // bool resultBool = DeactivatePacket(42); // 42
-    // if(resultBool) {
-    //     DEBUG_PRINT(F("Successfully deactivated packet \n"));
-    // } else {
-    //     DEBUG_PRINT(F("Failed to deactivate packet \n"));
-    // }
-    // DEBUG
+    // // DEBUG
 
-    DEBUG(
-        DEBUG_PRINT(F("|"));
-        for(unsigned int i = 0; i < EEPROM.length(); i++)
-        {
-            uint8_t current = EEPROM.read(i);
-            DEBUG_PRINT(current);
-            DEBUG_PRINT(F("|"));
-        }
-    )
+    // DEBUG(
+    //     DEBUG_PRINT(F("|"));
+    //     for(unsigned int i = 0; i < EEPROM.length(); i++)
+    //     {
+    //         uint8_t current = EEPROM.read(i);
+    //         DEBUG_PRINT(current);
+    //         DEBUG_PRINT(F("|"));
+    //     }
+    // )
 
     DEBUG_PRINT(F("\nChanging to default keymap.\n"));
     DEBUG(delay(100));
@@ -73,7 +67,6 @@ void Controller::Setup()
     LoadKeymapsFromMemoryIntoList(&customKeyMaps);
     ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount);
     ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount);
-    // nextPacketAdress = EEPROM.length() - 50; // DEBUG
 }
 
 void Controller::Update()
@@ -90,6 +83,11 @@ void Controller::Update()
     {
         SendKeyInfo();
     }
+}
+
+uint16_t Controller::CyclicEepromAdress(uint32_t adress)
+{
+    return CyclicAdress(adress, storageSize);
 }
 
 bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList)
@@ -128,7 +126,7 @@ bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
             DeactivatePacket(currentPacketAdress);
         }
         currentPacketAdress = nextPacketAdress;
-        nextPacketAdress = static_cast<uint16_t>(currentPacketAdress + packetSize);
+        nextPacketAdress = CyclicEepromAdress(currentPacketAdress + packetSize);
     } else 
     {
         DEBUG_PRINT(F("ERROR: Failed to write data to memory!\n")); // DEBUG
@@ -191,7 +189,7 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *ke
     // DEBUG
 
     currentPacketAdress = packetAdress;
-    nextPacketAdress = static_cast<uint16_t>(packetAdress + packetSize);
+    nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
 }
 
 bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, uint16_t *amountOfKeys, uint16_t *packetAdress, uint16_t *packetSize)

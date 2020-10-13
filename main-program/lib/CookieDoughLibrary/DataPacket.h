@@ -100,16 +100,19 @@ bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint1
 bool DeactivateAllPacketsOnEEPROM();
 
 /**
- * @brief Prevents the provided adress from exceeding the last adress of the EEPROM,
- * and converts the adress into a cyclic format. 
+ * @brief Prevents the provided adress from exceeding the last adress of the buffer,
+ * and converts the adress into a cyclic format.
  * 
  * @param adress The adress to be made cyclic.
+ * @param bufferSize The size of the cyclic buffer.
  * @return uint16_t Returns the adress in a safe cyclic format. If the adress exceeds
- * the last adress of the eeprom, a new safe adress that wraps back to the start of the EEPROM
- * will be returned. If the adress does exceed the eeproms last adress the returned adress 
+ * the last adress of the buffer, a new safe adress that wraps back to the start of the buffer
+ * will be returned. 
+ * If the adress does not exceed the buffers last adress the returned adress 
  * will be equal to the provided adress.
+ * WARNING: When bufferSize is zero, the returned adress will always be zero.
  */
-uint16_t CyclicEepromAdress(uint16_t adress);
+uint16_t CyclicAdress(uint32_t adress, uint16_t bufferSize);
 
 /**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
