@@ -20,7 +20,7 @@ void PrintResults()
             std::cout <<("\033[0m"
                    "In file (");
             std::cout <<(results[i].file);
-            std::cout <<(") at line (");
+            std::cout <<(":");
             std::cout <<(results[i].line);
             std::cout <<(") while executing code snippet (");
             std::cout <<(results[i].code);

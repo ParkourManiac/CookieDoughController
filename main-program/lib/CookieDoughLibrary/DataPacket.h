@@ -9,11 +9,31 @@
 struct DataPacket
 {
     uint8_t stx = 0x02;
+    uint8_t active = 0x01;
     uint16_t payloadLength = 0;
     uint32_t crc = 0;
-    uint8_t *payload = nullptr; // Todo: Allocate array of one uint8_t in constructor. Deallocate in destructor.
+    uint8_t *payload;
     uint8_t etx = 0x03;
+
+    DataPacket();
+    DataPacket(const uint8_t *_payload, const uint16_t _payloadLength);
+    DataPacket(const DataPacket &other);
+    void operator=(const DataPacket &other) = delete;
+    ~DataPacket();
 };
+
+/**
+ * @brief Converts any type of data into a DataPacket.
+ * 
+ * @tparam T The type of the data passed into the function.
+ * @param data The data to be converted into a payload.
+ * @return DataPacket The data represented as a DataPacket.
+ */
+template<class T>
+DataPacket DataToPacket(const T &data)
+{
+    return DataPacket(reinterpret_cast<const uint8_t*>(&data), sizeof(data));
+}
 
 /**
  * @brief Reads and parses a DataPacket from the eeprom.
@@ -26,7 +46,7 @@ struct DataPacket
  * @return true When we successfully parsed the DataPacket from the eeprom.
  * @return false When the adress couldn't be parsed as a DataPacket.
  */
-bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packetSize);
+bool ReadDataPacketOnEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packetSize);
 
 /**
  * @brief Saves the given data as a DataPacket on the eeprom.
@@ -39,7 +59,60 @@ bool ParsePacketFromEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packet
  * @return true When we successfully saved the DataPacket to the eeprom.
  * @return false When we were unsuccessful in saving the DataPacket to the eeprom.
  */
-bool SavePacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t *packetSize);
+bool SaveDataPacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t *packetSize);
+
+/**
+ * @brief Checks wether the DataPackets "active" flag is considered active or inactive.
+ * 
+ * @param activeFlag The value of the "active" flag of the DataPacket object.
+ * @return true The DataPacket is active.
+ * @return false The DataPacket is not active
+ */
+bool IsPacketActive(const uint8_t activeFlag);
+
+/**
+ * @brief Deactivates a packet present on the EEPROM.
+ * 
+ * @param adress The adress of the packet to be deactivated.
+ * @return true The packet was successfully deactivated.
+ * @return false The adress does not contain a packet.
+ */
+bool DeactivatePacket(uint16_t adress);
+
+/**
+ * @brief Tries to find and return the first DataPacket it finds on the EEPROM.
+ * 
+ * @param startAdress The starting point of the search.
+ * @param result The packet that is found.
+ * @param packetSize The size of the found packet.
+ * @param packetAdress The adress of the found packet.
+ * @return true Successfully found a packet.
+ * @return false Could not find a packet on the eeprom.
+ */
+bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint16_t *packetSize, uint16_t *packetAdress);
+
+/**
+ * @brief Deactivates all packets present on the EEPROM.
+ * 
+ * @return true Deactivated one or more packets
+ * @return false Couldn't deactivate any packets.
+ */
+bool DeactivateAllPacketsOnEEPROM();
+
+/**
+ * @brief Prevents the provided adress from exceeding the last adress of the buffer,
+ * and converts the adress into a cyclic format.
+ * 
+ * @param adress The adress to be made cyclic.
+ * @param bufferSize The size of the cyclic buffer.
+ * @return uint16_t Returns the adress in a safe cyclic format. If the adress exceeds
+ * the last adress of the buffer, a new safe adress that wraps back to the start of the buffer
+ * will be returned. 
+ * If the adress does not exceed the buffers last adress the returned adress 
+ * will be equal to the provided adress.
+ * WARNING: When bufferSize is zero, the returned adress will always be zero.
+ */
+uint16_t CyclicAdress(uint32_t adress, uint16_t bufferSize);
 
 /**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).

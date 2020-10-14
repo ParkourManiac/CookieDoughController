@@ -13,6 +13,7 @@ Controller::Controller(BareKeyboardKey *_defaultKeymap, int amountOfDefaultKeys,
     , customKeyMapsPtr(new LinkedList<BareKeyboardKey *>())
     , customKeyMaps(*(this->customKeyMapsPtr))
     , buf(new uint8_t[this->bufferSize]{ 0 })
+    , storageSize(EEPROM.length())
 {
     for(int i = 0; i < normalKeyCount; i++) 
     {
@@ -45,7 +46,20 @@ void Controller::Setup()
     // for(unsigned int i = 0; i < EEPROM.length(); i++) {
     //     EEPROM.write(i, 0);
     // }
+    // DEBUG
+    // DEBUG
+    // DeactivateAllPacketsOnEEPROM();
     // // DEBUG
+
+    // DEBUG(
+    //     DEBUG_PRINT(F("|"));
+    //     for(unsigned int i = 0; i < EEPROM.length(); i++)
+    //     {
+    //         uint8_t current = EEPROM.read(i);
+    //         DEBUG_PRINT(current);
+    //         DEBUG_PRINT(F("|"));
+    //     }
+    // )
 
     DEBUG_PRINT(F("\nChanging to default keymap.\n"));
     DEBUG(delay(100));
@@ -71,11 +85,15 @@ void Controller::Update()
     }
 }
 
-void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList)
+uint16_t Controller::CyclicEepromAdress(uint32_t adress)
+{
+    return CyclicAdress(adress, storageSize);
+}
+
+bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList)
 {
     const int keyCount = keymapList.length * normalKeyCount;
     BareKeyboardKey *serializedKeyMaps = new BareKeyboardKey[keyCount];
-    uint16_t serializedSize = static_cast<uint16_t>(sizeof(serializedKeyMaps[0]) * keyCount);
     for (unsigned int i = 0; i < keymapList.length; i++)
     {
         for (int j = 0; j < normalKeyCount; j++)
@@ -86,34 +104,41 @@ void Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     }
 
     uint8_t *dataPtr = reinterpret_cast<uint8_t *>(serializedKeyMaps);
+    uint16_t dataSize = static_cast<uint16_t>(sizeof(serializedKeyMaps[0]) * keyCount);
     // // DEBUG
     // DEBUG_PRINT(F("Passed in: "));
-    // for(int i = 0; i < serializedSize; i++) {
+    // for(int i = 0; i < dataSize; i++) 
+    // {
     //     DEBUG_PRINT(dataPtr[i], HEX);
     // }
     // DEBUG_PRINT(F("\n"));
     // DEBUG(delay(100));
     // // DEBUG
     uint16_t packetSize;
-    // TODO: Change this to write to nextFreeEepromAdress and invalidate the old one at eepromAdress.
-    bool success = SavePacketToEEPROM(eepromAdress, dataPtr, serializedSize, &packetSize);
+    bool success = SaveDataPacketToEEPROM(nextPacketAdress, dataPtr, dataSize, &packetSize);
     if (success)
     {
         DEBUG_PRINT(F("Settings saved!\n")); // DEBUG
         DEBUG(delay(100)); // DEBUG
-        nextFreeEepromAdress = static_cast<uint16_t>(eepromAdress + packetSize);
+        if(currentPacketAdress != nextPacketAdress) 
+        {
+            DeactivatePacket(currentPacketAdress);
+        }
+        currentPacketAdress = nextPacketAdress;
+        nextPacketAdress = CyclicEepromAdress(currentPacketAdress + packetSize);
     } else 
     {
-        DEBUG_PRINT(F("Failed to write data to memory!\n")); // DEBUG
-        DEBUG(delay(100)); // DEBUG
+        DEBUG_PRINT(F("ERROR: Failed to write data to memory!\n"));
+        DEBUG(delay(100));
 
         // TODO: Implement error code.
     }
 
     delete[] (serializedKeyMaps);
+    return success;
 }
 
-void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keymapList) // Refactored to BareKeyboardKey.
+void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keymapList)
 {
     uint16_t packetAdress, packetSize, amountOfKeys;
     BareKeyboardKey *payloadAsBareKeys = new BareKeyboardKey[1];
@@ -162,21 +187,20 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *ke
     // DEBUG(delay(100));
     // DEBUG
 
-    eepromAdress = packetAdress;
-    nextFreeEepromAdress = static_cast<uint16_t>(packetAdress + packetSize);
+    currentPacketAdress = packetAdress;
+    nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
 }
 
 bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, uint16_t *amountOfKeys, uint16_t *packetAdress, uint16_t *packetSize)
 {
     *amountOfKeys = *packetAdress = *packetSize = 0;
-    DataPacket *dataPtr = new DataPacket();
-    DataPacket packet = *dataPtr;
+    DataPacket packet;
 
     bool foundValidPacket = false;
     while (!foundValidPacket)
     {
         uint16_t startAdress = *packetAdress;
-        bool foundPacket = RetrieveDataPacketFromMemory(&packet, packetSize, packetAdress, startAdress);
+        bool foundPacket = FindFirstDataPacketOnEEPROM(startAdress, &packet, packetSize, packetAdress);
         if (!foundPacket)
             return false;
 
@@ -214,33 +238,8 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsB
         }
         DEBUG_PRINT(F("\n"));
     }
-
-    delete (dataPtr);
+    
     return true;
-}
-
-bool Controller::RetrieveDataPacketFromMemory(DataPacket *packet, uint16_t *packetSize, uint16_t *packetAdress, uint16_t startAdress)
-{
-    *packetAdress = startAdress;
-    *packetSize = 0;
-    bool foundPacket = false;
-    do
-    {
-        foundPacket = ParsePacketFromEEPROM(*packetAdress, packet, packetSize);
-        if (!foundPacket)
-        {
-            *packetAdress = static_cast<uint16_t>(*packetAdress + 1);
-            if (*packetAdress >= EEPROM.length())
-            {
-                DEBUG_PRINT(F("Failed to read data from memory!\n")); // DEBUG
-                DEBUG(delay(100));                                         // DEBUG
-
-                return false;
-            }
-        }
-    } while (!foundPacket && *packetAdress < EEPROM.length());
-
-    return foundPacket;
 }
 
 void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result)

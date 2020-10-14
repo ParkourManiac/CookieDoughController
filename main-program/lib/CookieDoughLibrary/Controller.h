@@ -27,13 +27,15 @@ private:
 
     unsigned int customKeyMapIndex = 0;
     LinkedList<BareKeyboardKey *> *customKeyMapsPtr;
-    LinkedList<BareKeyboardKey *> customKeyMaps;
+    LinkedList<BareKeyboardKey *> customKeyMaps; // TODO: Consider making into a reference variable?
 
     const uint8_t bufferSize = 8;
     uint8_t *buf; // Keyboard report buffer.
 
-    uint16_t eepromAdress = 0;
-    uint16_t nextFreeEepromAdress = 0;
+    const uint16_t storageSize;
+
+    uint16_t currentPacketAdress = 0;
+    uint16_t nextPacketAdress = 0;
 
     EditMode editmode = EditMode(normalKeyCount, true);
 
@@ -64,12 +66,27 @@ public:
     void Update();
 
     /**
+     * @brief Prevents the provided adress from exceeding the last adress of the EEPROM,
+     * and converts the adress into a cyclic format. 
+     * 
+     * @param adress The adress to be made cyclic.
+     * @return uint16_t Returns the adress in a safe cyclic format. If the adress exceeds
+     * the last adress of the EEPROM, a new safe adress that wraps back to the start of the EEPROM
+     * will be returned. 
+     * If the adress does not exceed the EEPROMs last adress, the returned adress 
+     * will be equal to the provided adress.
+     */
+    uint16_t CyclicEepromAdress(uint32_t adress);
+
+    /**
      * @brief Saves a list of keymaps to memory.
-     * Note: Will overwrite existing keymaps on the eeprom.
+     * Note: Will overwrite any data already present on the eeprom.
      *
      * @param keyMapList The list of keymaps to be saved.
+     * @return true The keymaps were successfully saved to the EEPROM.
+     * @return false Failed to save the keymaps.
      */
-    void SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList);
+    bool SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList);
 
     /**
      * @brief If present on the EEPROM, Loads a list of keymaps from memory
