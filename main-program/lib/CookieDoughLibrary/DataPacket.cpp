@@ -205,7 +205,7 @@ bool DeactivatePacket(uint16_t adress)
     uint16_t eepromSize = EEPROM.length();
     if(adress >= eepromSize) 
     {
-        DEBUG_PRINT(F("ERROR: Tried to deactivate packet outside of the EEPROM."));
+        DEBUG_PRINT(F("ERROR: Tried to deactivate a packet outside of the eeproms range. Adress out of range. \n"));
         return false;
     }
 
@@ -250,7 +250,11 @@ bool DeactivatePacket(uint16_t adress)
 bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint16_t *packetSize, uint16_t *packetAdress)
 {
     uint16_t eepromSize = EEPROM.length();
-    if(startAdress >= eepromSize) return false;
+    if(startAdress >= eepromSize) 
+    {
+        DEBUG_PRINT(F("ERROR: Tried to start searching for a packet outside of the eeproms range. Adress out of range. \n"));
+        return false;
+    }
 
     uint16_t currentAdress = 0;
     for(uint16_t i = 0; i < eepromSize; i++)
@@ -286,7 +290,11 @@ bool DeactivateAllPacketsOnEEPROM()
 
 uint16_t CyclicAdress(uint32_t adress, uint16_t bufferSize)
 {
-    if(bufferSize == 0) return 0;
+    if(bufferSize == 0) 
+    {
+        DEBUG_PRINT(F("ERROR: bufferSize cannot be zero when converting adress to a cyclic adress. \n"));
+        return 0;
+    }
     return static_cast<uint16_t>(adress % bufferSize);
 }
 
