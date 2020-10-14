@@ -52,5 +52,3 @@ uint16_t Helper_CalculateSizeOfPacketOnEEPROM(DataPacket packet)
     );
     return sizeOfPacket;
 }
-
-// TODO: Add adress to ParsePacket helper?
