@@ -12,7 +12,7 @@ struct DataPacket
     uint8_t active = 0x01;
     uint16_t payloadLength = 0;
     uint32_t crc = 0;
-    uint8_t *payload; // Todo: Allocate array of one uint8_t in constructor. Deallocate in destructor.
+    uint8_t *payload;
     uint8_t etx = 0x03;
 
     DataPacket();
