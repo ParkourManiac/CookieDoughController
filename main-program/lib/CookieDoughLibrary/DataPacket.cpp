@@ -205,6 +205,7 @@ bool DeactivatePacket(uint16_t adress)
     uint16_t eepromSize = EEPROM.length();
     if(adress >= eepromSize) 
     {
+        DEBUG_PRINT(F("ERROR: Tried to deactivate packet outside of the EEPROM."));
         return false;
     }
 
