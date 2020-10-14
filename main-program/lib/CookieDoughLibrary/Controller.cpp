@@ -115,7 +115,6 @@ bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     // DEBUG(delay(100));
     // // DEBUG
     uint16_t packetSize;
-    // TODO: Change this to write to nextPacketAdress and invalidate the old one at currentPacketAdress.
     bool success = SaveDataPacketToEEPROM(nextPacketAdress, dataPtr, dataSize, &packetSize);
     if (success)
     {
@@ -129,8 +128,8 @@ bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
         nextPacketAdress = CyclicEepromAdress(currentPacketAdress + packetSize);
     } else 
     {
-        DEBUG_PRINT(F("ERROR: Failed to write data to memory!\n")); // DEBUG
-        DEBUG(delay(100)); // DEBUG
+        DEBUG_PRINT(F("ERROR: Failed to write data to memory!\n"));
+        DEBUG(delay(100));
 
         // TODO: Implement error code.
     }
