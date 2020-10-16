@@ -115,6 +115,14 @@ bool DeactivateAllPacketsOnEEPROM();
 uint16_t CyclicAdress(uint32_t adress, uint16_t bufferSize);
 
 /**
+ * @brief Calculates the size in bytes that the given DataPacket will occupy when serialized.
+ * 
+ * @param packet The packet that you want to calculate the serialized size of.
+ * @return uint16_t Returns the size in bytes the packet will occupy when in a serialized form.
+ */
+uint16_t SizeOfSerializedDataPacket(const DataPacket &packet);
+
+/**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
  * 
  * @param data The data we want to calculate a CRC checksum for.

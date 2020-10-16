@@ -139,6 +139,12 @@ bool SaveDataPacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, u
     // Create packet.
     DataPacket packet = DataPacket(data, dataSize);
 
+    if(SizeOfSerializedDataPacket(packet) > sizeOfEeprom)
+    {
+        DEBUG_PRINT(F("ERROR: Tried to save a packet that was larger than the EEPROM. \n"));
+        return false;
+    }
+
     // Write packet.
     EEPROM.put(adress, packet.stx);
     offset = sizeof(packet.stx);
@@ -296,6 +302,18 @@ uint16_t CyclicAdress(uint32_t adress, uint16_t bufferSize)
         return 0;
     }
     return static_cast<uint16_t>(adress % bufferSize);
+}
+
+uint16_t SizeOfSerializedDataPacket(const DataPacket &packet) // TODO: Is there a way to automatically calculate the size here? So that we do not need to add the members by hand?
+{
+    return static_cast<uint16_t>(
+        sizeof(packet.stx) +
+        sizeof(packet.active) +
+        sizeof(packet.payloadLength) +
+        sizeof(packet.crc) +
+        sizeof(packet.payload[0]) * packet.payloadLength +
+        sizeof(packet.etx)
+    );
 }
 
 uint32_t CalculateCRC(uint8_t *data, uint16_t length)

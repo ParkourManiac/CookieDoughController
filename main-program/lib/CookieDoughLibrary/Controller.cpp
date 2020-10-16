@@ -799,15 +799,13 @@ bool Controller::CreateNewKeyMap() // TODO: Needs to be tested.
         }
         else
         {
-            // DEBUG_PRINT(F("Something messed up\n")); // DEBUG
-            // TODO: Error we failed to retrieve the newly added keymap.
+            DEBUG_PRINT(F("ERROR: Something messed up. We failed to retrieve the newly added keymap?\n"));
         }
     }
     else
     {
-        DEBUG_PRINT(F("We don't have enought space to create another keymap (Max size hardcoded to 10)...\n")); // DEBUG
+        DEBUG_PRINT(F("ERROR: We don't have enought space to create another keymap (Max size hardcoded to 10)...\n")); // TODO: Update this error message when not hardcoded anymore.
         SignalErrorToUser(); // TODO: prevent getting thrown out of memory when we fail to add a new keymap.
-        // TODO: Error we don't have space to create another keyMap.
     }
 
     return successful;

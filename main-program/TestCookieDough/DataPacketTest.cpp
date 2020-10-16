@@ -316,6 +316,80 @@ void CyclicAdress_BufferSizeIsZero_ReturnsZero()
     ASSERT_TEST(result == expectedAdress);
 }
 
+void SizeOfSerializedDataPacket_ReturnsTheAmountOfBytesTheDataPacketWillOccupyOnMemory()
+{
+    uint64_t data = 981239;
+    DataPacket packet = DataToPacket(data);
+    uint16_t expectedSize = static_cast<uint16_t>(
+        sizeof(packet.stx) +
+        sizeof(packet.active) +
+        sizeof(packet.payloadLength) +
+        sizeof(packet.crc) +
+        sizeof(data) +
+        sizeof(packet.etx)
+    );
+
+    uint16_t result = SizeOfSerializedDataPacket(packet);
+
+    ASSERT_TEST(result == expectedSize);
+}
+
+void SizeOfSerializedDataPacket_CalculatesSizeDependingOnTheSizeOfThePayload()
+{
+    uint64_t bigData = 981239;
+    uint8_t smallData = 123;
+    DataPacket packetTemplate = DataPacket(),
+               bigPacket = DataToPacket(bigData),
+               smallPacket = DataToPacket(smallData);
+    uint16_t dataPacketSizeExcludingPayload = static_cast<uint16_t>(
+        sizeof(packetTemplate.stx) +
+        sizeof(packetTemplate.active) +
+        sizeof(packetTemplate.payloadLength) +
+        sizeof(packetTemplate.crc) +
+        sizeof(packetTemplate.etx)
+    );
+    uint16_t expectedBigSize = static_cast<uint16_t>(dataPacketSizeExcludingPayload + sizeof(bigData)),
+             expectedSmallSize = static_cast<uint16_t>(dataPacketSizeExcludingPayload + sizeof(smallData));
+
+    uint16_t bigResult = SizeOfSerializedDataPacket(bigPacket),
+             smallResult = SizeOfSerializedDataPacket(smallPacket);
+
+    ASSERT_TEST(
+        bigResult == expectedBigSize && 
+        smallResult == expectedSmallSize
+    );
+}
+
+void SizeOfSerializedDataPacket_MustReturnTheSameSizeAsSaveDataPacketPacketToEEPROM()
+{
+    uint64_t data1 = 981239;
+    uint32_t data2 = 34446;
+    uint8_t data3 = 123;
+    DataPacket packet1 = DataToPacket(data1),
+               packet2 = DataToPacket(data2),
+               packet3 = DataToPacket(data3);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, packet1.payload, packet1.payloadLength);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, packet2.payload, packet2.payloadLength);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, packet3.payload, packet3.payloadLength);
+
+    uint16_t resultSize1 = SizeOfSerializedDataPacket(packet1),
+             resultSize2 = SizeOfSerializedDataPacket(packet2),
+             resultSize3 = SizeOfSerializedDataPacket(packet3);
+    uint16_t resultSavedPacketSize1,
+             resultSavedPacketSize2,
+             resultSavedPacketSize3;
+    bool resultBool = SaveDataPacketToEEPROM(0, packet1.payload, packet1.payloadLength, &resultSavedPacketSize1) &&
+                      SaveDataPacketToEEPROM(0, packet2.payload, packet2.payloadLength, &resultSavedPacketSize2) &&
+                      SaveDataPacketToEEPROM(0, packet3.payload, packet3.payloadLength, &resultSavedPacketSize3);
+
+    ASSERT_TEST(
+        resultSize1 == resultSavedPacketSize1 &&
+        resultSize2 == resultSavedPacketSize2 &&
+        resultSize3 == resultSavedPacketSize3 &&
+        resultBool == true
+    );
+}
+
 void SaveDataPacketToEEPROM_SavesStxToFirstGivenAdress()
 {
     uint8_t data = 42;
@@ -541,6 +615,42 @@ void SaveDataPacketToEEPROM_AdressIsOutsideOfEEPROMsRange_DoesNotWriteAnythingTo
         EEPROMClass_put_invocations_o3 == 0 &&
         EEPROMClass_update_invocations == 0
     );
+}
+
+void SaveDataPacketToEEPROM_PacketIsTooBigForEEPROM_DoesNotWriteToMemoryAndReturnsFalse()
+{
+    uint64_t data = 8409;
+    DataPacket packet = DataToPacket(data);
+    uint16_t packetSize = Helper_CalculateSizeOfPacketOnEEPROM(packet),
+             adress = 0,
+             eepromSize = static_cast<uint16_t>(packetSize - 1);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
+
+    uint16_t resultPacketSize;
+    bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &resultPacketSize);
+
+    ASSERT_TEST(
+        resultBool == false &&
+        EEPROMClass_put_invocations_o1 == 0 &&
+        EEPROMClass_put_invocations_o2 == 0 &&
+        EEPROMClass_put_invocations_o3 == 0 &&
+        EEPROMClass_update_invocations == 0
+    );
+}
+
+void SaveDataPacketToEEPROM_PacketFitsOnEEPROM_ReturnsTrue()
+{
+    uint64_t data = 8409;
+    DataPacket packet = DataToPacket(data);
+    uint16_t packetSize = SizeOfSerializedDataPacket(packet),
+             adress = 0,
+             eepromSize = static_cast<uint16_t>(packetSize);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
+
+    uint16_t resultPacketSize;
+    bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &resultPacketSize);
+
+    ASSERT_TEST(resultBool == true && resultPacketSize == packetSize);
 }
 
 
