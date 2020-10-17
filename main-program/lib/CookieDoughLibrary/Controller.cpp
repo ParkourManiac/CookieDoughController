@@ -754,12 +754,12 @@ bool Controller::CreateNewKeymap() // TODO: Needs to be tested.
     bool successful = false;
     // TODO: Implement real check to see if the arduino can
     // fit another keymap to stack/heap/memory.
-    bool weHaveSpaceLeft = customKeyMaps.length < 10;
+    bool weHaveSpaceLeft = customKeyMaps.length < 10; // NOTE: NOT TESTED
 
-    if (weHaveSpaceLeft)
+    if (weHaveSpaceLeft) // NOTE: NOT TESTED
     {
         BareKeyboardKey *newKeyMap = new BareKeyboardKey[normalKeyCount]; // TODO: Maybe remove "new"? // TODO: POTENTIAL SRAM LEAK????!!!!
-        int initialKeycode = 4; // The "a" key.
+        int initialKeycode = 4; // The "a" key. 
         // Copy the default pin values to the new keyMap.
         for (int i = 0; i < normalKeyCount; i++)
         {
@@ -769,6 +769,7 @@ bool Controller::CreateNewKeymap() // TODO: Needs to be tested.
         // Add it to the list and set it to the current keymap.
         customKeyMaps.Add(newKeyMap);
         int indexOfNewKeyMap = customKeyMaps.length - 1;
+        // TODO: Tested this far... <------------------------------------------------------------------- CONTINUE HERE
         BareKeyboardKey **lastKeyMapPtr = customKeyMaps[indexOfNewKeyMap];
         if (lastKeyMapPtr != nullptr)
         {

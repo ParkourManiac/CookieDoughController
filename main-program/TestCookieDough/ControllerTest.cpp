@@ -1504,3 +1504,118 @@ void UpdateCurrentCustomKeymap_CurrentKeymapHasBeenEditedAndTheSecondCustomKeyma
         resultingFirstCustomKeymap[2].pin == expectedKeymap[2].pin && resultingFirstCustomKeymap[2].keyCode == expectedKeymap[2].keyCode &&
         resultingFirstCustomKeymap[3].pin == expectedKeymap[3].pin && resultingFirstCustomKeymap[3].keyCode == expectedKeymap[3].keyCode);
 }
+
+void CreateNewKeymap_SuccessfullyCreatesAKeymapInCustomKeymaps()
+{
+    Controller controller = SetUpController();
+    unsigned int lengthBefore = controller.customKeyMaps.length;
+
+    controller.CreateNewKeymap();
+    unsigned int lengthAfter = controller.customKeyMaps.length;
+
+    ASSERT_TEST(
+        lengthAfter == (lengthBefore + 1)
+    );
+}
+
+void CreateNewKeymap_SuccessfullyCreatesAKeymap_ReturnsTrue()
+{
+    Controller controller = SetUpController();
+    unsigned int lengthBefore = controller.customKeyMaps.length;
+
+    bool resultBool = controller.CreateNewKeymap();
+    unsigned int lengthAfter = controller.customKeyMaps.length;
+
+    ASSERT_TEST(
+        lengthAfter == (lengthBefore + 1) &&
+        resultBool == true
+    );
+}
+
+void CreateNewKeymap_SuccessfullyCreatesAKeymap_KeymapIsAddedToTheEndOfTheCustomKeymapList()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey keymap1[genericNormalKeyCount] {
+        BareKeyboardKey(93, 1),
+        BareKeyboardKey(83, 2),
+        BareKeyboardKey(93, 3),
+        BareKeyboardKey(45, 0),
+    };
+    BareKeyboardKey keymap2[genericNormalKeyCount] {
+        BareKeyboardKey(8, 1),
+        BareKeyboardKey(8, 2),
+        BareKeyboardKey(5, 3),
+        BareKeyboardKey(13, 0),
+    };
+    controller.customKeyMaps.Add(keymap1);
+    controller.customKeyMaps.Add(keymap2);
+    
+    bool resultBool = controller.CreateNewKeymap();
+    unsigned int lastKeymapIndex = controller.customKeyMaps.length - 1;
+    BareKeyboardKey *lastKeymap = *controller.customKeyMaps[lastKeymapIndex];
+
+    ASSERT_TEST(
+        controller.customKeyMaps.length == 3 &&
+        resultBool == true &&
+
+        // Asserts that the last keymap in the custom keymaps list is not one of the old keymaps.
+        // Therefore the last keymap must be the newly added keymap.
+        (
+            lastKeymap[0] != keymap1[0] ||
+            lastKeymap[1] != keymap1[1] ||
+            lastKeymap[2] != keymap1[2] ||
+            lastKeymap[3] != keymap1[3]
+        ) 
+        && 
+        (
+            lastKeymap[0] != keymap2[0] ||
+            lastKeymap[1] != keymap2[1] ||
+            lastKeymap[2] != keymap2[2] ||
+            lastKeymap[3] != keymap2[3]
+        )
+    );
+}
+
+void CreateNewKeymap_SuccessfullyCreatesAKeymap_NewKeymapInheritsPinsFromDefaultKeymap()
+{
+    const int amountOfDefaultKeys = 4;
+    BareKeyboardKey defaultKeymap[amountOfDefaultKeys] {
+        BareKeyboardKey(9, 1),
+        BareKeyboardKey(3, 2),
+        BareKeyboardKey(3, 3),
+        BareKeyboardKey(5, 4),
+    };
+    const int amountOfSpecialKeys = 1;
+    SpecialKey specialKeymap[amountOfSpecialKeys] {
+        SpecialKey(10, toggleDefaultKeyMap),
+    };
+    Controller controller = Controller(defaultKeymap, amountOfDefaultKeys, specialKeymap, amountOfSpecialKeys);
+
+    bool resultBool = controller.CreateNewKeymap();
+    BareKeyboardKey *newlyAddedKeymap = *controller.customKeyMaps[controller.customKeyMaps.length - 1];
+
+    ASSERT_TEST(
+        newlyAddedKeymap[0].pin == controller.defaultKeymap[0].pin &&
+        newlyAddedKeymap[1].pin == controller.defaultKeymap[1].pin &&
+        newlyAddedKeymap[2].pin == controller.defaultKeymap[2].pin &&
+        newlyAddedKeymap[3].pin == controller.defaultKeymap[3].pin &&
+        resultBool == true
+    );
+}
+
+void CreateNewKeymap_SuccessfullyCreatesAKeymap_KeycodesOnNewKeymapsDefaultTo4()
+{
+    Controller controller = SetUpController();
+
+    bool resultBool = controller.CreateNewKeymap();
+    BareKeyboardKey *newlyAddedKeymap = *controller.customKeyMaps[controller.customKeyMaps.length - 1];
+
+    ASSERT_TEST(
+        newlyAddedKeymap[0].keyCode == 4 &&
+        newlyAddedKeymap[1].keyCode == 4 &&
+        newlyAddedKeymap[2].keyCode == 4 &&
+        newlyAddedKeymap[3].keyCode == 4 &&
+        resultBool == true
+    );
+}
+
