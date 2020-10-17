@@ -474,7 +474,7 @@ void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested. Refactor 
                     if (editmode.enabled)
                     {
                         ToggleEditMode(); // Exit editmode to save the keyMap.
-                        bool success = CreateNewKeyMap();
+                        bool success = CreateNewKeymap();
                         if (success)
                         {
                             ToggleEditMode();
@@ -572,7 +572,7 @@ void Controller::ToggleEditMode() // TODO: Needs to be tested.
         // editmode when we have no keymaps...
         if (customKeyMaps.IsEmpty())
         {
-            bool success = CreateNewKeyMap();
+            bool success = CreateNewKeymap();
             if (!success)
             {
                 // Error we failed to create the keymap...
@@ -749,7 +749,7 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
     );
 }
 
-bool Controller::CreateNewKeyMap() // TODO: Needs to be tested.
+bool Controller::CreateNewKeymap() // TODO: Needs to be tested.
 {
     bool successful = false;
     // TODO: Implement real check to see if the arduino can

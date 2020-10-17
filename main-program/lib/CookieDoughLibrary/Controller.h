@@ -217,7 +217,7 @@ public:
      * @return true The keymap was successfully created.
      * @return false The keymap couldn't be created due to insufficient amount of free space or an error occured.
      */
-    bool CreateNewKeyMap();
+    bool CreateNewKeymap();
 
     /**
      * @brief Quickly blinks the builtin led 5 times to indicate that something went wrong.
