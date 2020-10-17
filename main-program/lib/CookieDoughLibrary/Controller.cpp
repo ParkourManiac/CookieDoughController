@@ -629,7 +629,7 @@ void Controller::SaveControllerSettings() // TODO: Needs to be tested.
     digitalWrite(LED_BUILTIN, LOW);
 }
 
-void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. // TODO: Needs to be tested.
+void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. // TODO: Needs to be tested. // TODO: // TODO: After being tested, Double-check keymaps allocated in CreateNewKeymap is deleted[] when removing a keymap.
 {
     if (!editmode.enabled)
         return;
@@ -749,16 +749,16 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
     );
 }
 
-bool Controller::CreateNewKeymap() // TODO: Needs to be tested.
+bool Controller::CreateNewKeymap()
 {
     bool successful = false;
     // TODO: Implement real check to see if the arduino can
     // fit another keymap to stack/heap/memory.
-    bool weHaveSpaceLeft = customKeyMaps.length < 10; // NOTE: NOT TESTED
+    bool weHaveSpaceLeft = customKeyMaps.length < 10;
 
-    if (weHaveSpaceLeft) // NOTE: NOT TESTED
+    if (weHaveSpaceLeft)
     {
-        BareKeyboardKey *newKeyMap = new BareKeyboardKey[normalKeyCount]; // TODO: Maybe remove "new"? // TODO: POTENTIAL SRAM LEAK????!!!!
+        BareKeyboardKey *newKeyMap = new BareKeyboardKey[normalKeyCount]; // TODO: Double-check if this is deleted[] when removing a keymap.
         int initialKeycode = 4; // The "a" key. 
         // Copy the default pin values to the new keyMap.
         for (int i = 0; i < normalKeyCount; i++)
@@ -769,11 +769,11 @@ bool Controller::CreateNewKeymap() // TODO: Needs to be tested.
         // Add it to the list and set it to the current keymap.
         customKeyMaps.Add(newKeyMap);
         int indexOfNewKeyMap = customKeyMaps.length - 1;
-        // TODO: Tested this far... <------------------------------------------------------------------- CONTINUE HERE
-        BareKeyboardKey **lastKeyMapPtr = customKeyMaps[indexOfNewKeyMap];
-        if (lastKeyMapPtr != nullptr)
+        BareKeyboardKey *lastKeyMap = (customKeyMaps[indexOfNewKeyMap] != nullptr) ? 
+                                         *customKeyMaps[indexOfNewKeyMap] : nullptr;
+        if (lastKeyMap != nullptr)
         {
-            ChangeKeyMap(*lastKeyMapPtr);
+            ChangeKeyMap(lastKeyMap);
             customKeyMapIndex = indexOfNewKeyMap;
 
             successful = true;

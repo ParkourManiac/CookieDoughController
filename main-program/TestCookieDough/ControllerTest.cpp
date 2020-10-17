@@ -1619,3 +1619,92 @@ void CreateNewKeymap_SuccessfullyCreatesAKeymap_KeycodesOnNewKeymapsDefaultTo4()
     );
 }
 
+void CreateNewKeymap_SuccessfullyCreatesAKeymap_EquipsTheNewKeymap()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey keymap1[genericNormalKeyCount] {
+        BareKeyboardKey(93, 1),
+        BareKeyboardKey(83, 2),
+        BareKeyboardKey(93, 3),
+        BareKeyboardKey(45, 0),
+    };
+    controller.customKeyMaps.Add(keymap1);
+
+    bool resultBool = controller.CreateNewKeymap();
+    unsigned int expectedKeymapIndex = controller.customKeyMaps.length - 1;
+    BareKeyboardKey *newKeymap = *controller.customKeyMaps[expectedKeymapIndex];
+    Key *equippedKeymap = controller.currentKeyMap;
+
+    ASSERT_TEST(
+        equippedKeymap[0].pin == newKeymap[0].pin && equippedKeymap[0].keyCode == newKeymap[0].keyCode &&
+        equippedKeymap[1].pin == newKeymap[1].pin && equippedKeymap[1].keyCode == newKeymap[1].keyCode &&
+        equippedKeymap[2].pin == newKeymap[2].pin && equippedKeymap[2].keyCode == newKeymap[2].keyCode &&
+        equippedKeymap[3].pin == newKeymap[3].pin && equippedKeymap[3].keyCode == newKeymap[3].keyCode &&
+        controller.customKeyMapIndex == expectedKeymapIndex &&
+        resultBool == true
+    );
+}
+
+void CreateNewKeymap_WeHaveEnoughFreeMemory_CreatesKeymapAndReturnsTrue()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey keymap1[genericNormalKeyCount] {
+        BareKeyboardKey(93, 1),
+        BareKeyboardKey(83, 2),
+        BareKeyboardKey(93, 3),
+        BareKeyboardKey(45, 0),
+    };
+    for(int i = 0; i < 9; i++) // TODO: Change this test when a real memory check has been implemented.
+    {
+        controller.customKeyMaps.Add(keymap1);
+    }
+
+    bool resultBool = controller.CreateNewKeymap();
+
+    ASSERT_TEST(
+        resultBool == true
+    );
+}
+
+void CreateNewKeymap_DoesNotHaveEnoughMemoryLeft_DoesNotCreateAKeymapAndReturnsFalse()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey keymap1[genericNormalKeyCount] {
+        BareKeyboardKey(93, 1),
+        BareKeyboardKey(83, 2),
+        BareKeyboardKey(93, 3),
+        BareKeyboardKey(45, 0),
+    };
+    for(int i = 0; i < 10; i++) // TODO: Change this test when a real memory check has been implemented.
+    {
+        controller.customKeyMaps.Add(keymap1);
+    }
+    unsigned int lengthBefore = controller.customKeyMaps.length,
+                 customKeyMapIndexBefore = controller.customKeyMapIndex;
+    Key equippedKeymapBefore[genericNormalKeyCount] = {
+        Key(controller.currentKeyMap[0]),
+        Key(controller.currentKeyMap[1]),
+        Key(controller.currentKeyMap[2]),
+        Key(controller.currentKeyMap[3]),
+    };
+
+
+    bool resultBool = controller.CreateNewKeymap();
+    unsigned int lengthAfter = controller.customKeyMaps.length,
+                 customKeyMapIndexAfter = controller.customKeyMapIndex;
+    Key *equippedKeymapAfter = controller.currentKeyMap;
+
+    ASSERT_TEST(
+        (
+            equippedKeymapAfter[0].pin == equippedKeymapBefore[0].pin && equippedKeymapAfter[0].keyCode == equippedKeymapBefore[0].keyCode &&
+            equippedKeymapAfter[1].pin == equippedKeymapBefore[1].pin && equippedKeymapAfter[1].keyCode == equippedKeymapBefore[1].keyCode &&
+            equippedKeymapAfter[2].pin == equippedKeymapBefore[2].pin && equippedKeymapAfter[2].keyCode == equippedKeymapBefore[2].keyCode &&
+            equippedKeymapAfter[3].pin == equippedKeymapBefore[3].pin && equippedKeymapAfter[3].keyCode == equippedKeymapBefore[3].keyCode
+        )
+        &&
+        customKeyMapIndexAfter == customKeyMapIndexBefore &&
+        lengthBefore == lengthAfter &&
+        resultBool == false
+    );
+}
+
