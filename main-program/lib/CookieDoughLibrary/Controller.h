@@ -33,6 +33,11 @@ private:
     uint8_t *buf; // Keyboard report buffer.
 
     const uint16_t storageSize;
+    
+    /**
+     * @brief Represents the amount of free storage space available for use.
+     */
+    uint16_t amountOfFreeStorage;
 
     uint16_t currentPacketAdress = 0;
     uint16_t nextPacketAdress = 0;

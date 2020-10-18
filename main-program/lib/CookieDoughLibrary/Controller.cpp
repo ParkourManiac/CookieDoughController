@@ -14,6 +14,7 @@ Controller::Controller(BareKeyboardKey *_defaultKeymap, int amountOfDefaultKeys,
     , customKeyMaps(*(this->customKeyMapsPtr))
     , buf(new uint8_t[this->bufferSize]{ 0 })
     , storageSize(EEPROM.length())
+    , amountOfFreeStorage(this->storageSize)
 {
     for(int i = 0; i < normalKeyCount; i++) 
     {
