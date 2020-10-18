@@ -115,17 +115,6 @@ public:
     bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, uint16_t *amountOfKeys, uint16_t *packetAdress, uint16_t *packetSize);
 
     /**
-     * @brief Finds and retrieves a DataPacket stored on the EEPROM.
-     * 
-     * @param packet The DataPacket found on the EEPROM.
-     * @param packetAdress The EEPROM adress where the DataPacket was found.
-     * @param packetSize The size of the DataPacket.
-     * @return true The DataPacket was succesfully found and retrieved.
-     * @return false The DataPacket was not found or the DataPackets found were corrupt.
-     */
-    bool RetrieveDataPacketFromMemory(DataPacket *packet, uint16_t *packetSize, uint16_t *packetAdress, uint16_t startAdress = 0);
-
-    /**
      * @brief Converts a DataPacket payload into an array of BareKeyboardKeys.
      * 
      * @param packet The packet to be processed.
