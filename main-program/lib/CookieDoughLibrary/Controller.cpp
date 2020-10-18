@@ -127,6 +127,7 @@ bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
         }
         currentPacketAdress = nextPacketAdress;
         nextPacketAdress = CyclicEepromAdress(currentPacketAdress + packetSize);
+        amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);
     } else 
     {
         DEBUG_PRINT(F("ERROR: Failed to write data to memory!\n"));
@@ -190,6 +191,7 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *ke
 
     currentPacketAdress = packetAdress;
     nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
+    amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);
 }
 
 bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, uint16_t *amountOfKeys, uint16_t *packetAdress, uint16_t *packetSize)
