@@ -91,11 +91,11 @@ public:
      * be saved to the storage unit. 
      * If left as default (0), the function will use the amount of customKeyMaps
      * on the controllers to calculate the unused storage.
-     * @return uint16_t Returns the amount of unused storage in bytes if 
-     * we were to save the given number of keymaps to the storage unit.
-     * If the returned amount is negative, the absolute value of the 
-     * result will represent the amount of overflowing bytes that will not
-     * fit into the storage unit.
+     * @return uint16_t Returns the amount of unused storage in bytes for the 
+     * scenario when we save the given number of keymaps to the storage unit.
+     * If the returned amount is negative, the absolute value of the result
+     * will represent the amount of overflowing bytes that will not fit into
+     * the storage unit.
      */
     uint16_t CalculateAmountOfUnusedStorage(uint16_t amountOfKeymaps = 0);
 
