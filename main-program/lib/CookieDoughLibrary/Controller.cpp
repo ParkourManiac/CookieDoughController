@@ -91,7 +91,7 @@ uint16_t Controller::CyclicEepromAdress(uint32_t adress)
     return CyclicAdress(adress, storageSize);
 }
 
-uint16_t Controller::CalculateAmountOfUnusedStorage(uint16_t amountOfKeymaps)
+int32_t Controller::CalculateUnusedStorage(uint16_t amountOfKeymaps)
 {
     if(amountOfKeymaps == 0)
     {
@@ -103,7 +103,7 @@ uint16_t Controller::CalculateAmountOfUnusedStorage(uint16_t amountOfKeymaps)
     );
     uint16_t sizeOfEmptyDataPacket = SizeOfSerializedDataPacket(DataPacket());
 
-    return static_cast<uint16_t>(
+    return static_cast<int32_t>(
         storageSize - (sizeOfPayload + sizeOfEmptyDataPacket)
     );
 }
@@ -774,9 +774,10 @@ bool Controller::CreateNewKeymap()
     bool successful = false;
     // TODO: Implement real check to see if the arduino can
     // fit another keymap to stack/heap/memory.
-    bool weHaveSpaceLeft = customKeyMaps.length < 10;
+    int32_t freeSpaceAfterAddingKeymap = CalculateUnusedStorage(static_cast<uint16_t>(customKeyMaps.length + 1));
+    bool canFitAnotherKeymap = (freeSpaceAfterAddingKeymap >= 0);
 
-    if (weHaveSpaceLeft)
+    if (canFitAnotherKeymap)
     {
         BareKeyboardKey *newKeyMap = new BareKeyboardKey[normalKeyCount]; // TODO: Double-check if this is deleted[] when removing a keymap.
         int initialKeycode = 4; // The "a" key. 

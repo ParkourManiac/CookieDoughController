@@ -187,7 +187,7 @@ void CyclicEepromAdress_AdressIsWithinEepromsSize_AdressIsUnchanged()
     ASSERT_TEST(result == expectedAdress);
 }
 
-void CalculateAmountOfUnusedStorage_CalculatesTheAmountOfUnusedStorageAfterTheoreticallySavingTheGivenAmountOfKeymaps()
+void CalculateUnusedStorage_CalculatesTheAmountOfUnusedStorageAfterTheoreticallySavingTheGivenAmountOfKeymaps()
 {
     Controller controller = SetUpController();
     uint8_t data = 0;
@@ -196,19 +196,19 @@ void CalculateAmountOfUnusedStorage_CalculatesTheAmountOfUnusedStorageAfterTheor
              amountOfKeymaps = static_cast<uint16_t>(controller.customKeyMaps.length + 3),
              expectedAmountOfKeysInCustomKeymaps = static_cast<uint16_t>(amountOfKeymaps * controller.normalKeyCount),
              expectedSizeOfPayload = static_cast<uint16_t>(sizeof(BareKeyboardKey) * expectedAmountOfKeysInCustomKeymaps);
-    uint16_t expectedAmountOfUnusedStorage = static_cast<uint16_t>(
+    int32_t expectedAmountOfUnusedStorage = static_cast<int32_t>(
         controller.storageSize - (
             sizeOfEmptyDataPacket +
             expectedSizeOfPayload
         )
     );
 
-    uint16_t result = controller.CalculateAmountOfUnusedStorage(amountOfKeymaps);
+    int32_t result = controller.CalculateUnusedStorage(amountOfKeymaps);
 
     ASSERT_TEST(result == expectedAmountOfUnusedStorage);
 }
 
-void CalculateAmountOfUnusedStorage_NoArguments_CalculatesTheUnusedStorageAsIfWeWereToSaveDownTheCustomKeyMaps()
+void CalculateUnusedStorage_NoArguments_CalculatesTheUnusedStorageAsIfWeWereToSaveDownTheCustomKeyMaps()
 {
     BareKeyboardKey keymap[genericNormalKeyCount] {
         BareKeyboardKey(9, 9),
@@ -225,19 +225,19 @@ void CalculateAmountOfUnusedStorage_NoArguments_CalculatesTheUnusedStorageAsIfWe
              amountOfKeymaps = static_cast<uint16_t>(controller.customKeyMaps.length),
              expectedAmountOfKeysInCustomKeymaps = static_cast<uint16_t>(amountOfKeymaps * controller.normalKeyCount),
              expectedSizeOfPayload = static_cast<uint16_t>(sizeof(BareKeyboardKey) * expectedAmountOfKeysInCustomKeymaps);
-    uint16_t expectedAmountOfUnusedStorage = static_cast<uint16_t>(
+    int32_t expectedAmountOfUnusedStorage = static_cast<int32_t>(
         controller.storageSize - (
             sizeOfEmptyDataPacket +
             expectedSizeOfPayload
         )
     );
 
-    uint16_t result = controller.CalculateAmountOfUnusedStorage();
+    int32_t result = controller.CalculateUnusedStorage();
 
     ASSERT_TEST(result == expectedAmountOfUnusedStorage);
 }
 
-void CalculateAmountOfUnusedStorage_NoArguments_ReturnsTheSameSizeAsIfWeWereToSaveKeymapsToMemory()
+void CalculateUnusedStorage_NoArguments_ReturnsTheSameSizeAsIfWeWereToSaveKeymapsToMemory()
 {
     BareKeyboardKey keymap[genericNormalKeyCount] {
         BareKeyboardKey(9, 9),
@@ -252,15 +252,33 @@ void CalculateAmountOfUnusedStorage_NoArguments_ReturnsTheSameSizeAsIfWeWereToSa
     DataPacket packet = DataToPacket(keymap);
     uint16_t sizeOfPacket = SizeOfSerializedDataPacket(packet);
     Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, packet.payload, packet.payloadLength, controller.storageSize);
-    uint16_t expectedAmountOfUnusedStorage = static_cast<uint16_t>(controller.storageSize - sizeOfPacket);
+    int32_t expectedAmountOfUnusedStorage = static_cast<int32_t>(controller.storageSize - sizeOfPacket);
 
     bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
-    uint16_t result = controller.CalculateAmountOfUnusedStorage();
+    int32_t result = controller.CalculateUnusedStorage();
 
     ASSERT_TEST(
         resultBool == true &&
         result == expectedAmountOfUnusedStorage
     );
+}
+
+void CalculateUnusedStorage_TooManyKeymapsToFitOnTheEeprom_ReturnsTheOverloadAsANegativeNumber()
+{
+    Controller controller = SetUpController();
+    DataPacket emptyPacket;
+    uint16_t sizeOfEmptyDataPacket = SizeOfSerializedDataPacket(emptyPacket),
+             sizeOfKeymap = static_cast<uint16_t>(sizeof(BareKeyboardKey) * controller.normalKeyCount);
+    uint16_t amountOfKeymaps = static_cast<uint16_t>(
+        ((controller.storageSize - sizeOfEmptyDataPacket) / sizeOfKeymap) + 1
+    );
+    int32_t expectedAmountOfOverflow = static_cast<int32_t>(
+        ((controller.storageSize - sizeOfEmptyDataPacket) % sizeOfKeymap) - sizeOfKeymap
+    );
+
+    int32_t result = controller.CalculateUnusedStorage(amountOfKeymaps);
+
+    ASSERT_TEST(result == expectedAmountOfOverflow);
 }
 
 void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse()
@@ -1778,6 +1796,7 @@ void CreateNewKeymap_SuccessfullyCreatesAKeymap_NewKeymapInheritsPinsFromDefault
     SpecialKey specialKeymap[amountOfSpecialKeys] {
         SpecialKey(10, toggleDefaultKeyMap),
     };
+    EEPROMClass_length_return = 1024;
     Controller controller = Controller(defaultKeymap, amountOfDefaultKeys, specialKeymap, amountOfSpecialKeys);
 
     bool resultBool = controller.CreateNewKeymap();
@@ -1835,34 +1854,72 @@ void CreateNewKeymap_SuccessfullyCreatesAKeymap_EquipsTheNewKeymap()
     );
 }
 
-void CreateNewKeymap_WeHaveEnoughFreeMemory_CreatesKeymapAndReturnsTrue()
+void CreateNewKeymap_WeHaveEnoughStorageSpace_CreatesKeymapAndReturnsTrue()
 {
-    Controller controller = SetUpController();
-    BareKeyboardKey keymap1[genericNormalKeyCount] {
-        BareKeyboardKey(93, 1),
-        BareKeyboardKey(83, 2),
-        BareKeyboardKey(93, 3),
-        BareKeyboardKey(45, 0),
+    const int amountOfDefaultKeys = 2;
+    BareKeyboardKey defaultKeymap[amountOfDefaultKeys] {
+        BareKeyboardKey(9, 1), 
+        BareKeyboardKey(3, 2),
     };
+    const int amountOfSpecialKeys = 1;
+    SpecialKey specialKeymap[amountOfSpecialKeys] {
+        SpecialKey(10, toggleDefaultKeyMap),
+    };
+    BareKeyboardKey keymap[amountOfDefaultKeys] {
+        BareKeyboardKey(1, 10), 
+        BareKeyboardKey(2, 20),
+    };
+    uint16_t eepromSize = static_cast<uint16_t>(
+        sizeof(keymap) * 2 + SizeOfSerializedDataPacket(DataPacket())
+    );
+    EEPROMClass_length_return = eepromSize;
+    Controller controller = Controller(defaultKeymap, amountOfDefaultKeys, specialKeymap, amountOfSpecialKeys);
     controller.customKeyMaps.Clear();
-    for(int i = 0; i < 9; i++) // TODO: Change this test when a real memory check has been implemented.
-    {
-        controller.customKeyMaps.Add(keymap1);
-    }
+    controller.customKeyMaps.Add(keymap);
+    uint16_t customKeyMapLengthBefore = static_cast<uint16_t>(controller.customKeyMaps.length);
 
     bool resultBool = controller.CreateNewKeymap();
 
     ASSERT_TEST(
-        resultBool == true
+        resultBool == true &&
+        controller.customKeyMaps.length == static_cast<uint16_t>(customKeyMapLengthBefore + 1)
     );
 }
 
-// void CreateNewKeymap_EepromDoesNotFitAnotherKeymap_DoesNotCreateKeymapAndReturnsFalse()
-// {
-//     ASSERT_TEST(
-//         false // TODO: Finish writing this test.
-//     );
-// }
+void CreateNewKeymap_EepromDoesNotFitAnotherKeymap_DoesNotCreateNorChangeKeymapAndReturnsFalse()
+{
+    const int amountOfDefaultKeys = 2;
+    BareKeyboardKey defaultKeymap[amountOfDefaultKeys] {
+        BareKeyboardKey(9, 1),
+        BareKeyboardKey(3, 2),
+    };
+    const int amountOfSpecialKeys = 1;
+    SpecialKey specialKeymap[amountOfSpecialKeys] {
+        SpecialKey(10, toggleDefaultKeyMap),
+    };
+    BareKeyboardKey keymap[amountOfDefaultKeys] {
+        BareKeyboardKey(1, 10),
+        BareKeyboardKey(2, 20),
+    };
+    uint16_t eepromSize = static_cast<uint16_t>(
+        sizeof(keymap) + SizeOfSerializedDataPacket(DataPacket())
+    );
+    EEPROMClass_length_return = eepromSize;
+    Controller controller = Controller(defaultKeymap, amountOfDefaultKeys, specialKeymap, amountOfSpecialKeys);
+    controller.customKeyMaps.Clear();
+    controller.ChangeKeyMap(keymap);
+    controller.customKeyMaps.Add(keymap);
+    uint16_t customKeyMapLengthBefore = static_cast<uint16_t>(controller.customKeyMaps.length);
+
+    bool resultBool = controller.CreateNewKeymap();
+
+    ASSERT_TEST(
+        resultBool == false &&
+        controller.customKeyMaps.length == customKeyMapLengthBefore &&
+        controller.currentKeyMap[0].pin == keymap[0].pin && controller.currentKeyMap[0].keyCode == keymap[0].keyCode &&
+        controller.currentKeyMap[1].pin == keymap[1].pin && controller.currentKeyMap[1].keyCode == keymap[1].keyCode
+    );
+}
 
 // void CreateNewKeymap_SramDoesNotFitAnotherKeymap_DoesNotCreateKeymapAndReturnsFalse()
 // {
@@ -1870,47 +1927,3 @@ void CreateNewKeymap_WeHaveEnoughFreeMemory_CreatesKeymapAndReturnsTrue()
 //         false // TODO: Finish writing this test.
 //     );
 // }
-
-void CreateNewKeymap_DoesNotHaveEnoughMemoryLeft_DoesNotCreateAKeymapAndReturnsFalse()
-{
-    Controller controller = SetUpController();
-    BareKeyboardKey keymap1[genericNormalKeyCount] {
-        BareKeyboardKey(93, 1),
-        BareKeyboardKey(83, 2),
-        BareKeyboardKey(93, 3),
-        BareKeyboardKey(45, 0),
-    };
-    controller.customKeyMaps.Clear();
-    for(int i = 0; i < 10; i++) // TODO: Change this test when a real memory check has been implemented.
-    {
-        controller.customKeyMaps.Add(keymap1);
-    }
-    unsigned int lengthBefore = controller.customKeyMaps.length,
-                 customKeyMapIndexBefore = controller.customKeyMapIndex;
-    Key equippedKeymapBefore[genericNormalKeyCount] = {
-        Key(controller.currentKeyMap[0]),
-        Key(controller.currentKeyMap[1]),
-        Key(controller.currentKeyMap[2]),
-        Key(controller.currentKeyMap[3]),
-    };
-
-
-    bool resultBool = controller.CreateNewKeymap();
-    unsigned int lengthAfter = controller.customKeyMaps.length,
-                 customKeyMapIndexAfter = controller.customKeyMapIndex;
-    Key *equippedKeymapAfter = controller.currentKeyMap;
-
-    ASSERT_TEST(
-        (
-            equippedKeymapAfter[0].pin == equippedKeymapBefore[0].pin && equippedKeymapAfter[0].keyCode == equippedKeymapBefore[0].keyCode &&
-            equippedKeymapAfter[1].pin == equippedKeymapBefore[1].pin && equippedKeymapAfter[1].keyCode == equippedKeymapBefore[1].keyCode &&
-            equippedKeymapAfter[2].pin == equippedKeymapBefore[2].pin && equippedKeymapAfter[2].keyCode == equippedKeymapBefore[2].keyCode &&
-            equippedKeymapAfter[3].pin == equippedKeymapBefore[3].pin && equippedKeymapAfter[3].keyCode == equippedKeymapBefore[3].keyCode
-        )
-        &&
-        customKeyMapIndexAfter == customKeyMapIndexBefore &&
-        lengthBefore == lengthAfter &&
-        resultBool == false
-    );
-}
-

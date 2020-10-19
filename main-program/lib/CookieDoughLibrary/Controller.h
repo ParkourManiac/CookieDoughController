@@ -97,7 +97,7 @@ public:
      * will represent the amount of overflowing bytes that will not fit into
      * the storage unit.
      */
-    uint16_t CalculateAmountOfUnusedStorage(uint16_t amountOfKeymaps = 0);
+    int32_t CalculateUnusedStorage(uint16_t amountOfKeymaps = 0);
 
     /**
      * @brief Saves a list of keymaps to memory.
