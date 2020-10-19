@@ -334,6 +334,24 @@ void SizeOfSerializedDataPacket_ReturnsTheAmountOfBytesTheDataPacketWillOccupyOn
     ASSERT_TEST(result == expectedSize);
 }
 
+void SizeOfSerializedDataPacket_RecievesPacketWithoutAPayload_StillCalculatesSizeOfRemainingPacket()
+{
+    uint8_t data = 0,
+            dataSize = 0;
+    DataPacket packet = DataPacket(&data, dataSize);
+    uint16_t expectedSize = static_cast<uint16_t>(
+        sizeof(packet.stx) +
+        sizeof(packet.active) +
+        sizeof(packet.payloadLength) +
+        sizeof(packet.crc) +
+        sizeof(packet.etx)
+    );
+
+    uint16_t result = SizeOfSerializedDataPacket(packet);
+
+    ASSERT_TEST(result == expectedSize);
+}
+
 void SizeOfSerializedDataPacket_CalculatesSizeDependingOnTheSizeOfThePayload()
 {
     uint64_t bigData = 981239;

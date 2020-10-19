@@ -91,6 +91,23 @@ uint16_t Controller::CyclicEepromAdress(uint32_t adress)
     return CyclicAdress(adress, storageSize);
 }
 
+uint16_t Controller::CalculateAmountOfUnusedStorage(uint16_t amountOfKeymaps)
+{
+    if(amountOfKeymaps == 0)
+    {
+        amountOfKeymaps = static_cast<uint16_t>(customKeyMaps.length);
+    }
+
+    uint16_t sizeOfPayload = static_cast<uint16_t>(
+        amountOfKeymaps * normalKeyCount * sizeof(BareKeyboardKey)
+    );
+    uint16_t sizeOfEmptyDataPacket = SizeOfSerializedDataPacket(DataPacket());
+
+    return static_cast<uint16_t>(
+        storageSize - (sizeOfPayload + sizeOfEmptyDataPacket)
+    );
+}
+
 bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList)
 {
     const int keyCount = keymapList.length * normalKeyCount;

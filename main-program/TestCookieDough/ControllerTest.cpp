@@ -187,6 +187,82 @@ void CyclicEepromAdress_AdressIsWithinEepromsSize_AdressIsUnchanged()
     ASSERT_TEST(result == expectedAdress);
 }
 
+void CalculateAmountOfUnusedStorage_CalculatesTheAmountOfUnusedStorageAfterTheoreticallySavingTheGivenAmountOfKeymaps()
+{
+    Controller controller = SetUpController();
+    uint8_t data = 0;
+    DataPacket emptyPacket(&data, 0);
+    const uint16_t sizeOfEmptyDataPacket = SizeOfSerializedDataPacket(emptyPacket),
+             amountOfKeymaps = static_cast<uint16_t>(controller.customKeyMaps.length + 3),
+             expectedAmountOfKeysInCustomKeymaps = static_cast<uint16_t>(amountOfKeymaps * controller.normalKeyCount),
+             expectedSizeOfPayload = static_cast<uint16_t>(sizeof(BareKeyboardKey) * expectedAmountOfKeysInCustomKeymaps);
+    uint16_t expectedAmountOfUnusedStorage = static_cast<uint16_t>(
+        controller.storageSize - (
+            sizeOfEmptyDataPacket +
+            expectedSizeOfPayload
+        )
+    );
+
+    uint16_t result = controller.CalculateAmountOfUnusedStorage(amountOfKeymaps);
+
+    ASSERT_TEST(result == expectedAmountOfUnusedStorage);
+}
+
+void CalculateAmountOfUnusedStorage_NoArguments_CalculatesTheUnusedStorageAsIfWeWereToSaveDownTheCustomKeyMaps()
+{
+    BareKeyboardKey keymap[genericNormalKeyCount] {
+        BareKeyboardKey(9, 9),
+        BareKeyboardKey(8, 8),
+        BareKeyboardKey(7, 7),
+        BareKeyboardKey(6, 6),
+    };
+    Controller controller = SetUpController();
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(keymap);
+    uint8_t data = 0;
+    DataPacket emptyPacket(&data, 0);
+    const uint16_t sizeOfEmptyDataPacket = SizeOfSerializedDataPacket(emptyPacket),
+             amountOfKeymaps = static_cast<uint16_t>(controller.customKeyMaps.length),
+             expectedAmountOfKeysInCustomKeymaps = static_cast<uint16_t>(amountOfKeymaps * controller.normalKeyCount),
+             expectedSizeOfPayload = static_cast<uint16_t>(sizeof(BareKeyboardKey) * expectedAmountOfKeysInCustomKeymaps);
+    uint16_t expectedAmountOfUnusedStorage = static_cast<uint16_t>(
+        controller.storageSize - (
+            sizeOfEmptyDataPacket +
+            expectedSizeOfPayload
+        )
+    );
+
+    uint16_t result = controller.CalculateAmountOfUnusedStorage();
+
+    ASSERT_TEST(result == expectedAmountOfUnusedStorage);
+}
+
+void CalculateAmountOfUnusedStorage_NoArguments_ReturnsTheSameSizeAsIfWeWereToSaveKeymapsToMemory()
+{
+    BareKeyboardKey keymap[genericNormalKeyCount] {
+        BareKeyboardKey(9, 9),
+        BareKeyboardKey(8, 8),
+        BareKeyboardKey(7, 7),
+        BareKeyboardKey(6, 6),
+    };
+    Controller controller = SetUpController();
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(keymap);
+    // Prepare to save packet
+    DataPacket packet = DataToPacket(keymap);
+    uint16_t sizeOfPacket = SizeOfSerializedDataPacket(packet);
+    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, packet.payload, packet.payloadLength, controller.storageSize);
+    uint16_t expectedAmountOfUnusedStorage = static_cast<uint16_t>(controller.storageSize - sizeOfPacket);
+
+    bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
+    uint16_t result = controller.CalculateAmountOfUnusedStorage();
+
+    ASSERT_TEST(
+        resultBool == true &&
+        result == expectedAmountOfUnusedStorage
+    );
+}
+
 void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse()
 {
     Controller controller = SetUpController();
