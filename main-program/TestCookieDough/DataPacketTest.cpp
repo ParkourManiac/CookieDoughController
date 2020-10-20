@@ -689,6 +689,17 @@ void SaveDataPacketToEEPROM_PacketFitsOnEEPROM_ReturnsTrue()
     ASSERT_TEST(resultBool == true && resultPacketSize == packetSize);
 }
 
+// TODO: Write these tests.
+// void JoinDataWithDataPacketOnEEPROM_SuccessfullyAddsTheDataToTheEndOfThePayload()
+// void JoinDataWithDataPacketOnEEPROM_SuccessfullyIncreasesThePayloadLength()
+// void JoinDataWithDataPacketOnEEPROM_SuccessfullyIncludesTheDataIntoTheCalculationOfTheCrc()
+// void JoinDataWithDataPacketOnEEPROM_SuccessfullyAddsAnEtxToTheEndOfThePayload()
+// void JoinDataWithDataPacketOnEEPROM_SuccessfullyJoinsDataWithPacket_ReturnsTrue()
+// void JoinDataWithDataPacketOnEEPROM_WritesThePayloadInACircularPatternWhenExceedingTheEepromsLastAdress()
+// void JoinDataWithDataPacketOnEEPROM_JoinedPacketIsValid()
+// void JoinDataWithDataPacketOnEEPROM_AdressOfDataPacketIsOutsideOfTheEEPROM_ReturnsFalse()
+// void JoinDataWithDataPacketOnEEPROM_AdressDoesNotPointToAnStx_ReturnsFalse()
+// void JoinDataWithDataPacketOnEEPROM_CanNotFindEtx_ReturnsFalse()
 
 void ReadDataPacketOnEEPROM_DataPacketDoesNotNeedToBeManuallyAllocatedBeforePassedToFunciton_DoesNotCrash()
 {
