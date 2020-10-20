@@ -233,6 +233,24 @@ void CalculateCRC_UsesAlgorithCRC32()
     ASSERT_TEST(result == 1119744540);
 }
 
+void CalculateCRC_DataCanBeMadeStreamable()
+{
+    uint32_t data = 98547324;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    uint8_t data0 = dataPtr[0],
+            data1 = dataPtr[1],
+            data2 = dataPtr[2],
+            data3 = dataPtr[3];
+    uint32_t expectedResult = CalculateCRC(dataPtr, sizeof(data));
+
+    uint32_t result = CalculateCRC(&data0, sizeof(data0));
+    result = CalculateCRC(&data1, sizeof(data1), result);
+    result = CalculateCRC(&data2, sizeof(data2), result);
+    result = CalculateCRC(&data3, sizeof(data3), result);
+
+    ASSERT_TEST(result == expectedResult);
+}
+
 void CyclicAdress_TakesInAnAdressThatExceedsTheBufferSize_WrapsBackToTheBeginningOfTheBuffer()
 {
     uint16_t bufferSize = 1024;

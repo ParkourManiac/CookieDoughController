@@ -112,6 +112,8 @@ int32_t Controller::CalculateUnusedStorage(uint16_t amountOfKeymaps)
 bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList)
 {
     const int keyCount = keymapList.length * normalKeyCount;
+    DEBUG_PRINT(CalculateUnusedStorage(keymapList.length));
+    DEBUG(delay(100));
     BareKeyboardKey *serializedKeyMaps = new BareKeyboardKey[keyCount];
     for (unsigned int i = 0; i < keymapList.length; i++)
     {

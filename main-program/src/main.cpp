@@ -36,12 +36,14 @@ void loop()
 {
     controller.Update();
 
-    // // DEBUG
-    // if(millis() % 1000 == 0) {
-    //     Serial.print(freeMemory());
-    //     Serial.print("\n");
-    // } 
-    // // DEBUG
+    // DEBUG
+    if(millis() % 1000 == 0) {
+        Serial.print(freeMemory());
+        Serial.print(":");
+        Serial.print(controller.CalculateUnusedStorage());
+        Serial.print("\n");
+    } 
+    // DEBUG
 }
 
 // TODO: Learn how to use CMake and try using it in the project.

@@ -128,9 +128,14 @@ uint16_t SizeOfSerializedDataPacket(const DataPacket &packet);
  * @param data The data we want to calculate a CRC checksum for.
  * @param length The size of the data in bytes.
  * (The length of the array of bytes).
- * @return unsigned long Returns the CRC checksum calculated from the data.
+ * @param crc If not provided, will calculate the crc using only the data 
+ * provided. If provided, can be used to continue the calculation of a crc for a
+ * stream of data. Pass in the crc from the precceding part of the stream
+ * to continue the calculation of the crc. Do this until you reach the end of
+ * the stream to calculate a checksum for the stream as a whole.
+ * @return unsigned long Returns the CRC checksum calculated from the data (or data stream).
  */
-uint32_t CalculateCRC(uint8_t *data, uint16_t length);
+uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc = ~0L);
 
 
 #endif
