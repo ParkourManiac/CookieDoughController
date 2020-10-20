@@ -1,4 +1,5 @@
 #include "Controller.h"
+#include "MeasureSRAM.h"
 
 #include <EEPROM.h>
 #include <Arduino.h>
@@ -774,10 +775,12 @@ bool Controller::CreateNewKeymap()
     bool successful = false;
     // TODO: Implement real check to see if the arduino can
     // fit another keymap to stack/heap/memory.
-    int32_t freeSpaceAfterAddingKeymap = CalculateUnusedStorage(static_cast<uint16_t>(customKeyMaps.length + 1));
-    bool canFitAnotherKeymap = (freeSpaceAfterAddingKeymap >= 0);
+    int32_t freeStorageSpaceAfterAddingKeymap = CalculateUnusedStorage(static_cast<uint16_t>(customKeyMaps.length + 1));
+    int32_t freeSRAMAfterAddingKeymap = freeMemory() - (sizeof(BareKeyboardKey) * normalKeyCount); // TODO: Replace this with another solution?
+    bool canFitAnotherKeymapIntoStorage = (freeStorageSpaceAfterAddingKeymap >= 0);
+    bool canFitAnotherKeymapIntoSRAM = (freeSRAMAfterAddingKeymap >= SRAMSafetyThreshold);
 
-    if (canFitAnotherKeymap)
+    if (canFitAnotherKeymapIntoStorage && canFitAnotherKeymapIntoSRAM)
     {
         BareKeyboardKey *newKeyMap = new BareKeyboardKey[normalKeyCount]; // TODO: Double-check if this is deleted[] when removing a keymap.
         int initialKeycode = 4; // The "a" key. 

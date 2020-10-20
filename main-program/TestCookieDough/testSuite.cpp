@@ -4,6 +4,7 @@
 
 #include "Fakes/Arduino.h"
 #include "Fakes/EEPROM.h"
+#include "Fakes/MeasureSRAM.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-qual"
@@ -527,6 +528,23 @@ const uint32_t & EEPROMClass::put(int idx, const uint32_t & t)
 	}
 }
 
+int freeMemory_return;
+std::vector<int> freeMemory_return_v;
+unsigned int freeMemory_invocations = 0;
+int freeMemory()
+{
+	freeMemory_invocations++;
+
+	if(freeMemory_return_v.size() < freeMemory_invocations)
+	{
+		return freeMemory_return;
+	}
+	else
+	{
+		return freeMemory_return_v.at(freeMemory_invocations-1);
+	}
+}
+
 
 void ResetMocks() 
 {
@@ -679,6 +697,9 @@ void ResetMocks()
 	EEPROMClass_put_invocations_o3 = 0;
 	EEPROMClass_put_return_o3 = uint32_t();
 	EEPROMClass_put_return_o3_v.clear();
+	freeMemory_invocations = 0;
+	freeMemory_return = int();
+	freeMemory_return_v.clear();
 }
 
 #pragma GCC diagnostic pop
@@ -748,7 +769,9 @@ void CreateNewKeymap_SuccessfullyCreatesAKeymap_NewKeymapInheritsPinsFromDefault
 void CreateNewKeymap_SuccessfullyCreatesAKeymap_KeycodesOnNewKeymapsDefaultTo4();
 void CreateNewKeymap_SuccessfullyCreatesAKeymap_EquipsTheNewKeymap();
 void CreateNewKeymap_WeHaveEnoughStorageSpace_CreatesKeymapAndReturnsTrue();
+void CreateNewKeymap_WeHaveSufficientFreeSram_CreatesKeymapAndReturnsTrue();
 void CreateNewKeymap_EepromDoesNotFitAnotherKeymap_DoesNotCreateNorChangeKeymapAndReturnsFalse();
+void CreateNewKeymap_SramDoesNotFitAnotherKeymap_DoesNotCreateKeymapAndReturnsFalse();
 void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket();
 void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_SetEepromSizeByHandToFitThePacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket();
 void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_UsingHighAdress_EepromLengthIsSetToFitPacket();
@@ -1049,7 +1072,9 @@ void RunTests()
 	RUN_TEST(CreateNewKeymap_SuccessfullyCreatesAKeymap_KeycodesOnNewKeymapsDefaultTo4);
 	RUN_TEST(CreateNewKeymap_SuccessfullyCreatesAKeymap_EquipsTheNewKeymap);
 	RUN_TEST(CreateNewKeymap_WeHaveEnoughStorageSpace_CreatesKeymapAndReturnsTrue);
+	RUN_TEST(CreateNewKeymap_WeHaveSufficientFreeSram_CreatesKeymapAndReturnsTrue);
 	RUN_TEST(CreateNewKeymap_EepromDoesNotFitAnotherKeymap_DoesNotCreateNorChangeKeymapAndReturnsFalse);
+	RUN_TEST(CreateNewKeymap_SramDoesNotFitAnotherKeymap_DoesNotCreateKeymapAndReturnsFalse);
 	RUN_TEST(Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket);
 	RUN_TEST(Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_SetEepromSizeByHandToFitThePacket_ParsePacketFromEepromSuccessfullyReturnsCorrectPacket);
 	RUN_TEST(Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_UsingHighAdress_EepromLengthIsSetToFitPacket);

@@ -25,6 +25,10 @@ extern std::vector<uint8_t> EEPROMClass_update_param_val_v;
 
 extern std::vector<uint8_t> pinMode_param_pin_v;
 
+extern int freeMemory_return;
+extern std::vector<int> freeMemory_return_v;
+extern unsigned int freeMemory_invocations;
+
 const int genericNormalKeyCount = 4;
 const int genericSpecialKeyCount = 3;
 Controller SetUpController()
@@ -44,6 +48,7 @@ Controller SetUpController()
     };
 
     EEPROMClass_length_return_v.push_back(1024);
+    freeMemory_return = 2048;
 
     return Controller(defaultKeymap, genericNormalKeyCount, specialKeys, genericSpecialKeyCount);
 }
@@ -1797,6 +1802,8 @@ void CreateNewKeymap_SuccessfullyCreatesAKeymap_NewKeymapInheritsPinsFromDefault
         SpecialKey(10, toggleDefaultKeyMap),
     };
     EEPROMClass_length_return = 1024;
+    uint16_t amountOfFreeSRAM = 2048;
+    freeMemory_return = amountOfFreeSRAM;
     Controller controller = Controller(defaultKeymap, amountOfDefaultKeys, specialKeymap, amountOfSpecialKeys);
 
     bool resultBool = controller.CreateNewKeymap();
@@ -1873,9 +1880,44 @@ void CreateNewKeymap_WeHaveEnoughStorageSpace_CreatesKeymapAndReturnsTrue()
         sizeof(keymap) * 2 + SizeOfSerializedDataPacket(DataPacket())
     );
     EEPROMClass_length_return = eepromSize;
+    uint16_t amountOfFreeSRAM = 2048;
+    freeMemory_return = amountOfFreeSRAM;
     Controller controller = Controller(defaultKeymap, amountOfDefaultKeys, specialKeymap, amountOfSpecialKeys);
     controller.customKeyMaps.Clear();
     controller.customKeyMaps.Add(keymap);
+    uint16_t customKeyMapLengthBefore = static_cast<uint16_t>(controller.customKeyMaps.length);
+
+    bool resultBool = controller.CreateNewKeymap();
+
+    ASSERT_TEST(
+        resultBool == true &&
+        controller.customKeyMaps.length == static_cast<uint16_t>(customKeyMapLengthBefore + 1)
+    );
+}
+
+void CreateNewKeymap_WeHaveSufficientFreeSram_CreatesKeymapAndReturnsTrue()
+{
+    const int amountOfDefaultKeys = 2;
+    BareKeyboardKey defaultKeymap[amountOfDefaultKeys] {
+        BareKeyboardKey(9, 1),
+        BareKeyboardKey(3, 2),
+    };
+    const int amountOfSpecialKeys = 1;
+    SpecialKey specialKeymap[amountOfSpecialKeys] {
+        SpecialKey(10, toggleDefaultKeyMap),
+    };
+    BareKeyboardKey keymap[amountOfDefaultKeys] {
+        BareKeyboardKey(1, 10),
+        BareKeyboardKey(2, 20),
+    };
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Controller controller = Controller(defaultKeymap, amountOfDefaultKeys, specialKeymap, amountOfSpecialKeys);
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(keymap);
+    controller.ChangeKeyMap(keymap);
+    uint16_t amountOfFreeSRAM = static_cast<uint16_t>(controller.SRAMSafetyThreshold + sizeof(keymap));
+    freeMemory_return = amountOfFreeSRAM;
     uint16_t customKeyMapLengthBefore = static_cast<uint16_t>(controller.customKeyMaps.length);
 
     bool resultBool = controller.CreateNewKeymap();
@@ -1905,6 +1947,8 @@ void CreateNewKeymap_EepromDoesNotFitAnotherKeymap_DoesNotCreateNorChangeKeymapA
         sizeof(keymap) + SizeOfSerializedDataPacket(DataPacket())
     );
     EEPROMClass_length_return = eepromSize;
+    uint16_t amountOfFreeSRAM = 2048;
+    freeMemory_return = amountOfFreeSRAM;
     Controller controller = Controller(defaultKeymap, amountOfDefaultKeys, specialKeymap, amountOfSpecialKeys);
     controller.customKeyMaps.Clear();
     controller.ChangeKeyMap(keymap);
@@ -1921,9 +1965,37 @@ void CreateNewKeymap_EepromDoesNotFitAnotherKeymap_DoesNotCreateNorChangeKeymapA
     );
 }
 
-// void CreateNewKeymap_SramDoesNotFitAnotherKeymap_DoesNotCreateKeymapAndReturnsFalse()
-// {
-//     ASSERT_TEST(
-//         false // TODO: Finish writing this test.
-//     );
-// }
+void CreateNewKeymap_SramDoesNotFitAnotherKeymap_DoesNotCreateNorChangeKeymapAndReturnsFalse()
+{
+    const int amountOfDefaultKeys = 2;
+    BareKeyboardKey defaultKeymap[amountOfDefaultKeys] {
+        BareKeyboardKey(9, 1),
+        BareKeyboardKey(3, 2),
+    };
+    const int amountOfSpecialKeys = 1;
+    SpecialKey specialKeymap[amountOfSpecialKeys] {
+        SpecialKey(10, toggleDefaultKeyMap),
+    };
+    BareKeyboardKey keymap[amountOfDefaultKeys] {
+        BareKeyboardKey(1, 10),
+        BareKeyboardKey(2, 20),
+    };
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Controller controller = Controller(defaultKeymap, amountOfDefaultKeys, specialKeymap, amountOfSpecialKeys);
+    uint16_t amountOfFreeSRAM = static_cast<uint16_t>(controller.SRAMSafetyThreshold - sizeof(keymap));
+    freeMemory_return = amountOfFreeSRAM;
+    controller.customKeyMaps.Clear();
+    controller.customKeyMaps.Add(keymap);
+    controller.ChangeKeyMap(keymap);
+    uint16_t customKeyMapLengthBefore = static_cast<uint16_t>(controller.customKeyMaps.length);
+
+    bool resultBool = controller.CreateNewKeymap();
+
+    ASSERT_TEST(
+        resultBool == false &&
+        controller.customKeyMaps.length == customKeyMapLengthBefore &&
+        controller.currentKeyMap[0].pin == keymap[0].pin && controller.currentKeyMap[0].keyCode == keymap[0].keyCode &&
+        controller.currentKeyMap[1].pin == keymap[1].pin && controller.currentKeyMap[1].keyCode == keymap[1].keyCode
+    );
+}

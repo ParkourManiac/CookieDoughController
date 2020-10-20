@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include <Controller.h>
-#include <SRAM.cpp>  // DEBUG // NOLINT(build/include)
+#include <MeasureSRAM.h>
 
 // #define DEBUG(VALUE) VALUE
 // #define DEBUG_PRINT(VALUE) Serial.print(VALUE)
