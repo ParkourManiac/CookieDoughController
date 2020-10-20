@@ -44,21 +44,9 @@ void loop()
     // // DEBUG
 }
 
-// "If you run out of SRAM..." - https://www.arduino.cc/en/tutorial/memory
-
-// TODO: 
-    // DataPacket() 
-    // {
-    //     payload = new uint8_t[1] {0};
-    // }
-    // ~DataPacket() 
-    // {
-    //     delete[] (payload);
-    // }
-
 // TODO: Learn how to use CMake and try using it in the project.
 // TODO: Learn how to use clang-tidy and use it in the project. https://llvm.org/
 // TODO: When in doubt: Use assert().
-// TODO: __attribute__((packed)) on the structs that need to be saved to eeprom.
+// TODO: __attribute__((packed)) on the structs that need to be saved to eeprom. If neccessary
 // TODO: Research POD type. Plain-Old-datatype. (Serialization for c++).
 // TODO: Look into using GDB for debugging. b <num> = sets breakpoint. r = run code. c = Continue to next breakpoint. p <expression> = Prints the result of the given expression.

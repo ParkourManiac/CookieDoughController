@@ -495,11 +495,8 @@ void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested. Refactor 
                     if (editmode.enabled)
                     {
                         ToggleEditMode(); // Exit editmode to save the keyMap.
-                        bool success = CreateNewKeymap();
-                        if (success)
-                        {
-                            ToggleEditMode();
-                        }
+                        CreateNewKeymap();
+                        ToggleEditMode(); // Enter it again so we can edit the newly created keymap.
                     }
                     else
                     {
@@ -829,7 +826,7 @@ bool Controller::CreateNewKeymap()
     }
     else
     {
-        DEBUG_PRINT(F("ERROR: We don't have enought space to create another keymap (Max size hardcoded to 10)...\n")); // TODO: Update this error message when not hardcoded anymore.
+        DEBUG_PRINT(F("ERROR: We don't have enought space to create another keymap...\n"));
         SignalErrorToUser(); // TODO: prevent getting thrown out of memory when we fail to add a new keymap.
     }
 
