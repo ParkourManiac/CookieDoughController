@@ -62,6 +62,18 @@ bool ReadDataPacketOnEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packe
 bool SaveDataPacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t *packetSize);
 
 /**
+ * @brief Joins the given data onto the end of the payload of a packet that is present on the EEPROM
+ * and updates the packet information accordingly.
+ * 
+ * @param adress The adress to the stx of the packet.
+ * @param data The data to be joined onto the end of the packets payload.
+ * @param dataSize The size of the data to be joined.
+ * @return true The data was successfully joined onto the packets payload.
+ * @return false Unable to join the data with the packet.
+ */
+bool JoinDataWithDataPacketOnEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize);
+
+/**
  * @brief Checks wether the DataPackets "active" flag is considered active or inactive.
  * 
  * @param activeFlag The value of the "active" flag of the DataPacket object.

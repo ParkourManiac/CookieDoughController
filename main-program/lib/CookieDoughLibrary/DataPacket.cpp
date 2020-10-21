@@ -201,6 +201,11 @@ bool SaveDataPacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, u
     }
 }
 
+bool JoinDataWithDataPacketOnEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize)
+{
+    return false;
+}
+
 bool IsPacketActive(const uint8_t activeFlag)
 {
     return activeFlag == 0x01;
