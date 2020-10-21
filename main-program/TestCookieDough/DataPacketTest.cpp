@@ -697,12 +697,7 @@ void JoinDataWithDataPacketOnEEPROM_ReadsThePacketUsingACircularPatternAndReadsF
     DataPacket packet = DataToPacket(data);
     uint16_t adress = 13;
     uint16_t eepromSize = static_cast<uint16_t>(
-        adress + 
-        SizeOfSerializedDataPacket(packet) 
-        - (
-            sizeof(packet.etx) + 
-            sizeof(packet.payloadLength / 2)
-        )
+        adress + sizeof(packet.stx)
     );
     int32_t expectedStxAdress = adress;
     int32_t expectedPayloadLengthAdress = CyclicAdress(
@@ -799,20 +794,343 @@ void JoinDataWithDataPacketOnEEPROM_SuccessfullyAddsAnEtxToTheEndOfThePayload() 
     JoinDataWithDataPacketOnEEPROM(adress, dataToAddPtr, sizeof(dataToAdd));
 
     ASSERT_TEST(
+        EEPROMClass_update_param_idx_v.at(4) == expectedNewEtxAdress && 
+        EEPROMClass_update_param_val_v.at(4) == packet.etx
+    );
+}
+
+void JoinDataWithDataPacketOnEEPROM_SuccessfullyIncreasesThePayloadLength() // TODO: Check if correct
+{
+    uint32_t data = 1000;
+    uint32_t dataToAdd = 123;
+    uint8_t *dataToAddPtr = reinterpret_cast<uint8_t *>(&dataToAdd);
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 13;
+    int32_t expectedPayloadLengthAdress = (
+        adress +
+        sizeof(packet.stx) +
+        sizeof(packet.active)
+    );
+    int32_t expectedNewPayloadLength = (
+        packet.payloadLength + sizeof(dataToAdd)
+    );
+    EEPROMClass_length_return = 1024;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    JoinDataWithDataPacketOnEEPROM(adress, dataToAddPtr, sizeof(dataToAdd));
+
+    ASSERT_TEST(
+        EEPROMClass_put_param_idx_o2_v.at(0) == expectedPayloadLengthAdress && 
+        EEPROMClass_put_param_t_o2_v.at(0) == expectedNewPayloadLength
+    );
+}
+
+void JoinDataWithDataPacketOnEEPROM_SuccessfullyIncludesTheDataIntoTheCalculationOfTheCrc() // TODO: Check if correct
+{
+    uint32_t data = 1000;
+    uint32_t dataToAdd = 123;
+    uint8_t *dataToAddPtr = reinterpret_cast<uint8_t *>(&dataToAdd);
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 13;
+    int32_t expectedCRCAdress = (
+        adress +
+        sizeof(packet.stx) +
+        sizeof(packet.active) +
+        sizeof(packet.payloadLength)
+    );
+    uint16_t resultingPayloadLength = static_cast<uint16_t>(sizeof(data) + sizeof(dataToAdd));
+    uint8_t *resultingPayload = new uint8_t[resultingPayloadLength] {
+        packet.payload[0],
+        packet.payload[1],
+        packet.payload[2],
+        packet.payload[3],
+        dataToAddPtr[0],
+        dataToAddPtr[1],
+        dataToAddPtr[2],
+        dataToAddPtr[3],
+    };
+    uint32_t expectedCRC = CalculateCRC(resultingPayload, resultingPayloadLength);
+    EEPROMClass_length_return = 1024;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    JoinDataWithDataPacketOnEEPROM(adress, dataToAddPtr, sizeof(dataToAdd));
+
+    std::cout << CalculateCRC(resultingPayload, resultingPayloadLength) << " ?==? ";
+    std::cout << CalculateCRC(dataToAddPtr, sizeof(dataToAdd), packet.crc) << "\n";
+
+    ASSERT_TEST(
+        EEPROMClass_put_param_idx_o3_v.at(0) == expectedCRCAdress && 
+        EEPROMClass_put_param_t_o3_v.at(0) == expectedCRC
+    );
+    delete[](resultingPayload);
+}
+
+void JoinDataWithDataPacketOnEEPROM_WritesThePayloadInACircularPatternWhenExceedingTheEepromsLastAdress() // TODO: Check if correct
+{
+    uint32_t data = 1000;
+    uint32_t dataToAdd = 123;
+    uint8_t *dataToAddPtr = reinterpret_cast<uint8_t *>(&dataToAdd);
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 13;
+    uint32_t expectedPayloadContinuationAdress = (
+        adress +
+        sizeof(packet.stx) +
+        sizeof(packet.active) +
+        sizeof(packet.payloadLength) +
+        sizeof(packet.crc) +
+        packet.payloadLength
+    );
+    uint16_t eepromSize = static_cast<uint16_t>(
+        SizeOfSerializedDataPacket(packet) + (sizeof(dataToAdd)/2) - sizeof(packet.etx)
+    );
+    uint16_t expectedAddedDataAdress0 = CyclicAdress(expectedPayloadContinuationAdress + 0, eepromSize),
+            expectedAddedDataAdress1 = CyclicAdress(expectedPayloadContinuationAdress + 1, eepromSize),
+            expectedAddedDataAdress2 = CyclicAdress(expectedPayloadContinuationAdress + 2, eepromSize),
+            expectedAddedDataAdress3 = CyclicAdress(expectedPayloadContinuationAdress + 3, eepromSize);
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    JoinDataWithDataPacketOnEEPROM(adress, dataToAddPtr, sizeof(dataToAdd));
+
+    std::cout << "Adresses: \n";
+    std::cout << expectedAddedDataAdress0 << "\n";
+    std::cout << expectedAddedDataAdress1 << "\n";
+    std::cout << expectedAddedDataAdress2 << "\n";
+    std::cout << expectedAddedDataAdress3 << "\n";
+
+    ASSERT_TEST(
+        EEPROMClass_update_param_idx_v.at(0) == expectedAddedDataAdress0 && EEPROMClass_update_param_val_v.at(0) == dataToAddPtr[0] &&
+        EEPROMClass_update_param_idx_v.at(1) == expectedAddedDataAdress1 && EEPROMClass_update_param_val_v.at(1) == dataToAddPtr[1] &&
+        EEPROMClass_update_param_idx_v.at(2) == expectedAddedDataAdress2 && EEPROMClass_update_param_val_v.at(2) == dataToAddPtr[2] &&
+        EEPROMClass_update_param_idx_v.at(3) == expectedAddedDataAdress3 && EEPROMClass_update_param_val_v.at(3) == dataToAddPtr[3]
+    );
+}
+
+void JoinDataWithDataPacketOnEEPROM_StxIsAtTheLastPostitionOfTheEeprom_WritesEverythingInACircularPatternAtTheCorrectPlace() // TODO: Check if correct
+{
+    uint32_t data = 1000;
+    uint32_t dataToAdd = 123;
+    uint8_t *dataToAddPtr = reinterpret_cast<uint8_t *>(&dataToAdd);
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 13;
+    uint16_t eepromSize = static_cast<uint16_t>(
+        adress + sizeof(packet.stx)
+    );
+    int32_t expectedPayloadLengthAdress = CyclicAdress((
+        adress +
+        sizeof(packet.stx) +
+        sizeof(packet.active)
+    ), eepromSize);
+    int32_t expectedCRCAdress = CyclicAdress((
+        expectedPayloadLengthAdress + 
+        sizeof(packet.payloadLength)
+    ), eepromSize);
+    uint32_t expectedPayloadContinuationAdress = CyclicAdress((
+        expectedCRCAdress + 
+        sizeof(packet.crc) +
+        packet.payloadLength
+    ), eepromSize);
+    uint16_t expectedAddedDataAdress0 = CyclicAdress(expectedPayloadContinuationAdress + 0, eepromSize),
+            expectedAddedDataAdress1 = CyclicAdress(expectedPayloadContinuationAdress + 1, eepromSize),
+            expectedAddedDataAdress2 = CyclicAdress(expectedPayloadContinuationAdress + 2, eepromSize),
+            expectedAddedDataAdress3 = CyclicAdress(expectedPayloadContinuationAdress + 3, eepromSize);
+    int32_t expectedNewEtxAdress = CyclicAdress((
+        expectedAddedDataAdress3 +
+        sizeof(dataToAddPtr[3]) 
+    ), eepromSize);
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    JoinDataWithDataPacketOnEEPROM(adress, dataToAddPtr, sizeof(dataToAdd));
+
+    std::cout << "Adresses: \n";
+    std::cout << expectedAddedDataAdress0 << "\n";
+    std::cout << expectedAddedDataAdress1 << "\n";
+    std::cout << expectedAddedDataAdress2 << "\n";
+    std::cout << expectedAddedDataAdress3 << "\n";
+    std::cout << expectedPayloadLengthAdress << "\n";
+    std::cout << expectedCRCAdress << "\n";
+    std::cout << expectedNewEtxAdress << "\n";
+
+    ASSERT_TEST(
+        EEPROMClass_update_param_idx_v.at(0) == expectedAddedDataAdress0 && EEPROMClass_update_param_val_v.at(0) == dataToAddPtr[0] &&
+        EEPROMClass_update_param_idx_v.at(1) == expectedAddedDataAdress1 && EEPROMClass_update_param_val_v.at(1) == dataToAddPtr[1] &&
+        EEPROMClass_update_param_idx_v.at(2) == expectedAddedDataAdress2 && EEPROMClass_update_param_val_v.at(2) == dataToAddPtr[2] &&
+        EEPROMClass_update_param_idx_v.at(3) == expectedAddedDataAdress3 && EEPROMClass_update_param_val_v.at(3) == dataToAddPtr[3] &&
+        EEPROMClass_put_param_idx_o2_v.at(0) == expectedPayloadLengthAdress && 
+        EEPROMClass_put_param_idx_o3_v.at(0) == expectedCRCAdress && 
+        EEPROMClass_update_param_idx_v.at(4) == expectedNewEtxAdress
+    );
+}
+
+void JoinDataWithDataPacketOnEEPROM_JoinsDataWithPacket_ReturnsTrue() // TODO: Check if correct
+{
+    uint32_t data = 1000;
+    uint32_t dataToAdd = 123;
+    uint8_t *dataToAddPtr = reinterpret_cast<uint8_t *>(&dataToAdd);
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 13;
+    uint16_t eepromSize = static_cast<uint16_t>(
+        adress + sizeof(packet.stx)
+    );
+    int32_t expectedPayloadLengthAdress = CyclicAdress((
+        adress +
+        sizeof(packet.stx) +
+        sizeof(packet.active)
+    ), eepromSize);
+    int32_t expectedCRCAdress = CyclicAdress((
+        expectedPayloadLengthAdress + 
+        sizeof(packet.payloadLength)
+    ), eepromSize);
+    uint32_t expectedPayloadContinuationAdress = CyclicAdress((
+        expectedCRCAdress + 
+        sizeof(packet.crc) +
+        packet.payloadLength
+    ), eepromSize);
+    uint16_t expectedAddedDataAdress0 = CyclicAdress(expectedPayloadContinuationAdress + 0, eepromSize),
+            expectedAddedDataAdress1 = CyclicAdress(expectedPayloadContinuationAdress + 1, eepromSize),
+            expectedAddedDataAdress2 = CyclicAdress(expectedPayloadContinuationAdress + 2, eepromSize),
+            expectedAddedDataAdress3 = CyclicAdress(expectedPayloadContinuationAdress + 3, eepromSize);
+    int32_t expectedNewEtxAdress = CyclicAdress((
+        expectedAddedDataAdress3 +
+        sizeof(dataToAddPtr[3]) 
+    ), eepromSize);
+    int32_t expectedNewPayloadLength = (
+        packet.payloadLength + sizeof(dataToAdd)
+    );
+    uint32_t expectedNewCRC = CalculateCRC(dataToAddPtr, sizeof(dataToAdd), packet.crc);
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    bool resultBool = JoinDataWithDataPacketOnEEPROM(adress, dataToAddPtr, sizeof(dataToAdd));
+
+    std::cout << "Adresses: \n";
+    std::cout << expectedAddedDataAdress0 << "\n";
+    std::cout << expectedAddedDataAdress1 << "\n";
+    std::cout << expectedAddedDataAdress2 << "\n";
+    std::cout << expectedAddedDataAdress3 << "\n";
+    std::cout << expectedPayloadLengthAdress << "\n";
+    std::cout << expectedCRCAdress << "\n";
+    std::cout << expectedNewEtxAdress << "\n";
+
+    ASSERT_TEST(
+        resultBool == true &&
+        EEPROMClass_update_param_idx_v.at(0) == expectedAddedDataAdress0 && EEPROMClass_update_param_val_v.at(0) == dataToAddPtr[0] &&
+        EEPROMClass_update_param_idx_v.at(1) == expectedAddedDataAdress1 && EEPROMClass_update_param_val_v.at(1) == dataToAddPtr[1] &&
+        EEPROMClass_update_param_idx_v.at(2) == expectedAddedDataAdress2 && EEPROMClass_update_param_val_v.at(2) == dataToAddPtr[2] &&
+        EEPROMClass_update_param_idx_v.at(3) == expectedAddedDataAdress3 && EEPROMClass_update_param_val_v.at(3) == dataToAddPtr[3] &&
+        EEPROMClass_put_param_idx_o2_v.at(0) == expectedPayloadLengthAdress && EEPROMClass_put_param_t_o2_v.at(0) == expectedNewPayloadLength &&
+        EEPROMClass_put_param_idx_o3_v.at(0) == expectedCRCAdress && EEPROMClass_put_param_t_o3_v.at(0) == expectedNewCRC &&
         EEPROMClass_update_param_idx_v.at(4) == expectedNewEtxAdress && EEPROMClass_update_param_val_v.at(4) == packet.etx
     );
 }
 
-// TODO: Write these tests.
-// void JoinDataWithDataPacketOnEEPROM_SuccessfullyIncreasesThePayloadLength()
-// void JoinDataWithDataPacketOnEEPROM_SuccessfullyIncludesTheDataIntoTheCalculationOfTheCrc()
-// void JoinDataWithDataPacketOnEEPROM_JoinsDataWithPacket_ReturnsTrue()
-// void JoinDataWithDataPacketOnEEPROM_WritesThePayloadInACircularPatternWhenExceedingTheEepromsLastAdress()
-// void JoinDataWithDataPacketOnEEPROM_JoinedPacketIsValid()
-// void JoinDataWithDataPacketOnEEPROM_IncreasesThePayloadLengthButPayloadLengthIsBiggerThanWhatFitsOnEeprom_ReturnsFalse()
-// void JoinDataWithDataPacketOnEEPROM_AdressOfDataPacketIsOutsideOfTheEEPROM_ReturnsFalse()
-// void JoinDataWithDataPacketOnEEPROM_AdressDoesNotPointToAnStx_ReturnsFalse()
-// void JoinDataWithDataPacketOnEEPROM_CanNotFindEtx_ReturnsFalse()
+void JoinDataWithDataPacketOnEEPROM_TheJoinedPacketWillBeBiggerThanTheEeprom_DoesNotWriteToEEPROMAndReturnsFalse() // TODO: Check if correct
+{
+    uint32_t data = 1000;
+    uint32_t dataToAdd = 123;
+    uint8_t *dataToAddPtr = reinterpret_cast<uint8_t *>(&dataToAdd);
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 0;
+    uint16_t eepromSize = static_cast<uint16_t>(
+        SizeOfSerializedDataPacket(packet)
+    );
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    bool resultBool = JoinDataWithDataPacketOnEEPROM(adress, dataToAddPtr, sizeof(dataToAdd));
+
+    ASSERT_TEST(
+        resultBool == false &&
+        EEPROMClass_update_invocations == 0 &&
+        EEPROMClass_put_invocations_o2 == 0 &&
+        EEPROMClass_put_invocations_o3 == 0
+    );
+}
+
+void JoinDataWithDataPacketOnEEPROM_AdressExceedsTheLastAdressOfTheEEPROM_ReturnsFalse() // TODO: Check if correct
+{
+    uint32_t data = 1000;
+    uint32_t dataToAdd = 123;
+    uint8_t *dataToAddPtr = reinterpret_cast<uint8_t *>(&dataToAdd);
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 100;
+    uint16_t eepromSize = static_cast<uint16_t>(
+        adress
+    );
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    bool resultBool = JoinDataWithDataPacketOnEEPROM(adress, dataToAddPtr, sizeof(dataToAdd));
+
+    ASSERT_TEST(
+        resultBool == false &&
+        EEPROMClass_update_invocations == 0 &&
+        EEPROMClass_put_invocations_o2 == 0 &&
+        EEPROMClass_put_invocations_o3 == 0
+    );
+}
+
+void JoinDataWithDataPacketOnEEPROM_AdressDoesNotPointToAnStx_ReturnsFalse() // TODO: Check if correct
+{
+    uint32_t data = 1000;
+    uint32_t dataToAdd = 123;
+    uint8_t *dataToAddPtr = reinterpret_cast<uint8_t *>(&dataToAdd);
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 0;
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(0);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+
+    bool resultBool = JoinDataWithDataPacketOnEEPROM(adress, dataToAddPtr, sizeof(dataToAdd));
+
+    ASSERT_TEST(
+        resultBool == false &&
+        EEPROMClass_update_invocations == 0 &&
+        EEPROMClass_put_invocations_o2 == 0 &&
+        EEPROMClass_put_invocations_o3 == 0
+    );
+}
+
+void JoinDataWithDataPacketOnEEPROM_CanNotFindEtx_ReturnsFalse() // TODO: Check if correct
+{
+    uint32_t data = 1000;
+    uint32_t dataToAdd = 123;
+    uint8_t *dataToAddPtr = reinterpret_cast<uint8_t *>(&dataToAdd);
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 0;
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(0);
+
+    bool resultBool = JoinDataWithDataPacketOnEEPROM(adress, dataToAddPtr, sizeof(dataToAdd));
+
+    ASSERT_TEST(
+        resultBool == false &&
+        EEPROMClass_update_invocations == 0 &&
+        EEPROMClass_put_invocations_o2 == 0 &&
+        EEPROMClass_put_invocations_o3 == 0
+    );
+}
+
 
 void ReadDataPacketOnEEPROM_DataPacketDoesNotNeedToBeManuallyAllocatedBeforePassedToFunciton_DoesNotCrash()
 {
