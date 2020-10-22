@@ -203,7 +203,77 @@ bool SaveDataPacketToEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize, u
 
 bool JoinDataWithDataPacketOnEEPROM(uint16_t adress, uint8_t *data, uint16_t dataSize)
 {
-    return false;
+    DataPacket packet;
+    uint16_t eepromSize = EEPROM.length();
+
+    if(adress >= eepromSize)
+    {
+        DEBUG_PRINT(F("ERROR: Tried to access a packet outside of the eeproms range. Adress out of range. \n"));
+        return false;
+    }
+
+    uint8_t stx = EEPROM.read(adress);
+    if(stx != packet.stx)
+    {
+        return false;
+    }
+
+    uint16_t payloadLengthAdress = CyclicAdress((
+        adress +
+        sizeof(packet.stx) +
+        sizeof(packet.active)
+    ), eepromSize);
+    EEPROM.get(payloadLengthAdress, packet.payloadLength);
+
+    uint16_t newPacketSize = static_cast<uint16_t>(
+        SizeOfSerializedDataPacket(DataPacket()) +
+        packet.payloadLength +
+        dataSize
+    );
+    if(newPacketSize > eepromSize)
+    {
+        DEBUG_PRINT(F("ERROR: Joining the data with the DataPacket will cause the packets size to exceed the EEPROMs size. Joined packet is too large. \n"));
+        return false;
+    }
+
+    uint16_t crcAdress = CyclicAdress((
+        payloadLengthAdress +
+        sizeof(packet.payloadLength)
+    ), eepromSize);
+
+    uint16_t etxAdress = CyclicAdress((
+        crcAdress +
+        sizeof(packet.crc) + 
+        packet.payloadLength
+    ), eepromSize);
+    uint8_t etx = EEPROM.read(etxAdress);
+    if(etx != packet.etx)
+    {
+        return false;
+    }
+
+    EEPROM.get(crcAdress, packet.crc);
+
+    uint16_t newPayloadLength = static_cast<uint16_t>(packet.payloadLength + dataSize);
+    EEPROM.put(payloadLengthAdress, newPayloadLength);
+
+    uint32_t newCrc = CalculateCRC(data, dataSize, packet.crc);
+    EEPROM.put(crcAdress, newCrc);
+
+    uint16_t adressToJoinDataOn = CyclicAdress(etxAdress, eepromSize);
+    for(uint16_t i = 0; i < dataSize; i++)
+    {
+        uint16_t currentDataAdress = CyclicAdress(adressToJoinDataOn + i, eepromSize);
+        EEPROM.update(currentDataAdress, data[i]);
+    }
+
+    uint16_t newEtxAdress = CyclicAdress((
+        adressToJoinDataOn +
+        dataSize
+    ), eepromSize);
+    EEPROM.update(newEtxAdress, packet.etx);
+
+    return true;
 }
 
 bool IsPacketActive(const uint8_t activeFlag)
