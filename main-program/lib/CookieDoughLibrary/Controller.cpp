@@ -48,8 +48,8 @@ void Controller::Setup()
     // for(unsigned int i = 0; i < EEPROM.length(); i++) {
     //     EEPROM.write(i, 0);
     // }
-    // DEBUG
-    // DEBUG
+    // // DEBUG
+    // // DEBUG
     // DeactivateAllPacketsOnEEPROM();
     // // DEBUG
 
@@ -62,6 +62,20 @@ void Controller::Setup()
     //         DEBUG_PRINT(F("|"));
     //     }
     // )
+
+    // // DEBUG
+    // BareKeyboardKey data[normalKeyCount] {
+    //     BareKeyboardKey(defaultKeymap[0].pin, 99),
+    //     BareKeyboardKey(defaultKeymap[1].pin, 99),
+    //     BareKeyboardKey(defaultKeymap[2].pin, 99),
+    //     BareKeyboardKey(defaultKeymap[3].pin, 99),
+    // };
+    // uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
+    // DEBUG_PRINT(JoinDataWithDataPacketOnEEPROM(storageSize, dataPtr, sizeof(data)));
+    // DEBUG_PRINT(F("\n"));
+    // delay(5000);
+    // // DEBUG
+    
 
     DEBUG_PRINT(F("\nChanging to default keymap.\n"));
     DEBUG(delay(100));

@@ -37,7 +37,7 @@ void loop()
     controller.Update();
 
     // DEBUG
-    if(millis() % 1000 == 0) {
+    if(millis() % 3000 == 0) {
         Serial.print(freeMemory());
         Serial.print(":");
         Serial.print(controller.CalculateUnusedStorage());
