@@ -426,6 +426,96 @@ void SizeOfSerializedDataPacket_MustReturnTheSameSizeAsSaveDataPacketPacketToEEP
     );
 }
 
+void ReadBytesFromEEPROM_BeginsReadingAtTheAdress()
+{
+    EEPROMClass_length_return = 1024;
+    EEPROMClass_read_return = 0;
+    const uint16_t adress = 9,
+             amountOfBytes = 1;
+
+    uint8_t result[amountOfBytes];
+    ReadBytesFromEEPROM(adress, amountOfBytes, result);
+
+    ASSERT_TEST(EEPROMClass_read_param_idx_v.at(0) == adress);
+}
+
+void ReadBytesFromEEPROM_ReadsTheRequestedAmountOfBytes()
+{
+    EEPROMClass_length_return = 1024;
+    EEPROMClass_read_return = 0;
+    const uint16_t adress = 9,
+             amountOfBytes = 7;
+
+    uint8_t result[amountOfBytes];
+    ReadBytesFromEEPROM(adress, amountOfBytes, result);
+
+    ASSERT_TEST(EEPROMClass_read_invocations == amountOfBytes);
+}
+
+void ReadBytesFromEEPROM_ReadsBytesFromTheCorrectAdressUsingACyclicPattern()
+{
+    uint16_t eepromSize = 10;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return = 0;
+    const uint16_t adress = static_cast<uint16_t>(eepromSize - 2),
+             amountOfBytes = 6;
+    uint16_t expectedReadAdress0 = CyclicAdress(adress + 0, eepromSize),
+             expectedReadAdress1 = CyclicAdress(adress + 1, eepromSize), 
+             expectedReadAdress2 = CyclicAdress(adress + 2, eepromSize), 
+             expectedReadAdress3 = CyclicAdress(adress + 3, eepromSize), 
+             expectedReadAdress4 = CyclicAdress(adress + 4, eepromSize), 
+             expectedReadAdress5 = CyclicAdress(adress + 5, eepromSize);
+
+    uint8_t result[amountOfBytes];
+    ReadBytesFromEEPROM(adress, amountOfBytes, result);
+
+    ASSERT_TEST(
+        EEPROMClass_read_param_idx_v.at(0) == expectedReadAdress0 &&
+        EEPROMClass_read_param_idx_v.at(1) == expectedReadAdress1 &&
+        EEPROMClass_read_param_idx_v.at(2) == expectedReadAdress2 &&
+        EEPROMClass_read_param_idx_v.at(3) == expectedReadAdress3 &&
+        EEPROMClass_read_param_idx_v.at(4) == expectedReadAdress4 &&
+        EEPROMClass_read_param_idx_v.at(5) == expectedReadAdress5
+    );
+}
+
+void ReadBytesFromEEPROM_FillsTheOutputArrayWithTheCorrectBytesFromEEPROM()
+{
+    uint16_t eepromSize = 10;
+    EEPROMClass_length_return = eepromSize;
+    const uint16_t adress = static_cast<uint16_t>(eepromSize - 2),
+             amountOfBytes = 4;
+    uint16_t expectedReadAdress0 = CyclicAdress(adress + 0, eepromSize),
+             expectedReadAdress1 = CyclicAdress(adress + 1, eepromSize), 
+             expectedReadAdress2 = CyclicAdress(adress + 2, eepromSize), 
+             expectedReadAdress3 = CyclicAdress(adress + 3, eepromSize);
+    uint8_t expectedResult0 = 6,
+             expectedResult1 = 5,
+             expectedResult2 = 4,
+             expectedResult3 = 3;
+    EEPROMClass_read_return_v.push_back(expectedResult0);
+    EEPROMClass_read_return_v.push_back(expectedResult1);
+    EEPROMClass_read_return_v.push_back(expectedResult2);
+    EEPROMClass_read_return_v.push_back(expectedResult3);
+
+    uint8_t result[amountOfBytes];
+    ReadBytesFromEEPROM(adress, amountOfBytes, result);
+
+    ASSERT_TEST(
+        EEPROMClass_read_param_idx_v.at(0) == expectedReadAdress0 && result[0] == expectedResult0 && 
+        EEPROMClass_read_param_idx_v.at(1) == expectedReadAdress1 && result[1] == expectedResult1 && 
+        EEPROMClass_read_param_idx_v.at(2) == expectedReadAdress2 && result[2] == expectedResult2 && 
+        EEPROMClass_read_param_idx_v.at(3) == expectedReadAdress3 && result[3] == expectedResult3
+    );
+}
+
+// TODO:
+// void ReadBytesFromEEPROM_FillsTheOutputArrayWithTheRequestedAmountOfBytes()
+
+// void ReadBytesFromEEPROM_AdressIsOutOfRangeOnEEPROM_DoesNotReadAndReturnsFalse()
+// void ReadBytesFromEEPROM_TriesToReadMoreBytesThanWhatFitsOnTheEEPROM_DoesNotReadAndReturnsFalse()
+// void ReadBytesFromEEPROM_TriesToReadZeroBytes_DoesNotReadAndReturnsFalse()
+
 void SaveDataPacketToEEPROM_SavesStxToFirstGivenAdress()
 {
     uint8_t data = 42;

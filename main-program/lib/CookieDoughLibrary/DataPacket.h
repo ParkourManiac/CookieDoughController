@@ -135,6 +135,17 @@ uint16_t CyclicAdress(uint32_t adress, uint16_t bufferSize);
 uint16_t SizeOfSerializedDataPacket(const DataPacket &packet);
 
 /**
+ * @brief Read a series of bytes from the EEPROM and stores the result in the given array.
+ * 
+ * @param adress The adress to begin reading from the EEPROM.
+ * @param amountOfBytes The amount of bytes we want to retrieve.
+ * @param result An array of bytes to store the result.
+ * @return true The series of bytes was successfully read from the EEPROM and stored into the result array.
+ * @return false Could not read the series of bytes from the EEPROM.
+ */
+bool ReadBytesFromEEPROM(uint16_t adress, uint16_t amountOfBytes, uint8_t *result);
+
+/**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
  * 
  * @param data The data we want to calculate a CRC checksum for.

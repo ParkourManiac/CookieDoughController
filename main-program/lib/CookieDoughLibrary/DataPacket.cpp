@@ -391,6 +391,17 @@ uint16_t SizeOfSerializedDataPacket(const DataPacket &packet) // TODO: Is there 
     );
 }
 
+bool ReadBytesFromEEPROM(uint16_t adress, uint16_t amountOfBytes, uint8_t *result)
+{
+    uint16_t eepromSize = EEPROM.length();
+    
+    for(uint16_t i = 0; i < amountOfBytes; i++)
+    {
+        result[i] = EEPROM.read(CyclicAdress(adress + i, eepromSize));
+    }
+    return false;
+}
+
 uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc)
 {
     const uint32_t crc_table[16] = {
