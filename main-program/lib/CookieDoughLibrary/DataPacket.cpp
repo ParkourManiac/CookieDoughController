@@ -394,12 +394,17 @@ uint16_t SizeOfSerializedDataPacket(const DataPacket &packet) // TODO: Is there 
 bool ReadBytesFromEEPROM(uint16_t adress, uint16_t amountOfBytes, uint8_t *result)
 {
     uint16_t eepromSize = EEPROM.length();
+    if(adress >= eepromSize)
+    {
+        DEBUG_PRINT(F("ERROR: Tried to read a series of bytes outside of the EEPROMs range. Adress out of range. \n"));
+        return false;
+    }
     
     for(uint16_t i = 0; i < amountOfBytes; i++)
     {
         result[i] = EEPROM.read(CyclicAdress(adress + i, eepromSize));
     }
-    return false;
+    return true;
 }
 
 uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc)

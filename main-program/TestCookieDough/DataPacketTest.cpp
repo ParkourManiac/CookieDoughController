@@ -509,10 +509,79 @@ void ReadBytesFromEEPROM_FillsTheOutputArrayWithTheCorrectBytesFromEEPROM()
     );
 }
 
-// TODO:
-// void ReadBytesFromEEPROM_FillsTheOutputArrayWithTheRequestedAmountOfBytes()
+void ReadBytesFromEEPROM_FillsTheOutputArrayWithTheRequestedAmountOfBytes()
+{
+    const uint16_t adress = 0,
+             amountOfRequestedBytes = 3;
+    uint8_t expectedResult0 = 6,
+            expectedResult1 = 5,
+            expectedResult2 = 4;
+    EEPROMClass_length_return = 1024;
+    EEPROMClass_read_return_v.push_back(expectedResult0);
+    EEPROMClass_read_return_v.push_back(expectedResult1);
+    EEPROMClass_read_return_v.push_back(expectedResult2);
+    EEPROMClass_read_return_v.push_back(3);
+    EEPROMClass_read_return_v.push_back(2);
+    EEPROMClass_read_return_v.push_back(1);
 
-// void ReadBytesFromEEPROM_AdressIsOutOfRangeOnEEPROM_DoesNotReadAndReturnsFalse()
+    uint8_t result[6] = {0, 0, 0, 0, 0, 0};
+    ReadBytesFromEEPROM(adress, amountOfRequestedBytes, result);
+
+    ASSERT_TEST(
+        result[0] == expectedResult0 && 
+        result[1] == expectedResult1 && 
+        result[2] == expectedResult2 &&
+        result[3] == 0 &&
+        result[4] == 0 &&
+        result[5] == 0
+    );
+}
+
+void ReadBytesFromEEPROM_SuccessfullyReadsASeriesOfBytes_ReturnsTrue()
+{
+    uint16_t eepromSize = 10;
+    EEPROMClass_length_return = eepromSize;
+    const uint16_t adress = static_cast<uint16_t>(eepromSize - 1),
+             amountOfBytes = 3;
+    uint16_t expectedReadAdress0 = CyclicAdress(adress + 0, eepromSize),
+             expectedReadAdress1 = CyclicAdress(adress + 1, eepromSize), 
+             expectedReadAdress2 = CyclicAdress(adress + 2, eepromSize);
+    uint8_t expectedResult0 = 6,
+             expectedResult1 = 5,
+             expectedResult2 = 4;
+    EEPROMClass_read_return_v.push_back(expectedResult0);
+    EEPROMClass_read_return_v.push_back(expectedResult1);
+    EEPROMClass_read_return_v.push_back(expectedResult2);
+
+    uint8_t result[amountOfBytes];
+    bool resultBool = ReadBytesFromEEPROM(adress, amountOfBytes, result);
+
+    ASSERT_TEST(
+        EEPROMClass_read_param_idx_v.at(0) == expectedReadAdress0 && result[0] == expectedResult0 && 
+        EEPROMClass_read_param_idx_v.at(1) == expectedReadAdress1 && result[1] == expectedResult1 && 
+        EEPROMClass_read_param_idx_v.at(2) == expectedReadAdress2 && result[2] == expectedResult2 &&
+        resultBool == true
+    );
+}
+
+void ReadBytesFromEEPROM_AdressIsOutOfRangeOnEEPROM_DoesNotReadAndReturnsFalse()
+{
+    uint16_t eepromSize = 5;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return = 0;
+    const uint16_t adress = eepromSize,
+                   amountOfBytes = 1;
+
+    uint8_t result[amountOfBytes];
+    bool resultBool = ReadBytesFromEEPROM(adress, amountOfBytes, result);
+
+    ASSERT_TEST(
+        resultBool == false && 
+        EEPROMClass_read_invocations == 0
+    );
+}
+
+// TODO:
 // void ReadBytesFromEEPROM_TriesToReadMoreBytesThanWhatFitsOnTheEEPROM_DoesNotReadAndReturnsFalse()
 // void ReadBytesFromEEPROM_TriesToReadZeroBytes_DoesNotReadAndReturnsFalse()
 
