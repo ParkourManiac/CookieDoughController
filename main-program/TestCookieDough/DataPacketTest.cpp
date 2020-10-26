@@ -581,8 +581,24 @@ void ReadBytesFromEEPROM_AdressIsOutOfRangeOnEEPROM_DoesNotReadAndReturnsFalse()
     );
 }
 
+void ReadBytesFromEEPROM_TriesToReadMoreBytesThanWhatFitsOnTheEEPROM_DoesNotReadAndReturnsFalse()
+{
+    const uint16_t adress = 0,
+                   amountOfBytes = 6;
+    uint16_t eepromSize = amountOfBytes - 1;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return = 0;
+
+    uint8_t result[amountOfBytes];
+    bool resultBool = ReadBytesFromEEPROM(adress, amountOfBytes, result);
+
+    ASSERT_TEST(
+        resultBool == false && 
+        EEPROMClass_read_invocations == 0
+    );
+}
+
 // TODO:
-// void ReadBytesFromEEPROM_TriesToReadMoreBytesThanWhatFitsOnTheEEPROM_DoesNotReadAndReturnsFalse()
 // void ReadBytesFromEEPROM_TriesToReadZeroBytes_DoesNotReadAndReturnsFalse()
 
 void SaveDataPacketToEEPROM_SavesStxToFirstGivenAdress()
