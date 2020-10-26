@@ -399,6 +399,11 @@ bool ReadBytesFromEEPROM(uint16_t adress, uint16_t amountOfBytes, uint8_t *resul
         DEBUG_PRINT(F("ERROR: Tried to read a series of bytes outside of the EEPROMs range. Adress out of range. \n"));
         return false;
     }
+    if(amountOfBytes == 0)
+    {
+        DEBUG_PRINT(F("ERROR: Cannot retrieve zero bytes. Requested a series of bytes of size zero. \n"));
+        return false;
+    }
     if(amountOfBytes > eepromSize)
     {
         DEBUG_PRINT(F("ERROR: Tried to retrieve a series of bytes that is larger than what fits on the EEPROM. Requested series of bytes is to large. \n"));

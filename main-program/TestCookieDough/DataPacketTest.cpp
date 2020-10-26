@@ -598,8 +598,21 @@ void ReadBytesFromEEPROM_TriesToReadMoreBytesThanWhatFitsOnTheEEPROM_DoesNotRead
     );
 }
 
-// TODO:
-// void ReadBytesFromEEPROM_TriesToReadZeroBytes_DoesNotReadAndReturnsFalse()
+void ReadBytesFromEEPROM_TriesToReadZeroBytes_DoesNotReadAndReturnsFalse()
+{
+    const uint16_t adress = 0,
+                   amountOfBytes = 0;
+    EEPROMClass_length_return = 1024;
+    EEPROMClass_read_return = 0;
+
+    uint8_t result[1];
+    bool resultBool = ReadBytesFromEEPROM(adress, amountOfBytes, result);
+
+    ASSERT_TEST(
+        resultBool == false && 
+        EEPROMClass_read_invocations == 0
+    );
+}
 
 void SaveDataPacketToEEPROM_SavesStxToFirstGivenAdress()
 {
