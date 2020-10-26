@@ -44,13 +44,29 @@ Controller::~Controller()
 
 void Controller::Setup()
 {
-    // // DEBUG CLEAN EEPROM
+    // // DEBUG "CLEAN EEPROM"
     // for(unsigned int i = 0; i < EEPROM.length(); i++) {
     //     EEPROM.write(i, 0);
     // }
     // // DEBUG
-    // // DEBUG
+    
+    // // DEBUG "DeactivateAllPacketsOnEEPROM"
     // DeactivateAllPacketsOnEEPROM();
+    // // DEBUG
+
+    // // DEBUG "ReadBytesFromEEPROM"
+    // const uint16_t amountOfBytes = 10;
+    // uint8_t result[amountOfBytes] = {0};
+    // bool resultBool = ReadBytesFromEEPROM(10, amountOfBytes, result);
+    // if(resultBool)
+    // {
+    //     for(uint16_t i = 0; i < amountOfBytes; i++)
+    //     {
+    //         DEBUG_PRINT(result[i]);
+    //         DEBUG_PRINT(F("|"));
+    //     }
+    // DEBUG_PRINT(F("\n\n"));
+    // }
     // // DEBUG
 
     // DEBUG(
@@ -63,7 +79,7 @@ void Controller::Setup()
     //     }
     // )
 
-    // // DEBUG
+    // // DEBUG "JoinDataWithDataPacketOnEEPROM"
     // BareKeyboardKey data[normalKeyCount] {
     //     BareKeyboardKey(defaultKeymap[0].pin, 99),
     //     BareKeyboardKey(defaultKeymap[1].pin, 99),
