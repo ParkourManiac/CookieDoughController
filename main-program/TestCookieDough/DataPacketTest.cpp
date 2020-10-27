@@ -614,6 +614,49 @@ void ReadBytesFromEEPROM_TriesToReadZeroBytes_DoesNotReadAndReturnsFalse()
     );
 }
 
+void IsPacketOnEEPROMValid_PacketIsValid_ReturnsTrue()
+{
+    uint16_t adress = 3;
+    uint16_t data = 165;
+    DataPacket packet = DataToPacket(data);
+    uint16_t eepromSize = 1024;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    int32_t stxAdress = adress,
+             activeFlagAdress = stxAdress + sizeof(packet.stx),
+             payloadLengthAdress = activeFlagAdress + sizeof(packet.active),
+             crcAdress = payloadLengthAdress + sizeof(packet.payloadLength),
+             payloadAdress = crcAdress + sizeof(packet.crc),
+             adressPayload0 = payloadAdress,
+             adressPayload1 = payloadAdress + 1,
+             etxAdress = payloadAdress + packet.payloadLength;
+    
+    bool resultBool = IsPacketOnEEPROMValid(adress);
+
+    ASSERT_TEST(
+        resultBool == true && 
+        EEPROMClass_read_param_idx_v.at(0) == stxAdress &&
+        EEPROMClass_get_param_idx_o3_v.at(0) == activeFlagAdress &&
+        EEPROMClass_get_param_idx_o1_v.at(0) == payloadLengthAdress &&
+        EEPROMClass_read_param_idx_v.at(1) == etxAdress &&
+        EEPROMClass_read_param_idx_v.at(2) == adressPayload0 &&
+        EEPROMClass_read_param_idx_v.at(3) == adressPayload1 &&
+        EEPROMClass_get_param_idx_o2_v.at(0) == crcAdress
+    );
+}
+
+
+// TODO:
+// void ValidatePacketOnEEPROM_BeginsReadingAtTheAdress()
+// void ValidatePacketOnEEPROM_ReadsThePacketInACylicFormat()
+
+// void ValidatePacketOnEEPROM_AdressIsOutsideOfTheEEPROMsRange_ReturnsFalse()
+// void ValidatePacketOnEEPROM_CanNotFindStx_ReturnsFalse()
+// void ValidatePacketOnEEPROM_PacketIsInactive_ReturnsFalse()
+// void ValidatePacketOnEEPROM_PayloadLengthIsZero_ReturnsFalse()
+// void ValidatePacketOnEEPROM_PayloadLengthIsLargerThanTheEEPROM_ReturnsFalse()
+// void ValidatePacketOnEEPROM_CanNotFindEtx_ReturnsFalse()
+// void ValidatePacketOnEEPROM_CrcDoesNotMatchPayload_ReturnsFalse()
+
 void SaveDataPacketToEEPROM_SavesStxToFirstGivenAdress()
 {
     uint8_t data = 42;

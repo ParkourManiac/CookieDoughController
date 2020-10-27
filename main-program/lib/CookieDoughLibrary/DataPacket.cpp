@@ -417,6 +417,36 @@ bool ReadBytesFromEEPROM(uint16_t adress, uint16_t amountOfBytes, uint8_t *resul
     return true;
 }
 
+bool IsPacketOnEEPROMValid(uint16_t adress) // TODO: TDD
+{
+    uint16_t eepromSize = EEPROM.length();
+
+    DataPacket packet;
+    uint8_t stx = EEPROM.read(adress);
+
+    uint16_t activeAdress = static_cast<uint16_t>(adress + sizeof(stx));
+    EEPROM.get(activeAdress, packet.active);
+
+    uint16_t payloadLenghtAdress = static_cast<uint16_t>(activeAdress + sizeof(packet.active));
+    EEPROM.get(payloadLenghtAdress, packet.payloadLength);
+
+    uint16_t crcAdress = static_cast<uint16_t>(payloadLenghtAdress + sizeof(packet.payloadLength));
+    uint16_t payloadAdress = static_cast<uint16_t>(crcAdress + sizeof(packet.crc));
+
+    uint16_t etxAdress = static_cast<uint16_t>(payloadAdress + packet.payloadLength);
+    uint8_t etx = EEPROM.read(etxAdress);
+
+    for (uint16_t i = 0; i < packet.payloadLength; i++) 
+    {
+        uint16_t currentPayloadAdress = static_cast<uint16_t>(payloadAdress + i);
+        uint8_t currentPayloadPart = EEPROM.read(currentPayloadAdress);
+    }
+
+    EEPROM.get(crcAdress, packet.crc);
+
+    return true;
+}
+
 uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc)
 {
     const uint32_t crc_table[16] = {

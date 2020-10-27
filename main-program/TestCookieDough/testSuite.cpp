@@ -815,6 +815,7 @@ void ReadBytesFromEEPROM_SuccessfullyReadsASeriesOfBytes_ReturnsTrue();
 void ReadBytesFromEEPROM_AdressIsOutOfRangeOnEEPROM_DoesNotReadAndReturnsFalse();
 void ReadBytesFromEEPROM_TriesToReadMoreBytesThanWhatFitsOnTheEEPROM_DoesNotReadAndReturnsFalse();
 void ReadBytesFromEEPROM_TriesToReadZeroBytes_DoesNotReadAndReturnsFalse();
+void IsPacketOnEEPROMValid_PacketIsValid_ReturnsTrue();
 void SaveDataPacketToEEPROM_SavesStxToFirstGivenAdress();
 void SaveDataPacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket();
 void SaveDataPacketToEEPROM_PacketIsCorrectlyPutDown();
@@ -1140,6 +1141,7 @@ void RunTests()
 	RUN_TEST(ReadBytesFromEEPROM_AdressIsOutOfRangeOnEEPROM_DoesNotReadAndReturnsFalse);
 	RUN_TEST(ReadBytesFromEEPROM_TriesToReadMoreBytesThanWhatFitsOnTheEEPROM_DoesNotReadAndReturnsFalse);
 	RUN_TEST(ReadBytesFromEEPROM_TriesToReadZeroBytes_DoesNotReadAndReturnsFalse);
+	RUN_TEST(IsPacketOnEEPROMValid_PacketIsValid_ReturnsTrue);
 	RUN_TEST(SaveDataPacketToEEPROM_SavesStxToFirstGivenAdress);
 	RUN_TEST(SaveDataPacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket);
 	RUN_TEST(SaveDataPacketToEEPROM_PacketIsCorrectlyPutDown);
