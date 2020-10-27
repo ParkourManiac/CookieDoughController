@@ -417,32 +417,62 @@ bool ReadBytesFromEEPROM(uint16_t adress, uint16_t amountOfBytes, uint8_t *resul
     return true;
 }
 
-bool IsPacketOnEEPROMValid(uint16_t adress) // TODO: TDD
+bool IsPacketOnEEPROMValid(uint16_t adress)
 {
     uint16_t eepromSize = EEPROM.length();
+    if(adress >= eepromSize)
+    {
+        DEBUG_PRINT(F("ERROR: Tried to validate a packet outside of the EEPROMs range. Adress out of range. \n"));
+        return false;
+    }
 
     DataPacket packet;
     uint8_t stx = EEPROM.read(adress);
-
-    uint16_t activeAdress = static_cast<uint16_t>(adress + sizeof(stx));
-    EEPROM.get(activeAdress, packet.active);
-
-    uint16_t payloadLenghtAdress = static_cast<uint16_t>(activeAdress + sizeof(packet.active));
-    EEPROM.get(payloadLenghtAdress, packet.payloadLength);
-
-    uint16_t crcAdress = static_cast<uint16_t>(payloadLenghtAdress + sizeof(packet.payloadLength));
-    uint16_t payloadAdress = static_cast<uint16_t>(crcAdress + sizeof(packet.crc));
-
-    uint16_t etxAdress = static_cast<uint16_t>(payloadAdress + packet.payloadLength);
-    uint8_t etx = EEPROM.read(etxAdress);
-
-    for (uint16_t i = 0; i < packet.payloadLength; i++) 
+    if(stx != packet.stx)
     {
-        uint16_t currentPayloadAdress = static_cast<uint16_t>(payloadAdress + i);
+        return false;
+    }
+
+    uint16_t activeAdress = CyclicAdress(adress + sizeof(stx), eepromSize);
+    EEPROM.get(activeAdress, packet.active);
+    if(IsPacketActive(packet.active) == false)
+    {
+        return false;
+    }
+
+    uint16_t payloadLenghtAdress = CyclicAdress(activeAdress + sizeof(packet.active), eepromSize);
+    EEPROM.get(payloadLenghtAdress, packet.payloadLength);
+    bool isPacketEmpty = packet.payloadLength == 0;
+    bool isPacketTooLarge = packet.payloadLength > eepromSize;
+    if(isPacketEmpty || isPacketTooLarge)
+    {
+        return false;
+    }
+
+    uint16_t crcAdress = CyclicAdress(payloadLenghtAdress + sizeof(packet.payloadLength), eepromSize);
+    uint16_t payloadAdress = CyclicAdress(crcAdress + sizeof(packet.crc), eepromSize);
+
+    uint16_t etxAdress = CyclicAdress(payloadAdress + packet.payloadLength, eepromSize);
+    uint8_t etx = EEPROM.read(etxAdress);
+    if(etx != packet.etx)
+    {
+        return false;
+    }
+
+    uint8_t firstPayloadPart = EEPROM.read(payloadAdress);
+    uint32_t calculatedCrc = CalculateCRC(&firstPayloadPart, sizeof(firstPayloadPart));
+    for (uint16_t i = 1; i < packet.payloadLength; i++)
+    {
+        uint16_t currentPayloadAdress = CyclicAdress(payloadAdress + i, eepromSize);
         uint8_t currentPayloadPart = EEPROM.read(currentPayloadAdress);
+        calculatedCrc = CalculateCRC(&currentPayloadPart, sizeof(currentPayloadPart), calculatedCrc);
     }
 
     EEPROM.get(crcAdress, packet.crc);
+    if(calculatedCrc != packet.crc)
+    {
+        return false;
+    }
 
     return true;
 }

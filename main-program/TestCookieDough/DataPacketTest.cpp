@@ -614,12 +614,28 @@ void ReadBytesFromEEPROM_TriesToReadZeroBytes_DoesNotReadAndReturnsFalse()
     );
 }
 
+void ValidatePacketOnEEPROM_BeginsReadingAtTheAdress()
+{
+    uint16_t adress = 75;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    uint16_t expectedReadAdress = adress;
+
+    IsPacketOnEEPROMValid(adress);
+
+    ASSERT_TEST(EEPROMClass_read_param_idx_v.at(0) == expectedReadAdress);
+}
+
 void IsPacketOnEEPROMValid_PacketIsValid_ReturnsTrue()
 {
     uint16_t adress = 3;
     uint16_t data = 165;
     DataPacket packet = DataToPacket(data);
     uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
     Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
     int32_t stxAdress = adress,
              activeFlagAdress = stxAdress + sizeof(packet.stx),
@@ -644,18 +660,158 @@ void IsPacketOnEEPROMValid_PacketIsValid_ReturnsTrue()
     );
 }
 
+void ValidatePacketOnEEPROM_ReadsThePacketInACylicFormat()
+{
+    uint16_t data = 165;
+    DataPacket packet = DataToPacket(data);
+    uint16_t eepromSize = SizeOfSerializedDataPacket(packet);
+    EEPROMClass_length_return = eepromSize;
+    uint16_t adress = static_cast<uint16_t>(eepromSize - sizeof(packet.stx));
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    uint16_t stxAdress = adress,
+             activeFlagAdress = CyclicAdress(stxAdress + sizeof(packet.stx), eepromSize),
+             payloadLengthAdress = CyclicAdress(activeFlagAdress + sizeof(packet.active), eepromSize),
+             crcAdress = CyclicAdress(payloadLengthAdress + sizeof(packet.payloadLength), eepromSize),
+             payloadAdress = CyclicAdress(crcAdress + sizeof(packet.crc), eepromSize),
+             adressPayload0 = CyclicAdress(payloadAdress, eepromSize),
+             adressPayload1 = CyclicAdress(payloadAdress + 1, eepromSize),
+             etxAdress = CyclicAdress(payloadAdress + packet.payloadLength, eepromSize);
+    
+    bool resultBool = IsPacketOnEEPROMValid(adress);
 
-// TODO:
-// void ValidatePacketOnEEPROM_BeginsReadingAtTheAdress()
-// void ValidatePacketOnEEPROM_ReadsThePacketInACylicFormat()
+    ASSERT_TEST(
+        resultBool == true &&
+        EEPROMClass_read_param_idx_v.at(0) == stxAdress &&
+        EEPROMClass_get_param_idx_o3_v.at(0) == activeFlagAdress &&
+        EEPROMClass_get_param_idx_o1_v.at(0) == payloadLengthAdress &&
+        EEPROMClass_read_param_idx_v.at(1) == etxAdress &&
+        EEPROMClass_read_param_idx_v.at(2) == adressPayload0 &&
+        EEPROMClass_read_param_idx_v.at(3) == adressPayload1 &&
+        EEPROMClass_get_param_idx_o2_v.at(0) == crcAdress
+    );
+}
 
-// void ValidatePacketOnEEPROM_AdressIsOutsideOfTheEEPROMsRange_ReturnsFalse()
-// void ValidatePacketOnEEPROM_CanNotFindStx_ReturnsFalse()
-// void ValidatePacketOnEEPROM_PacketIsInactive_ReturnsFalse()
-// void ValidatePacketOnEEPROM_PayloadLengthIsZero_ReturnsFalse()
-// void ValidatePacketOnEEPROM_PayloadLengthIsLargerThanTheEEPROM_ReturnsFalse()
-// void ValidatePacketOnEEPROM_CanNotFindEtx_ReturnsFalse()
-// void ValidatePacketOnEEPROM_CrcDoesNotMatchPayload_ReturnsFalse()
+void ValidatePacketOnEEPROM_AdressIsOutsideOfTheEEPROMsRange_ReturnsFalse()
+{
+    uint16_t eepromSize = 100;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t adress = eepromSize;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+
+    bool resultBool = IsPacketOnEEPROMValid(adress);
+
+    ASSERT_TEST(resultBool == false);
+}
+
+void ValidatePacketOnEEPROM_CanNotFindStx_ReturnsFalse()
+{
+    uint16_t adress = 0;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    // Prepare to return a packet without stx.
+    EEPROMClass_read_return_v.push_back(0);
+    EEPROMClass_get_param_t_o3_vr.push_back(packet.active);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+    for (int i = 0; i < packet.payloadLength; i++) 
+    {
+        EEPROMClass_read_return_v.push_back(packet.payload[i]);
+    }
+    EEPROMClass_get_param_t_o2_vr.push_back(packet.crc);
+
+    bool resultBool = IsPacketOnEEPROMValid(adress);
+
+    ASSERT_TEST(resultBool == false);
+}
+
+void ValidatePacketOnEEPROM_PacketIsDeactivated_ReturnsFalse()
+{
+    uint8_t deactivatedFlag = 0x00;
+    uint16_t adress = 0;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    packet.active = deactivatedFlag;
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+
+    bool resultBool = IsPacketOnEEPROMValid(adress);
+
+    ASSERT_TEST(resultBool == false);
+}
+
+void ValidatePacketOnEEPROM_PayloadLengthIsZero_ReturnsFalse()
+{
+    uint16_t adress = 0;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    packet.payloadLength = 0;
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+
+    bool resultBool = IsPacketOnEEPROMValid(adress);
+
+    ASSERT_TEST(resultBool == false);
+}
+
+void ValidatePacketOnEEPROM_PayloadLengthIsLargerThanTheEEPROM_ReturnsFalse() // TODO: Include empty packet size into calculation.
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t adress = 0;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    packet.payloadLength = static_cast<uint16_t>(eepromSize + 1); // TODO: eeprom size - size of empty packet + 1
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+
+    bool resultBool = IsPacketOnEEPROMValid(adress);
+
+    ASSERT_TEST(resultBool == false);
+}
+
+void ValidatePacketOnEEPROM_CanNotFindEtx_ReturnsFalse()
+{
+    uint16_t adress = 0;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o3_vr.push_back(packet.active);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    // Prepare to return a packet without etx.
+    EEPROMClass_read_return_v.push_back(0);
+    for (int i = 0; i < packet.payloadLength; i++) 
+    {
+        EEPROMClass_read_return_v.push_back(packet.payload[i]);
+    }
+    EEPROMClass_get_param_t_o2_vr.push_back(packet.crc);
+
+    bool resultBool = IsPacketOnEEPROMValid(adress);
+
+    ASSERT_TEST(resultBool == false);
+}
+
+void ValidatePacketOnEEPROM_CrcDoesNotMatchPayload_ReturnsFalse()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t adress = 0;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    uint32_t faultyCrc = packet.crc + 12;
+    packet.crc = faultyCrc;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+
+    bool resultBool = IsPacketOnEEPROMValid(adress);
+
+    ASSERT_TEST(resultBool == false);
+}
 
 void SaveDataPacketToEEPROM_SavesStxToFirstGivenAdress()
 {
