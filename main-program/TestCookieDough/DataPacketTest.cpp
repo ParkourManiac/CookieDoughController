@@ -614,7 +614,7 @@ void ReadBytesFromEEPROM_TriesToReadZeroBytes_DoesNotReadAndReturnsFalse()
     );
 }
 
-void ValidatePacketOnEEPROM_BeginsReadingAtTheAdress()
+void IsPacketOnEEPROMValid_BeginsReadingAtTheAdress()
 {
     uint16_t adress = 75;
     uint16_t data = 13;
@@ -660,7 +660,7 @@ void IsPacketOnEEPROMValid_PacketIsValid_ReturnsTrue()
     );
 }
 
-void ValidatePacketOnEEPROM_ReadsThePacketInACylicFormat()
+void IsPacketOnEEPROMValid_ReadsThePacketInACylicFormat()
 {
     uint16_t data = 165;
     DataPacket packet = DataToPacket(data);
@@ -691,7 +691,45 @@ void ValidatePacketOnEEPROM_ReadsThePacketInACylicFormat()
     );
 }
 
-void ValidatePacketOnEEPROM_AdressIsOutsideOfTheEEPROMsRange_ReturnsFalse()
+void IsPacketOnEEPROMValid_WithOutputArguments_ReturnsPayloadsAdress()
+{
+    uint16_t adress = 75;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    uint16_t expectedPayloadAdress = static_cast<uint16_t>(
+        adress +
+        sizeof(packet.stx) +
+        sizeof(packet.active) +
+        sizeof(packet.payloadLength) +
+        sizeof(packet.crc)
+    );
+
+    uint16_t resultPayloadAdress, resultPayloadLength;
+    IsPacketOnEEPROMValid(adress, &resultPayloadAdress, &resultPayloadLength);
+
+    ASSERT_TEST(resultPayloadAdress == expectedPayloadAdress);
+}
+
+void IsPacketOnEEPROMValid_WithOutputArguments_ReturnsThePayloadsLength()
+{
+    uint16_t adress = 75;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    uint16_t expectedPayloadLength = packet.payloadLength;
+
+    uint16_t resultPayloadAdress, resultPayloadLength;
+    IsPacketOnEEPROMValid(adress, &resultPayloadAdress, &resultPayloadLength);
+
+    ASSERT_TEST(resultPayloadLength == expectedPayloadLength);
+}
+
+void IsPacketOnEEPROMValid_AdressIsOutsideOfTheEEPROMsRange_ReturnsFalse()
 {
     uint16_t eepromSize = 100;
     EEPROMClass_length_return = eepromSize;
@@ -705,7 +743,7 @@ void ValidatePacketOnEEPROM_AdressIsOutsideOfTheEEPROMsRange_ReturnsFalse()
     ASSERT_TEST(resultBool == false);
 }
 
-void ValidatePacketOnEEPROM_CanNotFindStx_ReturnsFalse()
+void IsPacketOnEEPROMValid_CanNotFindStx_ReturnsFalse()
 {
     uint16_t adress = 0;
     uint16_t data = 13;
@@ -728,7 +766,7 @@ void ValidatePacketOnEEPROM_CanNotFindStx_ReturnsFalse()
     ASSERT_TEST(resultBool == false);
 }
 
-void ValidatePacketOnEEPROM_PacketIsDeactivated_ReturnsFalse()
+void IsPacketOnEEPROMValid_PacketIsDeactivated_ReturnsFalse()
 {
     uint8_t deactivatedFlag = 0x00;
     uint16_t adress = 0;
@@ -744,7 +782,7 @@ void ValidatePacketOnEEPROM_PacketIsDeactivated_ReturnsFalse()
     ASSERT_TEST(resultBool == false);
 }
 
-void ValidatePacketOnEEPROM_PayloadLengthIsZero_ReturnsFalse()
+void IsPacketOnEEPROMValid_PayloadLengthIsZero_ReturnsFalse()
 {
     uint16_t adress = 0;
     uint16_t data = 13;
@@ -759,7 +797,7 @@ void ValidatePacketOnEEPROM_PayloadLengthIsZero_ReturnsFalse()
     ASSERT_TEST(resultBool == false);
 }
 
-void ValidatePacketOnEEPROM_PayloadLengthIsLargerThanTheEEPROM_ReturnsFalse() // TODO: Include empty packet size into calculation.
+void IsPacketOnEEPROMValid_PayloadLengthIsLargerThanTheEEPROM_ReturnsFalse() // TODO: Include empty packet size into calculation.
 {
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;
@@ -774,7 +812,7 @@ void ValidatePacketOnEEPROM_PayloadLengthIsLargerThanTheEEPROM_ReturnsFalse() //
     ASSERT_TEST(resultBool == false);
 }
 
-void ValidatePacketOnEEPROM_CanNotFindEtx_ReturnsFalse()
+void IsPacketOnEEPROMValid_CanNotFindEtx_ReturnsFalse()
 {
     uint16_t adress = 0;
     uint16_t data = 13;
@@ -797,7 +835,7 @@ void ValidatePacketOnEEPROM_CanNotFindEtx_ReturnsFalse()
     ASSERT_TEST(resultBool == false);
 }
 
-void ValidatePacketOnEEPROM_CrcDoesNotMatchPayload_ReturnsFalse()
+void IsPacketOnEEPROMValid_CrcDoesNotMatchPayload_ReturnsFalse()
 {
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;

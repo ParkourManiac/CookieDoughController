@@ -155,6 +155,17 @@ bool ReadBytesFromEEPROM(uint16_t adress, uint16_t amountOfBytes, uint8_t *resul
 bool IsPacketOnEEPROMValid(uint16_t adress);
 
 /**
+ * @brief Checks whether the adress contains a valid packet or not.
+ * 
+ * @param adress The adress to be checked for a valid packet.
+ * @param adressOfPayload Outputs the adress of the payload.
+ * @param lengthOfPayload Outputs the length of the payload.
+ * @return true The adress contains a valid packet.
+ * @return false The adress does not contain a valid packet.
+ */
+bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t *lengthOfPayload);
+
+/**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
  * 
  * @param data The data we want to calculate a CRC checksum for.

@@ -417,7 +417,7 @@ bool ReadBytesFromEEPROM(uint16_t adress, uint16_t amountOfBytes, uint8_t *resul
     return true;
 }
 
-bool IsPacketOnEEPROMValid(uint16_t adress)
+bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t *lengthOfPayload)
 {
     uint16_t eepromSize = EEPROM.length();
     if(adress >= eepromSize)
@@ -426,6 +426,7 @@ bool IsPacketOnEEPROMValid(uint16_t adress)
         return false;
     }
 
+    *adressOfPayload = *lengthOfPayload = 0;
     DataPacket packet;
     uint8_t stx = EEPROM.read(adress);
     if(stx != packet.stx)
@@ -474,7 +475,15 @@ bool IsPacketOnEEPROMValid(uint16_t adress)
         return false;
     }
 
+    *lengthOfPayload = packet.payloadLength;
+    *adressOfPayload = payloadAdress;
     return true;
+}
+
+bool IsPacketOnEEPROMValid(uint16_t adress)
+{
+    uint16_t adressOfPayload, lengthOfPayload;
+    return IsPacketOnEEPROMValid(adress, &adressOfPayload, &lengthOfPayload);
 }
 
 uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc)
