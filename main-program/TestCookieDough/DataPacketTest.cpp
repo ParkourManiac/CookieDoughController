@@ -621,7 +621,7 @@ void IsPacketOnEEPROMValid_BeginsReadingAtTheAdress()
     DataPacket packet = DataToPacket(data);
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
     uint16_t expectedReadAdress = adress;
 
     IsPacketOnEEPROMValid(adress);
@@ -636,7 +636,7 @@ void IsPacketOnEEPROMValid_PacketIsValid_ReturnsTrue()
     DataPacket packet = DataToPacket(data);
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
     int32_t stxAdress = adress,
              activeFlagAdress = stxAdress + sizeof(packet.stx),
              payloadLengthAdress = activeFlagAdress + sizeof(packet.active),
@@ -667,7 +667,7 @@ void IsPacketOnEEPROMValid_ReadsThePacketInACylicFormat()
     uint16_t eepromSize = SizeOfSerializedDataPacket(packet);
     EEPROMClass_length_return = eepromSize;
     uint16_t adress = static_cast<uint16_t>(eepromSize - sizeof(packet.stx));
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
     uint16_t stxAdress = adress,
              activeFlagAdress = CyclicAdress(stxAdress + sizeof(packet.stx), eepromSize),
              payloadLengthAdress = CyclicAdress(activeFlagAdress + sizeof(packet.active), eepromSize),
@@ -698,7 +698,7 @@ void IsPacketOnEEPROMValid_WithOutputArguments_ReturnsPayloadsAdress()
     DataPacket packet = DataToPacket(data);
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
     uint16_t expectedPayloadAdress = static_cast<uint16_t>(
         adress +
         sizeof(packet.stx) +
@@ -720,7 +720,7 @@ void IsPacketOnEEPROMValid_WithOutputArguments_ReturnsThePayloadsLength()
     DataPacket packet = DataToPacket(data);
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
     uint16_t expectedPayloadLength = packet.payloadLength;
 
     uint16_t resultPayloadAdress, resultPayloadLength;
@@ -736,7 +736,7 @@ void IsPacketOnEEPROMValid_AdressIsOutsideOfTheEEPROMsRange_ReturnsFalse()
     uint16_t adress = eepromSize;
     uint16_t data = 13;
     DataPacket packet = DataToPacket(data);
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
 
     bool resultBool = IsPacketOnEEPROMValid(adress);
 
@@ -775,7 +775,7 @@ void IsPacketOnEEPROMValid_PacketIsDeactivated_ReturnsFalse()
     packet.active = deactivatedFlag;
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
 
     bool resultBool = IsPacketOnEEPROMValid(adress);
 
@@ -790,7 +790,7 @@ void IsPacketOnEEPROMValid_PayloadLengthIsZero_ReturnsFalse()
     packet.payloadLength = 0;
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
 
     bool resultBool = IsPacketOnEEPROMValid(adress);
 
@@ -805,7 +805,7 @@ void IsPacketOnEEPROMValid_PayloadLengthIsLargerThanTheEEPROM_ReturnsFalse() // 
     uint16_t data = 13;
     DataPacket packet = DataToPacket(data);
     packet.payloadLength = static_cast<uint16_t>(eepromSize + 1); // TODO: eeprom size - size of empty packet + 1
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
 
     bool resultBool = IsPacketOnEEPROMValid(adress);
 
@@ -844,7 +844,7 @@ void IsPacketOnEEPROMValid_CrcDoesNotMatchPayload_ReturnsFalse()
     DataPacket packet = DataToPacket(data);
     uint32_t faultyCrc = packet.crc + 12;
     packet.crc = faultyCrc;
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(adress, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
 
     bool resultBool = IsPacketOnEEPROMValid(adress);
 
