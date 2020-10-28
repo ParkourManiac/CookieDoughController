@@ -26,6 +26,25 @@ void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(uint16_t adress, const 
     }
 }
 
+void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(uint16_t adress, const DataPacket &expectedPacket, uint16_t eepromSize)
+{
+    if(eepromSize == 0)
+    {
+        eepromSize = static_cast<uint16_t>(adress + Helper_CalculateSizeOfPacketOnEEPROM(expectedPacket) + 10);
+    }
+
+    EEPROMClass_length_return_v.push_back(eepromSize);
+    EEPROMClass_read_return_v.push_back(expectedPacket.stx);
+    EEPROMClass_get_param_t_o3_vr.push_back(expectedPacket.active);
+    EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
+    EEPROMClass_read_return_v.push_back(expectedPacket.etx);
+    for (int i = 0; i < expectedPacket.payloadLength; i++) 
+    {
+        EEPROMClass_read_return_v.push_back(expectedPacket.payload[i]);
+    }
+    EEPROMClass_get_param_t_o2_vr.push_back(expectedPacket.crc);
+}
+
 void Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t eepromSize)
 {
     DataPacket expectedPacket = DataPacket(data, dataSize);

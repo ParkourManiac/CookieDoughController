@@ -90,6 +90,76 @@ void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_ParsePacketFromEepromRe
     ASSERT_TEST(resultBool == false);
 }
 
+//
+void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_ReadsValidPacketFromEepromSuccessfullyAndReturnsTrueAndOutputsCorrectValues() {
+    uint16_t data = 1337;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    uint16_t expectedLengthOfPayload = packet.payloadLength;
+
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(0, packet);
+    uint16_t adressOfPayload, lengthOfPayload;
+    bool resultBool = IsPacketOnEEPROMValid(0, &adressOfPayload, &lengthOfPayload);
+
+    ASSERT_TEST(
+        resultBool == true && 
+        expectedLengthOfPayload == lengthOfPayload
+    );
+}
+
+void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_SetEepromSizeByHandToFitThePacket_SuccessfullyValidatesThePacket() {
+    uint16_t data = 1337;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(0, packet, static_cast<uint16_t>(65535u));
+    uint16_t adressOfPayload, lengthOfPayload;
+    bool resultBool = IsPacketOnEEPROMValid(0, &adressOfPayload, &lengthOfPayload);
+
+    ASSERT_TEST(resultBool == true);
+}
+
+void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_UsingHighAdress_EepromLengthIsSetToFitPacket()
+{
+    uint16_t data = 123;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    uint16_t adress = 10000;
+
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet);
+    uint16_t adressOfPayload, lengthOfPayload;
+    bool resultBool = IsPacketOnEEPROMValid(adress, &adressOfPayload, &lengthOfPayload);
+
+    ASSERT_TEST(resultBool == true);
+}
+
+void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_SetEepromSizeByHandToNotFitThePacket_ValidationOfPacketFails() {
+    uint16_t data = 1337;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    uint16_t eepromSize = 1;
+
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(0, packet, eepromSize);
+    uint16_t adressOfPayload, lengthOfPayload;
+    bool resultBool = IsPacketOnEEPROMValid(0, &adressOfPayload, &lengthOfPayload);
+
+    ASSERT_TEST(resultBool == false);
+}
+
+void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_RecievesInactiveFlag_ReturnsFalse() {
+    uint16_t data = 1337;
+    uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
+    DataPacket packet = DataPacket(dataPtr, sizeof(data));
+    packet.active = 0x00;
+
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(0, packet);
+    uint16_t adressOfPayload, lengthOfPayload;
+    bool resultBool = IsPacketOnEEPROMValid(0, &adressOfPayload, &lengthOfPayload);
+
+    ASSERT_TEST(resultBool == false);
+}
+//
+
 void Helper_SaveDataPacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_SaveDataPacketToEEPROMReturnsTrueAndReturnsCorrectPacketSize()
 {
     uint16_t data = 123;
