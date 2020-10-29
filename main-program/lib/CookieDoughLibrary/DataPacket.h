@@ -92,16 +92,14 @@ bool IsPacketActive(const uint8_t activeFlag);
 bool DeactivatePacket(uint16_t adress);
 
 /**
- * @brief Tries to find and return the first DataPacket it finds on the EEPROM.
+ * @brief Attempts to find and return the adress of the first DataPacket that is found on the EEPROM.
  * 
  * @param startAdress The starting point of the search.
- * @param result The packet that is found.
- * @param packetSize The size of the found packet.
- * @param packetAdress The adress of the found packet.
+ * @param adressOfTheFoundPacket Outputs the adress of the packet that was found.
  * @return true Successfully found a packet.
  * @return false Could not find a packet on the eeprom.
  */
-bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint16_t *packetSize, uint16_t *packetAdress);
+bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfTheFoundPacket);
 
 /**
  * @brief Deactivates all packets present on the EEPROM.

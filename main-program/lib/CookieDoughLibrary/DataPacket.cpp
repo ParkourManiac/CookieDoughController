@@ -306,10 +306,10 @@ bool DeactivatePacket(uint16_t adress)
     return true;
 }
 
-bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint16_t *packetSize, uint16_t *packetAdress)
+bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfTheFoundPacket)
 {
     uint16_t eepromSize = EEPROM.length();
-    if(startAdress >= eepromSize) 
+    if(startAdress >= eepromSize)
     {
         DEBUG_PRINT(F("ERROR: Tried to start searching for a packet outside of the eeproms range. Adress out of range. \n"));
         return false;
@@ -319,9 +319,9 @@ bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, DataPacket *result, uint1
     for(uint16_t i = 0; i < eepromSize; i++)
     {
         currentAdress = CyclicAdress(startAdress + i, eepromSize);
-        if(ReadDataPacketOnEEPROM(currentAdress, result, packetSize)) 
+        if(IsPacketOnEEPROMValid(currentAdress))
         {
-            *packetAdress = currentAdress;
+            *adressOfTheFoundPacket = currentAdress;
             return true;
         }
     }
