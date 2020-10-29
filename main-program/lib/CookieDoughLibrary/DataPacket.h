@@ -127,10 +127,17 @@ bool DeactivateAllPacketsOnEEPROM();
 uint16_t CyclicAdress(uint32_t adress, uint16_t bufferSize);
 
 /**
+ * @brief Returns the amount of bytes that an empty DataPacket would occupy when serialized.
+ * 
+ * @return uint16_t Returns the amount of bytes an empty DataPacket would occupy when in a serialized form.
+ */
+uint16_t SizeOfEmptySerializedDataPacket();
+
+/**
  * @brief Calculates the size in bytes that the given DataPacket will occupy when serialized.
  * 
  * @param packet The packet that you want to calculate the serialized size of.
- * @return uint16_t Returns the size in bytes the packet will occupy when in a serialized form.
+ * @return uint16_t Returns the amount of bytes the packet will occupy when in a serialized form.
  */
 uint16_t SizeOfSerializedDataPacket(const DataPacket &packet);
 

@@ -334,6 +334,22 @@ void CyclicAdress_BufferSizeIsZero_ReturnsZero()
     ASSERT_TEST(result == expectedAdress);
 }
 
+void SizeOfEmptySerializedDataPacket_ReturnsTheAmountOfBytesAnEmptyDataPacketWouldOccupyOnMemory()
+{
+    DataPacket packet;
+    uint16_t expectedSize = static_cast<uint16_t>(
+        sizeof(packet.stx) +
+        sizeof(packet.active) +
+        sizeof(packet.payloadLength) +
+        sizeof(packet.crc) +
+        sizeof(packet.etx)
+    );
+
+    uint16_t result = SizeOfEmptySerializedDataPacket();
+
+    ASSERT_TEST(result == expectedSize);
+}
+
 void SizeOfSerializedDataPacket_ReturnsTheAmountOfBytesTheDataPacketWillOccupyOnMemory()
 {
     uint64_t data = 981239;

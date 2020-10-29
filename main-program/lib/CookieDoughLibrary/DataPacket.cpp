@@ -379,15 +379,23 @@ uint16_t CyclicAdress(uint32_t adress, uint16_t bufferSize)
     return static_cast<uint16_t>(adress % bufferSize);
 }
 
-uint16_t SizeOfSerializedDataPacket(const DataPacket &packet) // TODO: Is there a way to automatically calculate the size here? So that we do not need to add the members by hand?
+uint16_t SizeOfEmptySerializedDataPacket() // TODO: Is there a way to automatically calculate the size here? So that we do not need to type each members by hand?
 {
+    DataPacket packet; // TODO: Can we somehow remove this allocation?
     return static_cast<uint16_t>(
         sizeof(packet.stx) +
         sizeof(packet.active) +
         sizeof(packet.payloadLength) +
         sizeof(packet.crc) +
-        sizeof(packet.payload[0]) * packet.payloadLength +
         sizeof(packet.etx)
+    );
+}
+
+uint16_t SizeOfSerializedDataPacket(const DataPacket &packet)
+{
+    return static_cast<uint16_t>(
+        SizeOfEmptySerializedDataPacket() +
+        sizeof(packet.payload[0]) * packet.payloadLength
     );
 }
 
