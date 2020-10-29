@@ -15,11 +15,9 @@ void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(uint16_t adress, const 
     }
 
     EEPROMClass_length_return_v.push_back(eepromSize);
-    EEPROMClass_read_return_v.push_back(expectedPacket.stx);
-    EEPROMClass_get_param_t_o3_vr.push_back(expectedPacket.active);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, expectedPacket, eepromSize);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
     EEPROMClass_get_param_t_o2_vr.push_back(expectedPacket.crc);
-    EEPROMClass_read_return_v.push_back(expectedPacket.etx);
     for (int i = 0; i < expectedPacket.payloadLength; i++) 
     {
         EEPROMClass_read_return_v.push_back(expectedPacket.payload[i]);

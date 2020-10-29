@@ -45,43 +45,26 @@ bool ReadDataPacketOnEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packe
         return false;
     }
 
-    // STX: If the first value is not equal to the stx...
-    uint8_t stx = EEPROM.read(adress);
-    if (stx != packet->stx)
+    if(IsPacketOnEEPROMValid(adress) == false)
+    {
         return false;
+    }
+
+    // STX
     offset += sizeof(packet->stx);
 
-    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
-    EEPROM.get(currentAdress, packet->active);
-    if (IsPacketActive(packet->active) == false)
-        return false;
+    // ACTIVE FLAG
     offset += sizeof(packet->active);
 
     // PAYLOAD LENGTH: 
     currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     EEPROM.get(currentAdress, packet->payloadLength);
-    uint16_t packetSizeExcludingPayload = static_cast<uint16_t>(
-        sizeof(packet->stx) +
-        sizeof(packet->active) +
-        sizeof(packet->payloadLength) +
-        sizeof(packet->crc) +
-        sizeof(packet->etx)
-    );
-    // If the payload is larger than what fits on the eeprom...
-    if (packet->payloadLength > (sizeOfEeprom - packetSizeExcludingPayload))
-        return false;
     offset += sizeof(packet->payloadLength);
-
 
     // CRC
     currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     EEPROM.get(currentAdress, packet->crc);
     offset += sizeof(packet->crc);
-
-    // ETX: If the packet does not end with the etx...
-    currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
-    if (EEPROM.read(currentAdress + packet->payloadLength) != packet->etx)
-        return false;
 
     // PAYLOAD: Retrieve payload as an uint8_t array.
     currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
@@ -111,11 +94,6 @@ bool ReadDataPacketOnEEPROM(uint16_t adress, DataPacket *packet, uint16_t *packe
     // DEBUG_PRINT(F("\n"));
     // DEBUG(delay(100));
     // // DEBUG
-
-    // If the crc of the payload is not equal to the crc of the packet...
-    uint32_t payloadCRC = CalculateCRC(packet->payload, packet->payloadLength);
-    if (packet->crc != payloadCRC)
-        return false;
 
     // ETX: Move offset to end of packet and assign it to packet size.
     offset += sizeof(packet->etx);

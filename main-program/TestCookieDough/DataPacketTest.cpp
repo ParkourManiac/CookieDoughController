@@ -1608,13 +1608,12 @@ void ReadDataPacketOnEEPROM_ReturnsCorrectPacket() // TODO: bad test. Locks the 
                                   sizeof(expectedPacket.crc) + 
                                   sizeof(data) + 
                                   sizeof(expectedPacket.etx);
+    uint16_t eepromSize = static_cast<uint16_t>(expectedPacket.payloadLength + 20);
 
-    EEPROMClass_read_return_v.push_back(expectedPacket.stx);
-    EEPROMClass_get_param_t_o3_vr.push_back(expectedPacket.active);
+    EEPROMClass_length_return_v.push_back(eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, expectedPacket, eepromSize);
     EEPROMClass_get_param_t_o1_vr.push_back(expectedPacket.payloadLength);
-    EEPROMClass_length_return = static_cast<uint16_t>(expectedPacket.payloadLength + 20);
     EEPROMClass_get_param_t_o2_vr.push_back(expectedPacket.crc);
-    EEPROMClass_read_return_v.push_back(expectedPacket.etx);
     EEPROMClass_read_return_v.push_back(expectedPacket.payload[0]);
     EEPROMClass_read_return_v.push_back(expectedPacket.payload[1]);
 
