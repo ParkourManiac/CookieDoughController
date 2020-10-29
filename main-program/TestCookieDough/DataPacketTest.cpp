@@ -813,14 +813,27 @@ void IsPacketOnEEPROMValid_PayloadLengthIsZero_ReturnsFalse()
     ASSERT_TEST(resultBool == false);
 }
 
-void IsPacketOnEEPROMValid_PayloadLengthIsLargerThanTheEEPROM_ReturnsFalse() // TODO: Include empty packet size into calculation.
+void IsPacketOnEEPROMValid_PacketFitsOnEEPROM_ReturnsTrue()
 {
-    uint16_t eepromSize = 1024;
-    EEPROMClass_length_return = eepromSize;
     uint16_t adress = 0;
     uint16_t data = 13;
     DataPacket packet = DataToPacket(data);
-    packet.payloadLength = static_cast<uint16_t>(eepromSize + 1); // TODO: eeprom size - size of empty packet + 1
+    uint16_t eepromSize = SizeOfSerializedDataPacket(packet);
+    EEPROMClass_length_return = eepromSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
+
+    bool resultBool = IsPacketOnEEPROMValid(adress);
+
+    ASSERT_TEST(resultBool == true);
+}
+
+void IsPacketOnEEPROMValid_PayloadLengthIsLargerThanWhatFitsOnTheEEPROM_ReturnsFalse()
+{
+    uint16_t adress = 0;
+    uint16_t data = 13;
+    DataPacket packet = DataToPacket(data);
+    uint16_t eepromSize = static_cast<uint16_t>(SizeOfSerializedDataPacket(packet) - 1);
+    EEPROMClass_length_return = eepromSize;
     Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
 
     bool resultBool = IsPacketOnEEPROMValid(adress);

@@ -430,7 +430,7 @@ bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t 
     uint16_t payloadLenghtAdress = CyclicAdress(activeAdress + sizeof(packet.active), eepromSize);
     EEPROM.get(payloadLenghtAdress, packet.payloadLength);
     bool isPacketEmpty = packet.payloadLength == 0;
-    bool isPacketTooLarge = packet.payloadLength > eepromSize;
+    bool isPacketTooLarge = packet.payloadLength > (eepromSize - SizeOfEmptySerializedDataPacket());
     if(isPacketEmpty || isPacketTooLarge)
     {
         return false;
