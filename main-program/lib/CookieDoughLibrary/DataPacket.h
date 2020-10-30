@@ -96,10 +96,11 @@ bool DeactivatePacket(uint16_t adress);
  * 
  * @param startAdress The starting point of the search.
  * @param adressOfTheFoundPacket Outputs the adress of the packet that was found.
+ * @param sizeOfTheFoundPacket Outputs the size of the packet that was found.
  * @return true Successfully found a packet.
  * @return false Could not find a packet on the eeprom.
  */
-bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfTheFoundPacket);
+bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfTheFoundPacket, uint16_t *sizeOfTheFoundPacket);
 
 /**
  * @brief Deactivates all packets present on the EEPROM.
@@ -165,10 +166,11 @@ bool IsPacketOnEEPROMValid(uint16_t adress);
  * @param adress The adress to be checked for a valid packet.
  * @param adressOfPayload Outputs the adress of the payload.
  * @param lengthOfPayload Outputs the length of the payload.
+ * @param sizeOfPacket Outputs the size of the packet.
  * @return true The adress contains a valid packet.
  * @return false The adress does not contain a valid packet.
  */
-bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t *lengthOfPayload);
+bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t *lengthOfPayload, uint16_t *sizeOfPacket);
 
 /**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).

@@ -306,7 +306,7 @@ bool DeactivatePacket(uint16_t adress)
     return true;
 }
 
-bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfTheFoundPacket)
+bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfTheFoundPacket, uint16_t *sizeOfTheFoundPacket)
 {
     uint16_t eepromSize = EEPROM.length();
     if(startAdress >= eepromSize)
@@ -333,9 +333,8 @@ bool DeactivateAllPacketsOnEEPROM()
     bool hasDeactivatedAPacket = false;
 
     uint16_t startAdress = 0;
-    DataPacket result;
     uint16_t packetSize, packetAdress;
-    while(FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress))
+    while(FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize)) // TODO: Check that the order of the arguments is correct.
     {
         if(DeactivatePacket(packetAdress))
         {
@@ -403,7 +402,7 @@ bool ReadBytesFromEEPROM(uint16_t adress, uint16_t amountOfBytes, uint8_t *resul
     return true;
 }
 
-bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t *lengthOfPayload)
+bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t *lengthOfPayload, uint16_t *sizeOfPacket)
 {
     uint16_t eepromSize = EEPROM.length();
     if(adress >= eepromSize)
@@ -468,8 +467,8 @@ bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t 
 
 bool IsPacketOnEEPROMValid(uint16_t adress)
 {
-    uint16_t adressOfPayload, lengthOfPayload;
-    return IsPacketOnEEPROMValid(adress, &adressOfPayload, &lengthOfPayload);
+    uint16_t adressOfPayload, lengthOfPayload, sizeOfPacket;
+    return IsPacketOnEEPROMValid(adress, &adressOfPayload, &lengthOfPayload, &sizeOfPacket);
 }
 
 uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc)

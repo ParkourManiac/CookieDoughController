@@ -253,7 +253,7 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsB
     while (!foundValidPacket)
     {
         uint16_t startAdress = *packetAdress;
-        bool foundPacket = FindFirstDataPacketOnEEPROM(startAdress, &packet, packetSize, packetAdress);
+        bool foundPacket = false; //FindFirstDataPacketOnEEPROM(startAdress, &packet, packetSize, packetAdress); // TODO: Check that the order of the arguments is correct.
         if (!foundPacket)
             return false;
 
