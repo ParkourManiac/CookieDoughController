@@ -871,6 +871,7 @@ void DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_ReturnsFalse();
 void DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_DoesNotWriteToEEPROM();
 void FindFirstDataPacketOnEEPROM_TakesInAStartAdress_BeginsLookingAtTheGivenAdress();
 void FindFirstDataPacketOnEEPROM_FindsPacket_ReturnsTrue();
+void FindFirstDataPacketOnEEPROM_PacketIsPresentAfterGarbageData_FindsPacket();
 void EditMode_Constructor_SetsCorrectValues();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
@@ -1192,6 +1193,7 @@ void RunTests()
 	RUN_TEST(DeactivatePacket_AdressPointsToStxButCantFindEtxOfPacket_DoesNotWriteToEEPROM);
 	RUN_TEST(FindFirstDataPacketOnEEPROM_TakesInAStartAdress_BeginsLookingAtTheGivenAdress);
 	RUN_TEST(FindFirstDataPacketOnEEPROM_FindsPacket_ReturnsTrue);
+	RUN_TEST(FindFirstDataPacketOnEEPROM_PacketIsPresentAfterGarbageData_FindsPacket);
 	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);

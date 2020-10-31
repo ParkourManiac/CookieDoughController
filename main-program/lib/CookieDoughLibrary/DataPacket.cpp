@@ -306,7 +306,7 @@ bool DeactivatePacket(uint16_t adress)
     return true;
 }
 
-bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfTheFoundPacket, uint16_t *sizeOfTheFoundPacket)
+bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfThePacket, uint16_t *sizeOfThePacket, uint16_t *adressOfThePayload, uint16_t *lengthOfThePayload)
 {
     uint16_t eepromSize = EEPROM.length();
     if(startAdress >= eepromSize)
@@ -319,9 +319,9 @@ bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfTheFoun
     for(uint16_t i = 0; i < eepromSize; i++)
     {
         currentAdress = CyclicAdress(startAdress + i, eepromSize);
-        if(IsPacketOnEEPROMValid(currentAdress))
+        if(IsPacketOnEEPROMValid(currentAdress, sizeOfThePacket, adressOfThePayload, lengthOfThePayload))
         {
-            *adressOfTheFoundPacket = currentAdress;
+            *adressOfThePacket = currentAdress;
             return true;
         }
     }
@@ -333,8 +333,8 @@ bool DeactivateAllPacketsOnEEPROM()
     bool hasDeactivatedAPacket = false;
 
     uint16_t startAdress = 0;
-    uint16_t packetSize, packetAdress;
-    while(FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize)) // TODO: Check that the order of the arguments is correct.
+    uint16_t packetAdress, packetSize, payloadAdress, payloadLength;
+    while(FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize, &payloadAdress, &payloadLength))
     {
         if(DeactivatePacket(packetAdress))
         {
@@ -402,7 +402,7 @@ bool ReadBytesFromEEPROM(uint16_t adress, uint16_t amountOfBytes, uint8_t *resul
     return true;
 }
 
-bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t *lengthOfPayload, uint16_t *sizeOfPacket)
+bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *sizeOfPacket, uint16_t *adressOfPayload, uint16_t *lengthOfPayload)
 {
     uint16_t eepromSize = EEPROM.length();
     if(adress >= eepromSize)
@@ -411,22 +411,26 @@ bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t 
         return false;
     }
 
-    *adressOfPayload = *lengthOfPayload = 0;
+    *adressOfPayload = *lengthOfPayload = *sizeOfPacket = 0;
+    uint32_t offset = 0;
     DataPacket packet;
     uint8_t stx = EEPROM.read(adress);
     if(stx != packet.stx)
     {
         return false;
     }
+    offset += sizeof(stx);
 
-    uint16_t activeAdress = CyclicAdress(adress + sizeof(stx), eepromSize);
+    uint16_t activeAdress = CyclicAdress(adress + offset, eepromSize);
     EEPROM.get(activeAdress, packet.active);
     if(IsPacketActive(packet.active) == false)
     {
         return false;
     }
+    offset += sizeof(packet.active);
 
-    uint16_t payloadLenghtAdress = CyclicAdress(activeAdress + sizeof(packet.active), eepromSize);
+
+    uint16_t payloadLenghtAdress = CyclicAdress(adress + offset, eepromSize);
     EEPROM.get(payloadLenghtAdress, packet.payloadLength);
     bool isPacketEmpty = packet.payloadLength == 0;
     bool isPacketTooLarge = packet.payloadLength > (eepromSize - SizeOfEmptySerializedDataPacket());
@@ -434,16 +438,21 @@ bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t 
     {
         return false;
     }
+    offset += sizeof(packet.payloadLength);
 
-    uint16_t crcAdress = CyclicAdress(payloadLenghtAdress + sizeof(packet.payloadLength), eepromSize);
-    uint16_t payloadAdress = CyclicAdress(crcAdress + sizeof(packet.crc), eepromSize);
 
-    uint16_t etxAdress = CyclicAdress(payloadAdress + packet.payloadLength, eepromSize);
+    uint16_t crcAdress = CyclicAdress(adress + offset, eepromSize);
+    offset += sizeof(packet.crc);
+    uint16_t payloadAdress = CyclicAdress(adress + offset, eepromSize);
+    offset += packet.payloadLength;
+
+    uint16_t etxAdress = CyclicAdress(adress + offset, eepromSize);
     uint8_t etx = EEPROM.read(etxAdress);
     if(etx != packet.etx)
     {
         return false;
     }
+    offset += sizeof(packet.etx);
 
     uint8_t firstPayloadPart = EEPROM.read(payloadAdress);
     uint32_t calculatedCrc = CalculateCRC(&firstPayloadPart, sizeof(firstPayloadPart));
@@ -462,13 +471,14 @@ bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t 
 
     *lengthOfPayload = packet.payloadLength;
     *adressOfPayload = payloadAdress;
+    *sizeOfPacket = static_cast<uint16_t>(offset);
     return true;
 }
 
 bool IsPacketOnEEPROMValid(uint16_t adress)
 {
     uint16_t adressOfPayload, lengthOfPayload, sizeOfPacket;
-    return IsPacketOnEEPROMValid(adress, &adressOfPayload, &lengthOfPayload, &sizeOfPacket);
+    return IsPacketOnEEPROMValid(adress, &sizeOfPacket, &adressOfPayload, &lengthOfPayload);
 }
 
 uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc)

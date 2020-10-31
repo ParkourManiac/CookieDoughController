@@ -723,8 +723,8 @@ void IsPacketOnEEPROMValid_WithOutputArguments_ReturnsPayloadsAdress()
         sizeof(packet.crc)
     );
 
-    uint16_t resultPayloadAdress, resultPayloadLength, resultPacketSize;
-    IsPacketOnEEPROMValid(adress, &resultPayloadAdress, &resultPayloadLength, &resultPacketSize);
+    uint16_t resultPacketSize, resultPayloadAdress, resultPayloadLength;
+    IsPacketOnEEPROMValid(adress, &resultPacketSize, &resultPayloadAdress, &resultPayloadLength);
 
     ASSERT_TEST(resultPayloadAdress == expectedPayloadAdress);
 }
@@ -739,8 +739,8 @@ void IsPacketOnEEPROMValid_WithOutputArguments_ReturnsThePayloadsLength()
     Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
     uint16_t expectedPayloadLength = packet.payloadLength;
 
-    uint16_t resultPayloadAdress, resultPayloadLength, resultPacketSize;
-    IsPacketOnEEPROMValid(adress, &resultPayloadAdress, &resultPayloadLength, &resultPacketSize);
+    uint16_t resultPacketSize, resultPayloadAdress, resultPayloadLength;
+    IsPacketOnEEPROMValid(adress, &resultPacketSize, &resultPayloadAdress, &resultPayloadLength);
 
     ASSERT_TEST(resultPayloadLength == expectedPayloadLength);
 }
@@ -755,8 +755,8 @@ void IsPacketOnEEPROMValid_WithOutputArguments_ReturnsTheCorrectPacketSize()
     Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet, eepromSize);
     uint16_t expectedPacketSize = SizeOfSerializedDataPacket(packet);
 
-    uint16_t resultPayloadAdress, resultPayloadLength, resultPacketSize;
-    IsPacketOnEEPROMValid(adress, &resultPayloadAdress, &resultPayloadLength, &resultPacketSize);
+    uint16_t resultPacketSize, resultPayloadAdress, resultPayloadLength;
+    IsPacketOnEEPROMValid(adress, &resultPacketSize, &resultPayloadAdress, &resultPayloadLength);
 
     ASSERT_TEST(resultPacketSize == expectedPacketSize);
 }
@@ -2048,8 +2048,8 @@ void FindFirstDataPacketOnEEPROM_TakesInAStartAdress_BeginsLookingAtTheGivenAdre
     uint16_t eepromSize = 100;
     EEPROMClass_length_return = eepromSize;
 
-    uint16_t packetAdress, packetSize;
-    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize);
+    uint16_t packetAdress, packetSize, payloadAdress, payloadLength;
+    FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize, &payloadAdress, &payloadLength);
 
     ASSERT_TEST(EEPROMClass_read_param_idx_v[0] == startAdress);
 }
@@ -2061,36 +2061,45 @@ void FindFirstDataPacketOnEEPROM_FindsPacket_ReturnsTrue()
     EEPROMClass_length_return = eepromSize;
     uint8_t data = 22;
     DataPacket expectedPacket = DataToPacket(data);
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(startAdress, expectedPacket, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(startAdress, expectedPacket, eepromSize);
 
-    uint16_t packetAdress, packetSize;
-    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize);
+    uint16_t packetAdress, packetSize, payloadAdress, payloadLength;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize, &payloadAdress, &payloadLength);
 
     ASSERT_TEST(resultBool == true);
 }
 
-// void FindFirstDataPacketOnEEPROM_PacketIsPresentAfterGarbageData_FindsPacket()
-// {
-//     uint8_t data = 22;
-//     DataPacket expectedPacket = DataToPacket(data);
-//     uint16_t expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(expectedPacket);
-//     uint16_t startAdress = 2;
-//     uint16_t expectedAdress = static_cast<uint16_t>(startAdress + 2);
-//     uint16_t eepromSize = 40;
-//     EEPROMClass_length_return = eepromSize;
-//     EEPROMClass_read_return_v.push_back(13);
-//     EEPROMClass_read_return_v.push_back(9);
-//     Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(expectedAdress, expectedPacket, eepromSize);
+void FindFirstDataPacketOnEEPROM_PacketIsPresentAfterGarbageData_FindsPacket()
+{
+    uint16_t startAdress = 2;
+    uint8_t data = 22;
+    DataPacket expectedPacket = DataToPacket(data);
+    uint16_t expectedPacketSize = SizeOfSerializedDataPacket(expectedPacket),
+             expectedAdress = static_cast<uint16_t>(startAdress + 2);
+    uint16_t expectedPayloadAdress = static_cast<uint16_t>(
+        expectedAdress + 
+        sizeof(expectedPacket.stx) +
+        sizeof(expectedPacket.active) +
+        sizeof(expectedPacket.payloadLength) +
+        sizeof(expectedPacket.crc) 
+    );
+    uint16_t eepromSize = 40;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(13);
+    EEPROMClass_read_return_v.push_back(9);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(expectedAdress, expectedPacket, eepromSize);
 
-//     uint16_t resultPacketAdress, resultPacketSize;
-//     bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &resultPacketAdress, &resultPacketSize);
+    uint16_t packetAdress, packetSize, payloadAdress, payloadLength;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize, &payloadAdress, &payloadLength);
 
-//     ASSERT_TEST(
-//         resultBool == true &&
-//         resultPacketAdress == expectedAdress &&
-//         resultPacketSize == expectedPacketSize
-//     );
-// }
+    ASSERT_TEST(
+        resultBool == true &&
+        packetAdress == expectedAdress &&
+        packetSize == expectedPacketSize && 
+        payloadAdress == expectedPayloadAdress &&
+        payloadLength == expectedPacket.payloadLength
+    );
+}
 
 // void FindFirstDataPacketOnEEPROM_PacketIsPresentAfterGarbageData_FindsPacketOnCorrectAdress()
 // {
@@ -2133,6 +2142,10 @@ void FindFirstDataPacketOnEEPROM_FindsPacket_ReturnsTrue()
 //         packetSize == expectedPacketSize
 //     );
 // }
+
+// TODO:
+// void FindFirstDataPacketOnEEPROM_FindsPacket_ReturnsCorrectPayloadAdress()
+// void FindFirstDataPacketOnEEPROM_FindsPacket_ReturnsCorrectPayloadLength()
 
 // void FindFirstDataPacketOnEEPROM_NoPacketIsPresent_LooksAtEveryPositionOfTheEeprom()
 // {

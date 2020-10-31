@@ -90,22 +90,21 @@ void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket_ParsePacketFromEepromRe
     ASSERT_TEST(resultBool == false);
 }
 
-//
 void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_ReadsValidPacketFromEepromSuccessfullyAndReturnsTrueAndOutputsCorrectValues() {
     uint16_t data = 1337;
     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
-    uint16_t expectedLengthOfPayload = packet.payloadLength;
-    uint16_t expectedSizeOfPayload = SizeOfSerializedDataPacket(packet);
+    uint16_t expectedPayloadLength = packet.payloadLength;
+    uint16_t expectedPacketSize = SizeOfSerializedDataPacket(packet);
 
     Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(0, packet);
-    uint16_t adressOfPayload, lengthOfPayload, sizeOfPayload;
-    bool resultBool = IsPacketOnEEPROMValid(0, &adressOfPayload, &lengthOfPayload, &sizeOfPayload);
+    uint16_t sizeOfPacket, adressOfPayload, lengthOfPayload;
+    bool resultBool = IsPacketOnEEPROMValid(0, &sizeOfPacket, &adressOfPayload, &lengthOfPayload);
 
     ASSERT_TEST(
         resultBool == true && 
-        expectedLengthOfPayload == lengthOfPayload &&
-        expectedSizeOfPayload == sizeOfPayload
+        lengthOfPayload == expectedPayloadLength &&
+        sizeOfPacket == expectedPacketSize
     );
 }
 
@@ -115,8 +114,8 @@ void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_SetEepromSizeByHandToFitTh
     DataPacket packet = DataPacket(dataPtr, sizeof(data));
 
     Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(0, packet, static_cast<uint16_t>(65535u));
-    uint16_t adressOfPayload, lengthOfPayload, sizeOfPayload;
-    bool resultBool = IsPacketOnEEPROMValid(0, &adressOfPayload, &lengthOfPayload, &sizeOfPayload);
+    uint16_t sizeOfPacket, adressOfPayload, lengthOfPayload;
+    bool resultBool = IsPacketOnEEPROMValid(0, &sizeOfPacket, &adressOfPayload, &lengthOfPayload);
 
     ASSERT_TEST(resultBool == true);
 }
@@ -129,8 +128,8 @@ void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_UsingHighAdress_EepromLeng
     uint16_t adress = 10000;
 
     Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adress, packet);
-    uint16_t adressOfPayload, lengthOfPayload, sizeOfPayload;
-    bool resultBool = IsPacketOnEEPROMValid(adress, &adressOfPayload, &lengthOfPayload, &sizeOfPayload);
+    uint16_t sizeOfPacket, adressOfPayload, lengthOfPayload;
+    bool resultBool = IsPacketOnEEPROMValid(adress, &sizeOfPacket, &adressOfPayload, &lengthOfPayload);
 
     ASSERT_TEST(resultBool == true);
 }
@@ -142,8 +141,8 @@ void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_SetEepromSizeByHandToNotFi
     uint16_t eepromSize = 1;
 
     Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(0, packet, eepromSize);
-    uint16_t adressOfPayload, lengthOfPayload, sizeOfPayload;
-    bool resultBool = IsPacketOnEEPROMValid(0, &adressOfPayload, &lengthOfPayload, &sizeOfPayload);
+    uint16_t sizeOfPacket, adressOfPayload, lengthOfPayload;
+    bool resultBool = IsPacketOnEEPROMValid(0, &sizeOfPacket, &adressOfPayload, &lengthOfPayload);
 
     ASSERT_TEST(resultBool == false);
 }
@@ -155,12 +154,11 @@ void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_RecievesInactiveFlag_Retur
     packet.active = 0x00;
 
     Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(0, packet);
-    uint16_t adressOfPayload, lengthOfPayload, sizeOfPayload;
-    bool resultBool = IsPacketOnEEPROMValid(0, &adressOfPayload, &lengthOfPayload, &sizeOfPayload);
+    uint16_t sizeOfPacket, adressOfPayload, lengthOfPayload;
+    bool resultBool = IsPacketOnEEPROMValid(0, &sizeOfPacket, &adressOfPayload, &lengthOfPayload);
 
     ASSERT_TEST(resultBool == false);
 }
-//
 
 void Helper_SaveDataPacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_SaveDataPacketToEEPROMReturnsTrueAndReturnsCorrectPacketSize()
 {

@@ -95,12 +95,14 @@ bool DeactivatePacket(uint16_t adress);
  * @brief Attempts to find and return the adress of the first DataPacket that is found on the EEPROM.
  * 
  * @param startAdress The starting point of the search.
- * @param adressOfTheFoundPacket Outputs the adress of the packet that was found.
- * @param sizeOfTheFoundPacket Outputs the size of the packet that was found.
+ * @param adressOfThePacket Outputs the adress of the packet that was found.
+ * @param sizeOfThePacket Outputs the size of the packet that was found.
+ * @param adressOfThePayload Outputs the adress of the payload on the found packet. 
+ * @param lengthOfThePayload Outputs the length of the payload on the found packet.
  * @return true Successfully found a packet.
  * @return false Could not find a packet on the eeprom.
  */
-bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfTheFoundPacket, uint16_t *sizeOfTheFoundPacket);
+bool FindFirstDataPacketOnEEPROM(uint16_t startAdress, uint16_t *adressOfThePacket, uint16_t *sizeOfThePacket, uint16_t *adressOfThePayload, uint16_t *lengthOfThePayload);
 
 /**
  * @brief Deactivates all packets present on the EEPROM.
@@ -164,13 +166,13 @@ bool IsPacketOnEEPROMValid(uint16_t adress);
  * @brief Checks whether the adress contains a valid packet or not.
  * 
  * @param adress The adress to be checked for a valid packet.
+ * @param sizeOfPacket Outputs the size of the packet.
  * @param adressOfPayload Outputs the adress of the payload.
  * @param lengthOfPayload Outputs the length of the payload.
- * @param sizeOfPacket Outputs the size of the packet.
  * @return true The adress contains a valid packet.
  * @return false The adress does not contain a valid packet.
  */
-bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *adressOfPayload, uint16_t *lengthOfPayload, uint16_t *sizeOfPacket);
+bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *sizeOfPacket, uint16_t *adressOfPayload, uint16_t *lengthOfPayload);
 
 /**
  * @brief Calculates a CRC checksum for the given array of bytes (using the algorith CRC-32).
