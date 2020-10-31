@@ -2184,58 +2184,55 @@ void FindFirstDataPacketOnEEPROM_FindsPacket_ReturnsCorrectPayloadLength()
     );
 }
 
-// void FindFirstDataPacketOnEEPROM_NoPacketIsPresent_LooksAtEveryPositionOfTheEeprom()
-// {
-//     uint16_t startAdress = 3,
-//             secondAdress = 0,
-//             thirdAdress = 1,
-//             fourthAdress = 2;
-//     uint16_t eepromSize = 4;
-//     EEPROMClass_length_return = eepromSize;
-//     EEPROMClass_read_return = 0x00;
+void FindFirstDataPacketOnEEPROM_NoPacketIsPresent_LooksAtEveryPositionOfTheEeprom()
+{
+    uint16_t startAdress = 3,
+            secondAdress = 0,
+            thirdAdress = 1,
+            fourthAdress = 2;
+    uint16_t eepromSize = 4;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return = 0x00;
 
-//     DataPacket result;
-//     uint16_t packetSize, packetAdress;
-//     bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+    uint16_t packetAdress, packetSize, payloadAdress, payloadLength;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize, &payloadAdress, &payloadLength);
 
-//     ASSERT_TEST(
-//         EEPROMClass_read_param_idx_v[0] == startAdress &&
-//         EEPROMClass_read_param_idx_v[1] == secondAdress &&
-//         EEPROMClass_read_param_idx_v[2] == thirdAdress &&
-//         EEPROMClass_read_param_idx_v[3] == fourthAdress &&
-//         EEPROMClass_read_invocations == eepromSize
-//     );
-// }
+    ASSERT_TEST(
+        EEPROMClass_read_param_idx_v[0] == startAdress &&
+        EEPROMClass_read_param_idx_v[1] == secondAdress &&
+        EEPROMClass_read_param_idx_v[2] == thirdAdress &&
+        EEPROMClass_read_param_idx_v[3] == fourthAdress &&
+        EEPROMClass_read_invocations == eepromSize
+    );
+}
 
-// void FindFirstDataPacketOnEEPROM_NoPacketIsPresent_ReturnsFalse()
-// {
-//     uint16_t startAdress = 3;
-//     uint16_t eepromSize = 4;
-//     EEPROMClass_length_return = eepromSize;
-//     EEPROMClass_read_return = 0x00;
+void FindFirstDataPacketOnEEPROM_NoPacketIsPresent_ReturnsFalse()
+{
+    uint16_t startAdress = 3;
+    uint16_t eepromSize = 20;
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return = 0x00;
 
-//     DataPacket result;
-//     uint16_t packetSize, packetAdress;
-//     bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+    uint16_t packetAdress, packetSize, payloadAdress, payloadLength;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize, &payloadAdress, &payloadLength);
 
-//     ASSERT_TEST(resultBool == false);
-// }
+    ASSERT_TEST(resultBool == false);
+}
 
-// void FindFirstDataPacketOnEEPROM_PacketIsPresentOnEEPROMButStartAdressIsOutOfRange_ReturnsFalse()
-// {
-//     uint16_t eepromSize = 40;
-//     uint16_t startAdress = eepromSize;
-//     EEPROMClass_length_return = eepromSize;
-//     uint8_t data = 22;
-//     DataPacket expectedPacket = DataToPacket(data);
-//     Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, expectedPacket, eepromSize);
+void FindFirstDataPacketOnEEPROM_PacketIsPresentOnEEPROMButStartAdressIsOutOfRange_ReturnsFalse()
+{
+    uint16_t eepromSize = 40;
+    uint16_t startAdress = eepromSize;
+    EEPROMClass_length_return = eepromSize;
+    uint8_t data = 22;
+    DataPacket expectedPacket = DataToPacket(data);
+    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, expectedPacket, eepromSize);
 
-//     DataPacket result;
-//     uint16_t packetSize, packetAdress;
-//     bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &result, &packetSize, &packetAdress);
+    uint16_t packetAdress, packetSize, payloadAdress, payloadLength;
+    bool resultBool = FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize, &payloadAdress, &payloadLength);
 
-//     ASSERT_TEST(resultBool == false);
-// }
+    ASSERT_TEST(resultBool == false);
+}
 
 // void DeactivateAllPacketsOnEEPROM_OnePacketIsPresent_OverwritesPacketWithADeactivatedFlag()
 // {
