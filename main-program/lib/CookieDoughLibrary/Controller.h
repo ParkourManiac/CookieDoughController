@@ -132,14 +132,6 @@ public:
     bool RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, uint16_t *amountOfKeys, uint16_t *packetAdress, uint16_t *packetSize);
 
     /**
-     * @brief Converts a DataPacket payload into an array of BareKeyboardKeys.
-     * 
-     * @param packet The packet to be processed.
-     * @param result A pointer to the resulting array of BareKeyboardKeys.
-     */
-    void ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result);
-
-    /**
      * @brief Populates the provided keymap list using the BareKeyboardKey array.
      * 
      * @param keys The array of keys to be inserted into the list.

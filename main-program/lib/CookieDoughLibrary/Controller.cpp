@@ -247,24 +247,29 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *ke
 bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, uint16_t *amountOfKeys, uint16_t *packetAdress, uint16_t *packetSize)
 {
     *amountOfKeys = *packetAdress = *packetSize = 0;
-    DataPacket packet;
 
     bool foundValidPacket = false;
     while (!foundValidPacket)
     {
         uint16_t startAdress = *packetAdress;
-        bool foundPacket = false; //FindFirstDataPacketOnEEPROM(startAdress, &packet, packetSize, packetAdress); // TODO: Check that the order of the arguments is correct.
+        uint16_t payloadAdress, payloadLength;
+        bool foundPacket = FindFirstDataPacketOnEEPROM(startAdress, packetAdress, packetSize, &payloadAdress, &payloadLength);
         if (!foundPacket)
             return false;
 
         // DEBUG_PRINT(F("Began Converting DataPacket to Keymaps...\n")); // DEBUG
         // DEBUG(delay(100));                                                  // DEBUG
-
-        *amountOfKeys = static_cast<uint16_t>(packet.payloadLength / sizeof(BareKeyboardKey));
+        *amountOfKeys = static_cast<uint16_t>(payloadLength / sizeof(BareKeyboardKey));
         delete[](*payloadAsBareKeys);
         *payloadAsBareKeys = new BareKeyboardKey[*amountOfKeys];
 
-        ConvertDataPacketToBareKeyboardKeys(packet, *payloadAsBareKeys);
+        // Read the payload into the result 
+        uint8_t *resultAsBytes = reinterpret_cast<uint8_t*>(*payloadAsBareKeys);
+        bool hasReadPayload = ReadBytesFromEEPROM(payloadAdress, payloadLength, resultAsBytes);
+        if(hasReadPayload == false) 
+        {
+            return false;
+        }
 
         foundValidPacket = true;
         for (uint16_t i = 0; i < *amountOfKeys; i++)
@@ -293,15 +298,6 @@ bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsB
     }
     
     return true;
-}
-
-void Controller::ConvertDataPacketToBareKeyboardKeys(DataPacket packet, BareKeyboardKey *result)
-{
-    uint8_t* resultAsBytes = reinterpret_cast<uint8_t*>(result);
-    for (unsigned int i = 0; i < packet.payloadLength; i++)
-    {
-        resultAsBytes[i] = packet.payload[i];
-    }
 }
 
 void Controller::ParseBareKeyboardKeyArrayIntoKeymapList(BareKeyboardKey *keys, unsigned int amountOfKeys, LinkedList<BareKeyboardKey *> *keymapList) // NOTE: Refactored to BareKeyboardKeys.

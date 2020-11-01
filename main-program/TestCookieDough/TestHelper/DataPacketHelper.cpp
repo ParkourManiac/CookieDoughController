@@ -43,6 +43,20 @@ void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(uint16_t adress, const Dat
     EEPROMClass_get_param_t_o2_vr.push_back(expectedPacket.crc);
 }
 
+void Helper_ReadBytesFromEEPROM_PreparesToReadPayload(uint16_t packetAdress, const DataPacket &expectedPacket, uint16_t eepromSize)
+{
+    if(eepromSize == 0)
+    {
+        eepromSize = static_cast<uint16_t>(packetAdress + Helper_CalculateSizeOfPacketOnEEPROM(expectedPacket) + 10);
+    }
+
+    EEPROMClass_length_return_v.push_back(eepromSize);
+    for (int i = 0; i < expectedPacket.payloadLength; i++) 
+    {
+        EEPROMClass_read_return_v.push_back(expectedPacket.payload[i]);
+    }
+}
+
 void Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(uint16_t adress, uint8_t *data, uint16_t dataSize, uint16_t eepromSize)
 {
     DataPacket expectedPacket = DataPacket(data, dataSize);

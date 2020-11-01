@@ -289,18 +289,15 @@ void CalculateUnusedStorage_TooManyKeymapsToFitOnTheEeprom_ReturnsTheOverloadAsA
 void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndReturnsFalse()
 {
     Controller controller = SetUpController();
-    // Set up packet
-    BareKeyboardKey templateData[2];
+    // Set up packet with faulty payload
+    BareKeyboardKey templateData[genericNormalKeyCount];
     const int templateDataSize = sizeof(templateData);
-
-    DataPacket packet;
     uint8_t *dataPtr = new uint8_t[templateDataSize]{0};
-    packet.payloadLength = templateDataSize;
-    packet.payload = dataPtr;
-    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
+    DataPacket packet(dataPtr, templateDataSize);
+    // Mock function behaviour
     uint16_t eepromSize = 1024;
-    EEPROMClass_length_return = eepromSize;
-    Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(0, packet, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(0, packet, eepromSize);
+    EEPROMClass_length_return_v.push_back(eepromSize);
 
     BareKeyboardKey *result = new BareKeyboardKey[controller.normalKeyCount];
     uint16_t amountOfKeys, packetAdress, packetSize;
@@ -308,7 +305,7 @@ void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndRetur
     bool resultBool = controller.RetrieveBareKeyboardKeysFromMemory(&result, &amountOfKeys, &packetAdress, &packetSize);
     doesNotCrash = true;
 
-    ASSERT_TEST(resultBool == false && doesNotCrash == true);
+    ASSERT_TEST(resultBool == false && doesNotCrash == true); // Test if working
     delete[](result);
     delete[](dataPtr);
 }
@@ -421,49 +418,6 @@ void RetrieveBareKeyboardKeysFromMemory_RetrievesFaultyData_DoesNotCrashAndRetur
 //                 result[1].pin == validKey2.pin && result[1].keyCode == validKey2.keyCode);
 //     delete[](result);
 // }
-
-void ConvertDataPacketToBareKeyboardKeys_RetrievesCorrectPacketWithFaultyPayload_DoesNotCrash()
-{
-    Controller controller = SetUpController();
-    // Set up packet
-    BareKeyboardKey templateData[2];
-    const int templateDataSize = sizeof(templateData);
-
-    DataPacket packet;
-    uint8_t *dataPtr = new uint8_t[templateDataSize]{0};
-    packet.payloadLength = templateDataSize;
-    packet.payload = dataPtr;
-    packet.crc = CalculateCRC(packet.payload, packet.payloadLength);
-
-    BareKeyboardKey result[2];
-    bool didNotCrash = false;
-    controller.ConvertDataPacketToBareKeyboardKeys(packet, result);
-    uint8_t pinAsInt = result[0].pin;
-    pinAsInt++;
-    didNotCrash = true;
-
-    ASSERT_TEST(didNotCrash == true);
-    delete[](dataPtr);
-}
-
-void ConvertDataPacketToBareKeyboardKeys_SuccessfullyConvertsPacketIntoListOfBareKeyboardKeys()
-{
-    Controller controller = SetUpController();
-    // Set up packet
-    BareKeyboardKey key1 = BareKeyboardKey(1, 2), 
-                    key2 = BareKeyboardKey(3, 4);
-    BareKeyboardKey data[2] = {
-        key1,
-        key2,
-    };
-    uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
-    DataPacket packet = DataPacket(dataPtr, sizeof(data));
-
-    BareKeyboardKey result[2];
-    controller.ConvertDataPacketToBareKeyboardKeys(packet, result);
-
-    ASSERT_TEST(result[0] == key1 && result[1] == key2);
-}
 
 void ParseBareKeyboardKeyArrayIntoKeymapList_PopulatesTheListWithTheGivenKeys()
 {

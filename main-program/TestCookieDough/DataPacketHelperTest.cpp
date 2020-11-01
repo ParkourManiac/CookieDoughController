@@ -160,6 +160,93 @@ void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket_RecievesInactiveFlag_Retur
     ASSERT_TEST(resultBool == false);
 }
 
+void Helper_ReadBytesFromEEPROM_PreparesToReadPayload_RecievesValidPacket_OutputsThePayloadAndReturnsTrue() {
+    uint32_t data = 1337;
+    const uint32_t sizeOfData = 4;
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 0,
+            payloadAdress = static_cast<uint16_t>(adress + 8);
+
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(adress, packet);
+    uint8_t result[sizeOfData];
+    bool resultBool = ReadBytesFromEEPROM(payloadAdress, packet.payloadLength, result);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        result[0] == packet.payload[0] &&
+        result[1] == packet.payload[1] &&
+        result[2] == packet.payload[2] &&
+        result[3] == packet.payload[3]
+    );
+}
+
+void Helper_ReadBytesFromEEPROM_PreparesToReadPayload_SetEepromToBeLargerThanPacket_SuccessfullyReturnsPayload() {
+    uint16_t data = 1337;
+    const uint32_t sizeOfData = 2;
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 0,
+             payloadAdress = static_cast<uint16_t>(adress + 8);
+    uint16_t eepromSize = static_cast<uint16_t>(
+        SizeOfSerializedDataPacket(packet) 
+        + 10
+    );
+
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(adress, packet, eepromSize);
+    uint8_t result[sizeOfData];
+    bool resultBool = ReadBytesFromEEPROM(payloadAdress, packet.payloadLength, result);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        result[0] == packet.payload[0] &&
+        result[1] == packet.payload[1]
+    );
+}
+
+void Helper_ReadBytesFromEEPROM_PreparesToReadPayload_UsingHighAdress_EepromLengthIsAutomaticallySetToFitPacket()
+{
+    uint16_t data = 1337;
+    const uint32_t sizeOfData = 2;
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 10000,
+             payloadAdress = static_cast<uint16_t>(adress + 8);
+
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(adress, packet);
+    uint8_t result[sizeOfData];
+    bool resultBool = ReadBytesFromEEPROM(payloadAdress, packet.payloadLength, result);
+
+    ASSERT_TEST(resultBool == true);
+}
+
+void Helper_ReadBytesFromEEPROM_PreparesToReadPayload_SetEepromToBeSmallerThanPacket_ReturnsFalse() {
+    uint16_t data = 1337;
+    const uint32_t sizeOfData = 2;
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 0,
+             payloadAdress = static_cast<uint16_t>(adress + 8);
+    uint16_t eepromSize = 1;
+
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(adress, packet, eepromSize);
+    uint8_t result[sizeOfData];
+    bool resultBool = ReadBytesFromEEPROM(payloadAdress, packet.payloadLength, result);
+
+    ASSERT_TEST(resultBool == false);
+}
+
+void Helper_ReadBytesFromEEPROM_PreparesToReadPayload_EepromSizeIsSmallerThanRequestedBytes_ReturnsFalse() {
+    uint16_t data = 1337;
+    DataPacket packet = DataToPacket(data);
+    const uint16_t amountOfBytesToRead = 65535u;
+    uint16_t adress = 0,
+             payloadAdress = static_cast<uint16_t>(adress + 8);
+    uint16_t eepromSize = SizeOfSerializedDataPacket(packet);
+
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(adress, packet, eepromSize);
+    uint8_t result[amountOfBytesToRead];
+    bool resultBool = ReadBytesFromEEPROM(payloadAdress, amountOfBytesToRead, result);
+
+    ASSERT_TEST(resultBool == false);
+}
+
 void Helper_SaveDataPacketToEEPROM_PreparesEepromSizeAndPrepareToReturnPacket_SaveDataPacketToEEPROMReturnsTrueAndReturnsCorrectPacketSize()
 {
     uint16_t data = 123;

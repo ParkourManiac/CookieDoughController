@@ -28,6 +28,19 @@ void Helper_ReadDataPacketOnEEPROM_PrepareToReturnPacket(uint16_t adress, const 
 void Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(uint16_t adress, const DataPacket &expectedPacket, uint16_t eepromSize = 0);
 
 /**
+ * @brief Configures the behaviour of the mocked EEPROM functions to have
+ * ReadBytesFromEEPROM successfully return the payload from the provided 
+ * DataPacket. 
+ * 
+ * @param packetAdress The adress of the packet.
+ * @param expectedPacket The packet containing the payload to be returned
+ * through ReadBytesFromEEPROM.
+ * @param eepromSize The size of the eeprom. Note: Leaving this at 0 will let 
+ * the function assign a eepromSize automatically that fits the provided packet.
+ */
+void Helper_ReadBytesFromEEPROM_PreparesToReadPayload(uint16_t packetAdress, const DataPacket &expectedPacket, uint16_t eepromSize = 0);
+
+/**
  * @brief Sets up the behaviour of the mocked EEPROM functions so that
  * the SaveDataPacketToEEPROM function will return true. 
  * 
