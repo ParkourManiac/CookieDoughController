@@ -244,6 +244,30 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *ke
     amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);
 }
 
+void Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList)
+{
+    // Find a valid packet.
+    
+
+    // Retrieve part of payload (One key map).
+
+    // Validate part for valid keymap.
+
+    // Add keys to List.
+
+    // Repeat with next part of payload
+
+    // If it fails:
+    //      Delete (only) the keymaps that we have added.
+    //      Attempt to find a new packet.
+
+
+    // Lastly copy tests from LoadKeymapFromMemoryIntoList...
+    // currentPacketAdress = packetAdress;
+    // nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
+    // amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);
+}
+
 bool Controller::RetrieveBareKeyboardKeysFromMemory(BareKeyboardKey **payloadAsBareKeys, uint16_t *amountOfKeys, uint16_t *packetAdress, uint16_t *packetSize)
 {
     *amountOfKeys = *packetAdress = *packetSize = 0;

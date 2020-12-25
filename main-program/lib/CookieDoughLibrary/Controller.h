@@ -118,6 +118,10 @@ public:
      */
     void LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keyMapList); // NOTE: Refactored to BareKeyboardKeys
 
+    // TODO: Complete this function and replace "LoadKeymapsFromMemoryIntoList".
+    void LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList);
+
+
     /**
      * @brief Retrieves the saved BareKeyboardKeys stored in the EEPROM.
      * WARNING, payloadAsBareKeys MUST BE ALLOCATED ON THE HEAP (IF NOT THE PROGRAM WILL CRASH).
