@@ -247,22 +247,96 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *ke
 void Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList)
 {
     // Find a valid packet.
-    
+    uint16_t startAdress, packetAdress, packetSize, payloadAdress, payloadLength;
+    startAdress = packetSize = payloadAdress = payloadLength = 0;
+    packetAdress = startAdress + 1;
 
-    // Retrieve part of payload (One key map).
+    bool success = false;
+    while(!success)
+    {
+        if(packetAdress < startAdress) // TODO: Test this for edge cases (for example, easy to miss, startAdress == packetAdress == 0 in first iteration).
+        {
+            DEBUG_PRINT(F("Warning: DataPackets on eeprom were not valid. No valid DataPacket found."));
+            return;
+        }
 
-    // Validate part for valid keymap.
+        uint16_t oldPacketAdress = packetAdress;
+        bool hasFoundPacket = FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize, &payloadAdress, &payloadLength);
+        if(hasFoundPacket && oldPacketAdress != packetAdress)
+        {
+            // TODO: CONTINUE HERE, 
+            //          - Figure out what startAdress should be set to to prepare to find the next packet.
+            //          - How can we detect if we have already tried this packet?
+            //          - Should packetAdress really start at 1? Can we make it start at -1 to detect first iteration? Remove oldPacketAdress?
+            startAdress = packetAdress + 1; // TODO: Test if it searches for next packet after failing to add an invalid packet.
+        }
+        else
+        {
+            DEBUG_PRINT(F("Warning: Could not find any data packets on eeprom. No DataPacket found."));
+            return;
+        }
 
-    // Add keys to List.
+        success = true;
+        uint16_t keymapSize = normalKeyCount * sizeof(BareKeyboardKey);
+        uint16_t amountOfKeymaps = payloadLength / keymapSize;
+        for(uint16_t i = 0; i < amountOfKeymaps; i++)
+        {
+            uint16_t keymapStartAdress = payloadAdress + (i * keymapSize);
 
-    // Repeat with next part of payload
+            // Retrieve part of payload (One key map).
+            BareKeyboardKey *keymap = new BareKeyboardKey[normalKeyCount]; // TODO: Cleanup when not successful.
+            uint8_t *keymapAsBytes = reinterpret_cast<uint8_t*>(keymap); // TODO: Don't know if keymaps can be read separately (Not all at once... See how the keymaps are saved)?
+            bool hasReadBytes = ReadBytesFromEEPROM(keymapStartAdress, keymapSize, keymapAsBytes);
+            if(hasReadBytes) 
+            {
+                // Validate part for valid keymap.
+                for(int j = 0; j < normalKeyCount; j++)
+                {
+                    if(!IsKeyValid(keymap[j].pin))
+                    {
+                        success = false;
+                    }
+                }
+            } 
+            else 
+            {
+                success = false;
+            }
 
-    // If it fails:
-    //      Delete (only) the keymaps that we have added.
-    //      Attempt to find a new packet.
+            if(success) 
+            {
+                // Add keys to List.
+                keymapList->Add(keymap);
+            }
+            else // TODO: Test this part.
+            {
+                DEBUG_PRINT(F("ERROR: Failed to load keymaps in DataPacket."));
+
+                // Proceed to delete the invalid keymaps that were added
+                for(int j = 0; j < i; j++)
+                {
+                    BareKeyboardKey *removedKeymap = nullptr;
+                    bool isRemovedFromList = keymapList->RemoveAtIndex(keymapList->length - 1, &removedKeymap);
+                    // If we successfully removed the keymap from the list...
+                    if (isRemovedFromList)
+                    {
+                        // Remove the keymap from the heap
+                        delete[](removedKeymap);
+                    }
+                    else
+                    {
+                        DEBUG_PRINT(F("ERROR: Failed to clean up invalid, loaded keymap. Could not remove keymap."));
+                    }
+                }
+
+                break;
+                // - Attempt to find a new packet.
+            }
+        }
+    }
 
 
-    // Lastly copy tests from LoadKeymapFromMemoryIntoList...
+    // Lastly copy tests from LoadKeymapFromMemoryIntoList and from relevant sub functions...
     // currentPacketAdress = packetAdress;
     // nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
     // amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);
