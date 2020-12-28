@@ -121,6 +121,21 @@ public:
     // TODO: Complete this function and replace "LoadKeymapsFromMemoryIntoList".
     void LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList);
 
+    /**
+     * @brief Parse the given payload as a list of keymaps and concatinate the
+     * result into the provided keymap list.
+     * 
+     * @param payloadAdress The adress of the payload to be parsed.
+     * @param payloadLength The length of the payload.
+     * @param keymapList The list where the resulting keymaps will be 
+     * concatinated into.
+     * @return true Successfully parsed and concatinated the keymaps into the 
+     * given keymap list.
+     * @return false Either failed to read the bytes from storage or the 
+     * payload does not contain a valid array of keymaps.
+     */
+    bool AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, const uint16_t &payloadLength, LinkedList<BareKeyboardKey *> *keymapList);
+
 
     /**
      * @brief Retrieves the saved BareKeyboardKeys stored in the EEPROM.
