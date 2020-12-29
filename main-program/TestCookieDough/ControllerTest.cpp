@@ -1057,6 +1057,76 @@ void LoadKeymapsFromMemoryIntoListV2_EepromHasDefectKeymapsFollowedByValidKeymap
     );
 }
 
+void AddKeymapsFromPayloadIntoList_SuccessfullyAddsKeymapToList()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey data[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 4), 
+        BareKeyboardKey(3, 26), 
+        BareKeyboardKey(4, 22), 
+        BareKeyboardKey(5, 7),
+    };
+    DataPacket packet = DataToPacket(data);
+    uint16_t packetAdress = 0;
+    uint16_t payloadAdress = static_cast<uint16_t>(
+        packetAdress +
+        SizeOfEmptySerializedDataPacket()
+        - sizeof(packet.etx)
+    );
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, controller.storageSize);
+
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
+    controller.AddKeymapsFromPayloadIntoList(payloadAdress, packet.payloadLength, &resultingKeymaps);
+    BareKeyboardKey *result = nullptr;
+    if (!resultingKeymaps.IsEmpty())
+    {
+        result = *(resultingKeymaps[0]);
+    }
+
+    ASSERT_TEST(
+        resultingKeymaps.IsEmpty() == false &&
+        result[0] == data[0] &&
+        result[1] == data[1] &&
+        result[2] == data[2] && 
+        result[3] == data[3]
+    );
+}
+
+void AddKeymapsFromPayloadIntoList_AddsKeymapToList_ReturnsTrue()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey data[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 4), 
+        BareKeyboardKey(3, 26), 
+        BareKeyboardKey(4, 22), 
+        BareKeyboardKey(5, 7),
+    };
+    DataPacket packet = DataToPacket(data);
+    uint16_t packetAdress = 0;
+    uint16_t payloadAdress = static_cast<uint16_t>(
+        packetAdress +
+        SizeOfEmptySerializedDataPacket()
+        - sizeof(packet.etx)
+    );
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, controller.storageSize);
+
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
+    bool resultBool = controller.AddKeymapsFromPayloadIntoList(payloadAdress, packet.payloadLength, &resultingKeymaps);
+    BareKeyboardKey *result = nullptr;
+    if (!resultingKeymaps.IsEmpty())
+    {
+        result = *(resultingKeymaps[0]);
+    }
+
+    ASSERT_TEST(
+        resultingKeymaps.IsEmpty() == false &&
+        resultBool == true
+    );
+}
+
+
 void WipeKeyboardEventBuffer_BufferOnlyContainsZeroes()
 {
     Controller controller = SetUpController();

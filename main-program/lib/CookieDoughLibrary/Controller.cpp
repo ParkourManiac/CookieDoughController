@@ -305,7 +305,7 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
         );
 
         // Retrieve part of payload (One key map).
-        BareKeyboardKey *keymap = new BareKeyboardKey[normalKeyCount]; // TODO: Cleanup when not successful.
+        BareKeyboardKey *keymap = new BareKeyboardKey[normalKeyCount];
         uint8_t *keymapAsBytes = reinterpret_cast<uint8_t*>(keymap); // TODO: Don't know if keymaps can be read separately (Not all at once... See how the keymaps are saved)?
         bool hasReadBytes = ReadBytesFromEEPROM(keymapStartAdress, keymapSize, keymapAsBytes);
         if(hasReadBytes) 
@@ -329,11 +329,13 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
             // Add keys to List.
             keymapList->Add(keymap);
         }
-        else // TODO: Test this part.
+        else // TODO: Test this cleanup part. Return false on fail.
         {
             DEBUG_PRINT(F("ERROR: Failed to load keymaps in DataPacket."));
 
             // Proceed to delete the invalid keymaps that were added
+            delete[](keymap);
+
             for(int j = 0; j < i; j++)
             {
                 BareKeyboardKey *removedKeymap = nullptr;
