@@ -244,7 +244,7 @@ void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *ke
     amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);
 }
 
-void Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList)
+bool Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList)
 {
     // Find a valid packet.
     uint16_t startAdress, packetAdress, packetSize, payloadAdress, payloadLength;
@@ -259,7 +259,7 @@ void Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *
         if(!hasFoundPacket)
         {
             DEBUG_PRINT(F("Warning: Could not find any data packets on eeprom. No DataPacket found."));
-            return;
+            return false;
         }
         uint16_t nextStartAdress = CyclicEepromAdress(packetAdress + 1);
 
@@ -270,7 +270,7 @@ void Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *
             if(isLooping || foundTheSamePacketTwice)
             {
                 DEBUG_PRINT(F("Warning: DataPackets on eeprom were not valid. No valid DataPacket found."));
-                return;
+                return false;
                 // TODO: Test that the function stops if it finds a packet after cycling back to the start.
                 // TODO: Test that the function stops if it finds the same packet twice.
             }
@@ -286,20 +286,23 @@ void Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *
     }
 
 
-    // Lastly copy tests from LoadKeymapFromMemoryIntoList and from relevant sub functions...
-    // currentPacketAdress = packetAdress;
-    // nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
-    // amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);
+    // TODO: Lastly copy tests from LoadKeymapFromMemoryIntoList and from relevant sub functions...
+    currentPacketAdress = packetAdress;
+    nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
+    amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);
+    return success; // TODO: Result needs to be tested.
 }
 
 bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, const uint16_t &payloadLength, LinkedList<BareKeyboardKey *> *keymapList)
 {
     bool success = true;
-    uint16_t keymapSize = normalKeyCount * sizeof(BareKeyboardKey);
+    uint16_t keymapSize = static_cast<uint16_t>(normalKeyCount * sizeof(BareKeyboardKey));
     uint16_t amountOfKeymaps = payloadLength / keymapSize;
     for(uint16_t i = 0; i < amountOfKeymaps; i++)
     {
-        uint16_t keymapStartAdress = payloadAdress + (i * keymapSize);
+        uint16_t keymapStartAdress = static_cast<uint16_t>(
+            payloadAdress + (i * keymapSize)
+        );
 
         // Retrieve part of payload (One key map).
         BareKeyboardKey *keymap = new BareKeyboardKey[normalKeyCount]; // TODO: Cleanup when not successful.

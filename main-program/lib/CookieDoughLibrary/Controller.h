@@ -119,7 +119,7 @@ public:
     void LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keyMapList); // NOTE: Refactored to BareKeyboardKeys
 
     // TODO: Complete this function and replace "LoadKeymapsFromMemoryIntoList".
-    void LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList);
+    bool LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList);
 
     /**
      * @brief Parse the given payload as a list of keymaps and concatinate the
