@@ -329,7 +329,7 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
             // Add keys to List.
             keymapList->Add(keymap);
         }
-        else // TODO: Test this cleanup part. Return false on fail.
+        else
         {
             DEBUG_PRINT(F("ERROR: Failed to load keymaps in DataPacket."));
 
