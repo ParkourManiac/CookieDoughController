@@ -287,7 +287,7 @@ bool Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *
     currentPacketAdress = packetAdress;
     nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
     amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);
-    return success; // TODO: Result needs to be tested.
+    return success;
 }
 
 bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, const uint16_t &payloadLength, LinkedList<BareKeyboardKey *> *keymapList)
