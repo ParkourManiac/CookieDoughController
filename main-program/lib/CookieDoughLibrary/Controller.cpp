@@ -271,8 +271,6 @@ bool Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *
             {
                 DEBUG_PRINT(F("Warning: DataPackets on eeprom were not valid. No valid DataPacket found."));
                 return false;
-                // TODO: Test that the function stops if it finds a packet after cycling back to the start.
-                // TODO: Test that the function stops if it finds the same packet twice.
             }
         }
         else 
@@ -280,13 +278,12 @@ bool Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *
             firstAttempt = false;
         }
         startAdress = nextStartAdress;
-        // TODO: Test if it searches for next packet after failing to add an invalid packet.
 
         success = AddKeymapsFromPayloadIntoList(payloadAdress, payloadLength, keymapList);
     }
 
 
-    // TODO: Lastly copy tests from LoadKeymapFromMemoryIntoList and from relevant sub functions...
+    // TODO: Lastly copy tests from relevant sub functions...
     currentPacketAdress = packetAdress;
     nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
     amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);

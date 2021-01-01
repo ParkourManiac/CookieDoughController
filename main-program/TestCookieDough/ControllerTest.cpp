@@ -18,6 +18,8 @@ extern std::vector<uint8_t> EEPROMClass_put_param_t_o1_v;
 
 extern std::vector<uint16_t> EEPROMClass_get_param_t_o1_vr;
 
+extern unsigned int EEPROMClass_get_invocations_o3;
+
 extern uint8_t *Serial__write_param_buffer;
 extern size_t Serial__write_param_size;
 
@@ -901,6 +903,134 @@ void LoadKeymapsFromMemoryIntoListV2_LoadsKeymap_SetsTheAmountOfFreeStorageToBeE
     ASSERT_TEST(
         controller.amountOfFreeStorage == expectedAmountOfFreeStorage &&
         resultingKeymaps.IsEmpty() == false
+    );
+}
+
+void LoadKeymapsFromMemoryIntoListV2_GoesThroughWholeStorageWithoutFindingValidKeymaps_DoesNotRepeatInInfiniteLoop()
+{
+    BareKeyboardKey data1[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 4), 
+        BareKeyboardKey(3, 26), 
+        BareKeyboardKey(4, 22), 
+        BareKeyboardKey(99, 7),
+    };
+    BareKeyboardKey data2[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 4), 
+        BareKeyboardKey(99, 26), 
+        BareKeyboardKey(4, 22), 
+        BareKeyboardKey(5, 7),
+    };
+    DataPacket packet1 = DataToPacket(data1);
+    DataPacket packet2 = DataToPacket(data2);
+    uint16_t packetSize1 = SizeOfSerializedDataPacket(packet1),
+             packetSize2 = SizeOfSerializedDataPacket(packet2),
+             packetAdress1 = 0,
+             packetAdress2 = packetSize1;
+    uint16_t eepromSize = static_cast<uint16_t>(
+        packetSize1 + packetSize2
+    );
+    EEPROMClass_length_return = eepromSize;
+    const int normalKeyCount = 4;
+    BareKeyboardKey defaultKeymap[normalKeyCount] = {
+        BareKeyboardKey(2, 1),
+        BareKeyboardKey(3, 2),
+        BareKeyboardKey(4, 3),
+        BareKeyboardKey(5, 4),
+    };
+    const int specialKeyCount = 1;
+    SpecialKey specialKeys[specialKeyCount] {
+        SpecialKey(12, toggleDefaultKeyMap),
+    };
+    Controller controller(defaultKeymap, normalKeyCount, specialKeys, specialKeyCount);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(packetAdress1, packet1, controller.storageSize);
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress1, packet1, controller.storageSize);
+    // Push back garbage so we can start reading packet2 from the right adress for the test to work.
+    for(uint16_t i = 0; i < (packetSize1 - 1); i++)
+    {
+        EEPROMClass_read_return_v.push_back(0);
+    }
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(packetAdress2, packet2, controller.storageSize);
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress2, packet2, controller.storageSize);
+    // Push back garbage so we can start reading packet1 from the beginning of the eeprom again.
+    for(uint16_t i = 0; i < (packetSize2 - 1); i++)
+    {
+        EEPROMClass_read_return_v.push_back(0);
+    }
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(packetAdress1, packet1, controller.storageSize);
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress1, packet1, controller.storageSize);
+    for(uint16_t i = 0; i < (packetSize1 - 1); i++)
+    {
+        EEPROMClass_read_return_v.push_back(0);
+    }
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(packetAdress2, packet2, controller.storageSize);
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress2, packet2, controller.storageSize);
+    for(uint16_t i = 0; i < (packetSize2 - 1); i++)
+    {
+        EEPROMClass_read_return_v.push_back(0);
+    }
+
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
+    bool resultBool = controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+
+    ASSERT_TEST(
+        resultBool == false &&
+        resultingKeymaps.IsEmpty() == true &&
+        EEPROMClass_get_invocations_o3 <= 3
+    );
+}
+
+void LoadKeymapsFromMemoryIntoListV2_OnlyOneInvalidKeymapInMemory_DoesNotAttemptToLoadTheSamePacketTwice()
+{
+    BareKeyboardKey data[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 4), 
+        BareKeyboardKey(3, 26), 
+        BareKeyboardKey(4, 22), 
+        BareKeyboardKey(99, 7),
+    };
+    DataPacket packet = DataToPacket(data);
+    uint16_t packetSize = SizeOfSerializedDataPacket(packet),
+             packetAdress = 0;
+    uint16_t eepromSize = packetSize;
+    EEPROMClass_length_return = eepromSize;
+    const int normalKeyCount = 4;
+    BareKeyboardKey defaultKeymap[normalKeyCount] = {
+        BareKeyboardKey(2, 1),
+        BareKeyboardKey(3, 2),
+        BareKeyboardKey(4, 3),
+        BareKeyboardKey(5, 4),
+    };
+    const int specialKeyCount = 1;
+    SpecialKey specialKeys[specialKeyCount] {
+        SpecialKey(12, toggleDefaultKeyMap),
+    };
+    Controller controller(defaultKeymap, normalKeyCount, specialKeys, specialKeyCount);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(packetAdress, packet, controller.storageSize);
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, controller.storageSize);
+    // Push back garbage so we can start reading packet from the beginning of the eeprom again.
+    for(uint16_t i = 0; i < (packetSize - 1); i++)
+    {
+        EEPROMClass_read_return_v.push_back(0);
+    }
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(packetAdress, packet, controller.storageSize);
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, controller.storageSize);
+    for(uint16_t i = 0; i < (packetSize - 1); i++)
+    {
+        EEPROMClass_read_return_v.push_back(0);
+    }
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(packetAdress, packet, controller.storageSize);
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, controller.storageSize);
+    for(uint16_t i = 0; i < (packetSize - 1); i++)
+    {
+        EEPROMClass_read_return_v.push_back(0);
+    }
+
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
+    bool resultBool = controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+
+    ASSERT_TEST(
+        resultBool == false &&
+        resultingKeymaps.IsEmpty() == true &&
+        EEPROMClass_get_invocations_o3 <= 2
     );
 }
 
