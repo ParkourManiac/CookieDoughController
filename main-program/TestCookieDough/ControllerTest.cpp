@@ -503,7 +503,7 @@ void IsKeyValid_ThePinOfTheKeyIsNotPresentInTheDefaultKeymap_ReturnsFalse()
     ASSERT_TEST(result == false);
 }
 
-void LoadKeymapsFromMemoryIntoListV2_CorrectlyLoadsKeymapIntoList()
+void InsertKeymapsFromStorage_CorrectlyLoadsKeymapIntoList()
 {
     Controller controller = SetUpController();
     BareKeyboardKey data[genericNormalKeyCount] = {
@@ -520,7 +520,7 @@ void LoadKeymapsFromMemoryIntoListV2_CorrectlyLoadsKeymapIntoList()
     Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, eepromSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    controller.InsertKeymapsFromStorage(&resultingKeymaps);
     BareKeyboardKey *result = nullptr;
     if (!resultingKeymaps.IsEmpty())
         result = *(resultingKeymaps[0]);
@@ -534,7 +534,7 @@ void LoadKeymapsFromMemoryIntoListV2_CorrectlyLoadsKeymapIntoList()
     );
 }
 
-void LoadKeymapsFromMemoryIntoListV2_CorrectlyLoadsKeymapIntoList_ReturnsTrue()
+void InsertKeymapsFromStorage_CorrectlyLoadsKeymapIntoList_ReturnsTrue()
 {
     Controller controller = SetUpController();
     BareKeyboardKey data[genericNormalKeyCount] = {
@@ -551,7 +551,7 @@ void LoadKeymapsFromMemoryIntoListV2_CorrectlyLoadsKeymapIntoList_ReturnsTrue()
     Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, controller.storageSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    bool resultBool = controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    bool resultBool = controller.InsertKeymapsFromStorage(&resultingKeymaps);
     BareKeyboardKey *result = nullptr;
     if (!resultingKeymaps.IsEmpty())
     {
@@ -568,7 +568,7 @@ void LoadKeymapsFromMemoryIntoListV2_CorrectlyLoadsKeymapIntoList_ReturnsTrue()
     );
 }
 
-void LoadKeymapsFromMemoryIntoListV2_LoadsKeymap_SetsCurrentPacketAdressToTheLoadedPacketsAdress()
+void InsertKeymapsFromStorage_LoadsKeymap_SetsCurrentPacketAdressToTheLoadedPacketsAdress()
 {
     Controller controller = SetUpController();
     controller.currentPacketAdress = 0;
@@ -589,7 +589,7 @@ void LoadKeymapsFromMemoryIntoListV2_LoadsKeymap_SetsCurrentPacketAdressToTheLoa
     Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, eepromSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    controller.InsertKeymapsFromStorage(&resultingKeymaps);
     BareKeyboardKey *result = nullptr;
     if (resultingKeymaps.IsEmpty() == false)
     {
@@ -602,7 +602,7 @@ void LoadKeymapsFromMemoryIntoListV2_LoadsKeymap_SetsCurrentPacketAdressToTheLoa
     );
 }
 
-void LoadKeymapsFromMemoryIntoListV2_LoadsKeymap_SetsNextPacketAdressToAFreeAdressAfterTheEndOfTheLoadedPacket()
+void InsertKeymapsFromStorage_LoadsKeymap_SetsNextPacketAdressToAFreeAdressAfterTheEndOfTheLoadedPacket()
 {
     Controller controller = SetUpController();
     controller.nextPacketAdress = 0;
@@ -623,7 +623,7 @@ void LoadKeymapsFromMemoryIntoListV2_LoadsKeymap_SetsNextPacketAdressToAFreeAdre
     Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, eepromSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    controller.InsertKeymapsFromStorage(&resultingKeymaps);
     BareKeyboardKey *result = nullptr;
     if (resultingKeymaps.IsEmpty() == false)
     {
@@ -636,7 +636,7 @@ void LoadKeymapsFromMemoryIntoListV2_LoadsKeymap_SetsNextPacketAdressToAFreeAdre
     );
 }
 
-void LoadKeymapsFromMemoryIntoListV2_LoadsKeymap_SetsTheAmountOfFreeStorageToBeEqualToTheStorageSizeMinusTheSizeOfTheLoadedPacket()
+void InsertKeymapsFromStorage_LoadsKeymap_SetsTheAmountOfFreeStorageToBeEqualToTheStorageSizeMinusTheSizeOfTheLoadedPacket()
 {
     Controller controller = SetUpController();
     controller.amountOfFreeStorage = 0;
@@ -654,7 +654,7 @@ void LoadKeymapsFromMemoryIntoListV2_LoadsKeymap_SetsTheAmountOfFreeStorageToBeE
     Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, controller.storageSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps;
-    controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    controller.InsertKeymapsFromStorage(&resultingKeymaps);
 
     ASSERT_TEST(
         controller.amountOfFreeStorage == expectedAmountOfFreeStorage &&
@@ -662,7 +662,7 @@ void LoadKeymapsFromMemoryIntoListV2_LoadsKeymap_SetsTheAmountOfFreeStorageToBeE
     );
 }
 
-void LoadKeymapsFromMemoryIntoListV2_GoesThroughWholeStorageWithoutFindingValidKeymaps_DoesNotRepeatInInfiniteLoop_AndReturnsFalse()
+void InsertKeymapsFromStorage_GoesThroughWholeStorageWithoutFindingValidKeymaps_DoesNotRepeatInInfiniteLoop_AndReturnsFalse()
 {
     BareKeyboardKey data1[genericNormalKeyCount] = {
         BareKeyboardKey(2, 4), 
@@ -726,7 +726,7 @@ void LoadKeymapsFromMemoryIntoListV2_GoesThroughWholeStorageWithoutFindingValidK
     }
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    bool resultBool = controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    bool resultBool = controller.InsertKeymapsFromStorage(&resultingKeymaps);
 
     ASSERT_TEST(
         resultBool == false &&
@@ -735,7 +735,7 @@ void LoadKeymapsFromMemoryIntoListV2_GoesThroughWholeStorageWithoutFindingValidK
     );
 }
 
-void LoadKeymapsFromMemoryIntoListV2_OnlyOneInvalidKeymapInMemory_DoesNotAttemptToLoadTheSamePacketTwice_AndReturnsFalse()
+void InsertKeymapsFromStorage_OnlyOneInvalidKeymapInMemory_DoesNotAttemptToLoadTheSamePacketTwice_AndReturnsFalse()
 {
     BareKeyboardKey data[genericNormalKeyCount] = {
         BareKeyboardKey(2, 4), 
@@ -781,7 +781,7 @@ void LoadKeymapsFromMemoryIntoListV2_OnlyOneInvalidKeymapInMemory_DoesNotAttempt
     }
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    bool resultBool = controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    bool resultBool = controller.InsertKeymapsFromStorage(&resultingKeymaps);
 
     ASSERT_TEST(
         resultBool == false &&
@@ -790,7 +790,7 @@ void LoadKeymapsFromMemoryIntoListV2_OnlyOneInvalidKeymapInMemory_DoesNotAttempt
     );
 }
 
-void LoadKeymapsFromMemoryIntoListV2_FailsToLoadKeymap_DoesNotChangeAmountOfFreeStorage()
+void InsertKeymapsFromStorage_FailsToLoadKeymap_DoesNotChangeAmountOfFreeStorage()
 {
     Controller controller = SetUpController();
     controller.amountOfFreeStorage = 730;
@@ -798,7 +798,7 @@ void LoadKeymapsFromMemoryIntoListV2_FailsToLoadKeymap_DoesNotChangeAmountOfFree
     uint16_t amountOfFreeStorageBefore = controller.amountOfFreeStorage;
 
     LinkedList<BareKeyboardKey *> resultingKeymaps;
-    controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    controller.InsertKeymapsFromStorage(&resultingKeymaps);
     uint16_t amountOfFreeStorageAfter = controller.amountOfFreeStorage;
 
     ASSERT_TEST(
@@ -807,19 +807,19 @@ void LoadKeymapsFromMemoryIntoListV2_FailsToLoadKeymap_DoesNotChangeAmountOfFree
     );
 }
 
-void LoadKeymapsFromMemoryIntoListV2_NoPacketInStorage_ReturnsFalse()
+void InsertKeymapsFromStorage_NoPacketInStorage_ReturnsFalse()
 {
     Controller controller = SetUpController();
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    bool resultBool = controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    bool resultBool = controller.InsertKeymapsFromStorage(&resultingKeymaps);
 
     ASSERT_TEST(
         resultBool == false
     );
 }
 
-void LoadKeymapsFromMemoryIntoListV2_LoadsKeymapThatExceedsTheEepromsLastAdress_DoesNotUpdateNextPacketAdressWithAnAdressOutsideTheEeprom()
+void InsertKeymapsFromStorage_LoadsKeymapThatExceedsTheEepromsLastAdress_DoesNotUpdateNextPacketAdressWithAnAdressOutsideTheEeprom()
 {
     uint16_t eepromSize = 60;
     EEPROMClass_length_return = eepromSize;
@@ -855,7 +855,7 @@ void LoadKeymapsFromMemoryIntoListV2_LoadsKeymapThatExceedsTheEepromsLastAdress_
     Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, controller.storageSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    controller.InsertKeymapsFromStorage(&resultingKeymaps);
     BareKeyboardKey *result = nullptr;
     if (resultingKeymaps.IsEmpty() == false)
     {
@@ -868,7 +868,7 @@ void LoadKeymapsFromMemoryIntoListV2_LoadsKeymapThatExceedsTheEepromsLastAdress_
     );
 }
 
-void LoadKeymapsFromMemoryIntoListV2_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
+void InsertKeymapsFromStorage_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
 {
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;
@@ -895,12 +895,12 @@ void LoadKeymapsFromMemoryIntoListV2_EepromHasDefectKeymaps_DoesNotLoadKeymaps()
     Helper_ReadBytesFromEEPROM_PreparesToReadPayload(0, packet, eepromSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    controller.InsertKeymapsFromStorage(&resultingKeymaps);
 
     ASSERT_TEST(resultingKeymaps.IsEmpty());
 }
 
-void LoadKeymapsFromMemoryIntoListV2_EepromHasDefectKeymapsFollowedByValidKeymaps_LoadsTheValidKeymaps()
+void InsertKeymapsFromStorage_EepromHasDefectKeymapsFollowedByValidKeymaps_LoadsTheValidKeymaps()
 {
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;
@@ -939,7 +939,7 @@ void LoadKeymapsFromMemoryIntoListV2_EepromHasDefectKeymapsFollowedByValidKeymap
     Helper_ReadBytesFromEEPROM_PreparesToReadPayload(validPacketAdress, validPacket, eepromSize);
 
     LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
-    bool resultBool = controller.LoadKeymapsFromMemoryIntoListV2(&resultingKeymaps);
+    bool resultBool = controller.InsertKeymapsFromStorage(&resultingKeymaps);
     BareKeyboardKey *result = nullptr;
     if (!resultingKeymaps.IsEmpty())
     {

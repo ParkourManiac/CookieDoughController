@@ -96,7 +96,7 @@ void Controller::Setup()
     DEBUG_PRINT(F("\nChanging to default keymap.\n"));
     DEBUG(delay(100));
     ChangeKeyMap(defaultKeymap);
-    LoadKeymapsFromMemoryIntoListV2(&customKeyMaps);
+    InsertKeymapsFromStorage(&customKeyMaps);
     ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount);
     ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount);
 }
@@ -190,7 +190,7 @@ bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     return success;
 }
 
-bool Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList)
+bool Controller::InsertKeymapsFromStorage(LinkedList<BareKeyboardKey *> *keymapList)
 {
     // Find a valid packet.
     uint16_t startAdress, packetAdress, packetSize, payloadAdress, payloadLength;

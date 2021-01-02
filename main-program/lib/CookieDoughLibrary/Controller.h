@@ -111,16 +111,15 @@ public:
     bool SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList);
 
     /**
-     * @brief Loads available keymaps from storage into the provided list of
-     * keymaps.
+     * @brief Finds and inserts the available keymaps on storage into the
+     * provided list of keymaps.
      *
-     * @param keymapList The list of keymaps to where the result will be 
-     * concatinated.
-     * @return true The keymaps found in storage has been loaded into the
+     * @param keymapList The list where the resulting keymaps will be inserted.
+     * @return true The keymaps found in storage has been inserted into the
      * provided keymap list.
-     * @return false Could not find or load any valid keymaps from memory.
+     * @return false Could not find or load any valid keymaps from storage.
      */
-    bool LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList);
+    bool InsertKeymapsFromStorage(LinkedList<BareKeyboardKey *> *keymapList);
 
     /**
      * @brief Parse the given payload as a list of keymaps and concatinate the
