@@ -283,7 +283,6 @@ bool Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *
     }
 
 
-    // TODO: Lastly copy tests from relevant sub functions...
     currentPacketAdress = packetAdress;
     nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
     amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);

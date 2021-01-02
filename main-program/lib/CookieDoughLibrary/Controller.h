@@ -118,7 +118,16 @@ public:
      */
     void LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keyMapList); // NOTE: Refactored to BareKeyboardKeys
 
-    // TODO: Complete this function and replace "LoadKeymapsFromMemoryIntoList".
+    /**
+     * @brief Loads available keymaps from storage into the provided list of
+     * keymaps.
+     *
+     * @param keymapList The list of keymaps to where the result will be 
+     * concatinated.
+     * @return true The keymaps found in storage has been loaded into the
+     * provided keymap list.
+     * @return false Could not find or load any valid keymaps from memory.
+     */
     bool LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList);
 
     /**
