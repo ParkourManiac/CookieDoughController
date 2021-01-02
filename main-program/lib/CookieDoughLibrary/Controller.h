@@ -111,14 +111,6 @@ public:
     bool SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList);
 
     /**
-     * @brief If present on the EEPROM, Loads a list of keymaps from memory
-     * into the provided keyMap list.
-     *
-     * @param keyMapList The keyMap list to store the result.
-     */
-    void LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keyMapList); // NOTE: Refactored to BareKeyboardKeys
-
-    /**
      * @brief Loads available keymaps from storage into the provided list of
      * keymaps.
      *

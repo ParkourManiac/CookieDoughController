@@ -190,60 +190,6 @@ bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     return success;
 }
 
-void Controller::LoadKeymapsFromMemoryIntoList(LinkedList<BareKeyboardKey *> *keymapList)
-{
-    uint16_t packetAdress, packetSize, amountOfKeys;
-    BareKeyboardKey *payloadAsBareKeys = new BareKeyboardKey[1];
-    bool success = RetrieveBareKeyboardKeysFromMemory(&payloadAsBareKeys, &amountOfKeys, &packetAdress, &packetSize);
-    if (!success) 
-    {
-        delete[](payloadAsBareKeys);
-        return;
-    }
-
-    ParseBareKeyboardKeyArrayIntoKeymapList(payloadAsBareKeys, amountOfKeys, keymapList);
-    delete[](payloadAsBareKeys);
-
-    DEBUG(
-        for (unsigned int i = 0; i < keymapList->length; i++)
-        {
-            DEBUG_PRINT(F("Data "));
-            DEBUG_PRINT(i);
-            DEBUG_PRINT(F(":\n"));
-            for (int j = 0; j < normalKeyCount; j++)
-            {
-                DEBUG_PRINT(F("    ( pin: "));
-                DEBUG_PRINT((*(*keymapList)[i])[j].pin);
-                DEBUG_PRINT(F(", keyCode: "));
-                DEBUG_PRINT((*(*keymapList)[i])[j].keyCode);
-                DEBUG_PRINT(F(" )\n"));
-            }
-        }
-        DEBUG(delay(100));
-    );
-
-    // DEBUG
-    // DEBUG_PRINT(F("DATA:::::\n"));
-    // for(int i = 0; i < packet.payloadLength; i++) {
-    //     DEBUG_PRINT(packet.payload[i], HEX);
-    //     DEBUG_PRINT(F("\n"));
-    // }
-    // DEBUG_PRINT(F(":::::\n"));
-
-    // DEBUG_PRINT(F("Finished loading.\n"));
-
-    // DEBUG_PRINT(F("\n"));
-    // DEBUG_PRINT(F("Packet size: "));
-    // DEBUG_PRINT(packetSize);
-    // DEBUG_PRINT(F("\n"));
-    // DEBUG(delay(100));
-    // DEBUG
-
-    currentPacketAdress = packetAdress;
-    nextPacketAdress = CyclicEepromAdress(packetAdress + packetSize);
-    amountOfFreeStorage = static_cast<uint16_t>(storageSize - packetSize);
-}
-
 bool Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *keymapList)
 {
     // Find a valid packet.
@@ -323,7 +269,8 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
                     DEBUG_PRINT(F(", .keyCode: "));
                     DEBUG_PRINT(keymap[j].keyCode);
                     DEBUG_PRINT(F(" }"));
-                    DEBUG(delay(100));
+                    delay(75);
+                    if(!IsKeyValid(keymap[j].pin)) delay(100);
                 );
             }
         } 
@@ -348,7 +295,7 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
 
             for(uint16_t j = 0; j < i; j++)
             {
-                DEBUG_PRINT(F("\nRemoved packet on index: "));
+                DEBUG_PRINT(F("\nRemoved keymap, from faulty DataPacket, on index: "));
                 DEBUG_PRINT(keymapList->length - 1);
                 BareKeyboardKey *removedKeymap = nullptr;
                 bool isRemovedFromList = keymapList->RemoveAtIndex(keymapList->length - 1, &removedKeymap);
