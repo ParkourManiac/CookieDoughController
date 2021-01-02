@@ -38,10 +38,10 @@ void loop()
 
     // DEBUG
     if(millis() % 3000 == 0) {
+        Serial.print("\n");
         Serial.print(freeMemory());
         Serial.print(":");
         Serial.print(controller.CalculateUnusedStorage());
-        Serial.print("\n");
     } 
     // DEBUG
 }

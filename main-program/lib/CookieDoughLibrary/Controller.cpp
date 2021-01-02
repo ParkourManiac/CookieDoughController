@@ -96,7 +96,7 @@ void Controller::Setup()
     DEBUG_PRINT(F("\nChanging to default keymap.\n"));
     DEBUG(delay(100));
     ChangeKeyMap(defaultKeymap);
-    LoadKeymapsFromMemoryIntoList(&customKeyMaps);
+    LoadKeymapsFromMemoryIntoListV2(&customKeyMaps);
     ConfigurePinsForKeyMap<Key>(currentKeyMap, normalKeyCount);
     ConfigurePinsForKeyMap<SpecialKey>(specialKeys, specialKeyCount);
 }
@@ -258,7 +258,7 @@ bool Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *
         bool hasFoundPacket = FindFirstDataPacketOnEEPROM(startAdress, &packetAdress, &packetSize, &payloadAdress, &payloadLength);
         if(!hasFoundPacket)
         {
-            DEBUG_PRINT(F("Warning: Could not find any data packets on eeprom. No DataPacket found."));
+            DEBUG_PRINT(F("\nWarning: Could not find any data packets on eeprom. No DataPacket found."));
             return false;
         }
         uint16_t nextStartAdress = CyclicEepromAdress(packetAdress + 1);
@@ -269,7 +269,7 @@ bool Controller::LoadKeymapsFromMemoryIntoListV2(LinkedList<BareKeyboardKey *> *
             bool isLooping = packetAdress < startAdress;
             if(isLooping || foundTheSamePacketTwice)
             {
-                DEBUG_PRINT(F("Warning: DataPackets on eeprom were not valid. No valid DataPacket found."));
+                DEBUG_PRINT(F("\nWarning: DataPackets on eeprom were not valid. No valid DataPacket found."));
                 return false;
             }
         }
@@ -312,7 +312,19 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
                 if(!IsKeyValid(keymap[j].pin))
                 {
                     success = false;
+
                 }
+                DEBUG(
+                    DEBUG_PRINT(F("\nIsValid?: ")); 
+                    DEBUG_PRINT(IsKeyValid(keymap[j].pin)); 
+                    DEBUG_PRINT(F("  {"));
+                    DEBUG_PRINT(F(" .pin: "));
+                    DEBUG_PRINT(keymap[j].pin);
+                    DEBUG_PRINT(F(", .keyCode: "));
+                    DEBUG_PRINT(keymap[j].keyCode);
+                    DEBUG_PRINT(F(" }"));
+                    DEBUG(delay(100));
+                );
             }
         } 
         else 
@@ -324,16 +336,20 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
         {
             // Add keys to List.
             keymapList->Add(keymap);
+            DEBUG_PRINT(F("\nAdded packet on index: "));
+            DEBUG_PRINT(keymapList->length - 1);
         }
         else
         {
-            DEBUG_PRINT(F("ERROR: Failed to load keymaps in DataPacket."));
+            DEBUG_PRINT(F("\nERROR: Failed to load keymaps in DataPacket."));
 
             // Proceed to delete the invalid keymaps that were added
             delete[](keymap);
 
-            for(int j = 0; j < i; j++)
+            for(uint16_t j = 0; j < i; j++)
             {
+                DEBUG_PRINT(F("\nRemoved packet on index: "));
+                DEBUG_PRINT(keymapList->length - 1);
                 BareKeyboardKey *removedKeymap = nullptr;
                 bool isRemovedFromList = keymapList->RemoveAtIndex(keymapList->length - 1, &removedKeymap);
                 // If we successfully removed the keymap from the list...
@@ -344,7 +360,7 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
                 }
                 else
                 {
-                    DEBUG_PRINT(F("ERROR: Failed to clean up invalid, loaded keymap. Could not remove keymap."));
+                    DEBUG_PRINT(F("\nERROR: Failed to clean up invalid, loaded keymap. Could not remove keymap."));
                 }
             }
 
