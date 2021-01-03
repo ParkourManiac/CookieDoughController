@@ -189,5 +189,60 @@ bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *sizeOfPacket, uint16_t *ad
  */
 uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc = ~0L);
 
+/**
+ * @brief Used to constructs and sequentially write down a DataPacket to 
+ * EEPROM.
+ */
+class DataPacketWriter
+{
+private:
+    bool isCompleted = false; // Todo: Test that this is false after constructor. And true after FinishPacket().
+    uint16_t adress = 0;
+    uint16_t payloadLength = 0;
+    uint32_t crc = 0; // TODO: Test that this starts with the correct initial value.
+
+public:
+    bool success = true; // TODO: test that this is true from the beginning and set to false if any of the steps/methods fail.
+    DataPacketWriter();
+    DataPacketWriter(const DataPacketWriter& other) = delete;
+    void operator=(const DataPacketWriter&) = delete;
+
+
+
+    // TODO: Write functionality (Not fully planned out):
+    //  - 1 Constructor
+    //      - Take in a packetAdress as argument.
+    //      - Saves adress in object.
+    //      - Set isCompleted to false.
+    //      - Write stx to EEPROM on the given adress. (Take functionality and tests from 'SaveDataPacketToEEPROM')
+    //      - If we succeed,
+    //          - Set success to true.
+    //      - If we fail to write stx to EEPROM on the adress,
+    //          - Set success to false.
+    //
+    //  - 2 AddDataToPayload (writes payload step by step. Each call adds to payload)
+    //      - if we are not successful, return false.
+    //      - if we isCompleted is already true, return false.
+    //      - Test that the added data won't make the packet to big for the EEPROM.
+    //      - ... Take functionality and tests from 'SaveDataPacketToEEPROM'.
+    //      - Add size of data to the payloadLength on object.
+    //      - Add data to crc on object. (If it has not yet been set, start it off with the initial function)
+    //      - If we fail to add the data to the payload,
+    //          - Set success to false.
+    //      - return success.
+    //
+    //  - 3 FinishWritingPacket (Make the user unable to call any other functions on this object after this step)
+    //      - if we are not successful, return false.
+    //      - if we isCompleted is already true, return false.
+    //      - Write crc, payloadLength, active and etx to EEPROM. (Take functionality and tests from 'SaveDataPacketToEEPROM')
+    //      - if we fail to save packet to EEPROM,
+    //          - Set success to false.
+    //          - return false.
+    //      - if we succeeded in writing the datapacket,
+    //          - Set isCompleted to true.
+    //          - Return success.
+
+
+};
 
 #endif
