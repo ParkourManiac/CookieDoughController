@@ -497,3 +497,31 @@ uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc)
     }
     return crc;
 }
+
+DataPacketWriter::DataPacketWriter(uint16_t packetAddress)
+{
+    // uint32_t offset = 0;
+    // uint32_t currentAdress = 0;
+    uint16_t sizeOfEeprom = EEPROM.length();
+
+    if(packetAddress >= sizeOfEeprom)
+    {
+        DEBUG_PRINT(F("ERROR: Tried to begin writing a packet outside of the eeproms range. Adress out of range. \n"));
+        // TODO: Test that success is set to false here.
+        return;
+    }
+
+    // Create packet.
+    DataPacket packet; // = DataPacket(data, dataSize);
+
+    // if(SizeOfSerializedDataPacket(packet) > sizeOfEeprom)
+    // {
+    //     DEBUG_PRINT(F("ERROR: Tried to save a packet that was larger than the EEPROM. \n"));
+    //     return false;
+    // }
+
+    // Write packet.
+    EEPROM.put(packetAddress, packet.stx);
+    // offset = sizeof(packet.stx);
+}
+

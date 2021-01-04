@@ -197,17 +197,30 @@ class DataPacketWriter
 {
 private:
     bool isCompleted = false; // Todo: Test that this is false after constructor. And true after FinishPacket().
-    uint16_t adress = 0;
+    uint16_t address = 0;
     uint16_t payloadLength = 0;
     uint32_t crc = 0; // TODO: Test that this starts with the correct initial value.
 
 public:
     bool success = true; // TODO: test that this is true from the beginning and set to false if any of the steps/methods fail.
-    DataPacketWriter();
+
+    // TODO: Document this...
+    DataPacketWriter(uint16_t packetAddress);
     DataPacketWriter(const DataPacketWriter& other) = delete;
     void operator=(const DataPacketWriter&) = delete;
 
+    // TODO: Document this...
+    bool AddDataToPayload(const uint8_t *data, const uint16_t dataSize);
 
+    // TODO: Document this... Test this when above function is implemented.
+    // template<class T>
+    // bool AddDataToPayload(const T &data)
+    // {
+    //     return AddDataToPayload(reinterpret_cast<const uint8_t*>(&data), sizeof(data));
+    // }
+
+    // TODO: Document this...
+    bool FinishWritingPacket(uint16_t *packetSize);
 
     // TODO: Write functionality (Not fully planned out):
     //  - 1 Constructor
@@ -240,6 +253,7 @@ public:
     //          - return false.
     //      - if we succeeded in writing the datapacket,
     //          - Set isCompleted to true.
+    //          - Assign the out-variable "packetSize" the size of the packet.
     //          - Return success.
 
 
