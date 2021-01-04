@@ -197,12 +197,12 @@ class DataPacketWriter
 {
 private:
     bool isCompleted = false; // Todo: Test that this is false after constructor. And true after FinishPacket().
-    uint16_t address = 0;
-    uint16_t payloadLength = 0;
+    bool success = true; // TODO: test that this is true from the beginning and set to false if any of the steps/methods fail.
+    uint16_t address = 0; // TODO: Test that adress is the packetAdress after constructor.
+    uint16_t payloadLength = 0; // TODO: Test that this increases each time we add to payload.
     uint32_t crc = 0; // TODO: Test that this starts with the correct initial value.
 
 public:
-    bool success = true; // TODO: test that this is true from the beginning and set to false if any of the steps/methods fail.
 
     // TODO: Document this...
     DataPacketWriter(uint16_t packetAddress);
@@ -235,7 +235,7 @@ public:
     //
     //  - 2 AddDataToPayload (writes payload step by step. Each call adds to payload)
     //      - if we are not successful, return false.
-    //      - if we isCompleted is already true, return false.
+    //      - if isCompleted is already true, return false.
     //      - Test that the added data won't make the packet to big for the EEPROM.
     //      - ... Take functionality and tests from 'SaveDataPacketToEEPROM'.
     //      - Add size of data to the payloadLength on object.

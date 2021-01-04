@@ -500,6 +500,7 @@ uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc)
 
 DataPacketWriter::DataPacketWriter(uint16_t packetAddress)
 {
+    success = true;
     // uint32_t offset = 0;
     // uint32_t currentAdress = 0;
     uint16_t sizeOfEeprom = EEPROM.length();
@@ -507,7 +508,7 @@ DataPacketWriter::DataPacketWriter(uint16_t packetAddress)
     if(packetAddress >= sizeOfEeprom)
     {
         DEBUG_PRINT(F("ERROR: Tried to begin writing a packet outside of the eeproms range. Adress out of range. \n"));
-        // TODO: Test that success is set to false here.
+        success = false;
         return;
     }
 
@@ -523,5 +524,11 @@ DataPacketWriter::DataPacketWriter(uint16_t packetAddress)
     // Write packet.
     EEPROM.put(packetAddress, packet.stx);
     // offset = sizeof(packet.stx);
+
+    // TODO: Test that success is true after we put down the stx.
+
+
+
+    
 }
 

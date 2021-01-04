@@ -912,6 +912,7 @@ void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_DoesNotWriteToEEPROM();
 void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse();
 void DataPacketWriter_Constructor_WritesStxToGivenAdress();
 void DataPacketWriter_Constructor_AdressIsOutsideOfEEPROMsRange_DoesNotWriteAnythingToEEPROM();
+void DataPacketWriter_Constructor_AdressIsOutsideOfEEPROMsRange_SuccessVariableIsSetToFalse();
 void EditMode_Constructor_SetsCorrectValues();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
@@ -1274,6 +1275,7 @@ void RunTests()
 	RUN_TEST(DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse);
 	RUN_TEST(DataPacketWriter_Constructor_WritesStxToGivenAdress);
 	RUN_TEST(DataPacketWriter_Constructor_AdressIsOutsideOfEEPROMsRange_DoesNotWriteAnythingToEEPROM);
+	RUN_TEST(DataPacketWriter_Constructor_AdressIsOutsideOfEEPROMsRange_SuccessVariableIsSetToFalse);
 	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);

@@ -2618,19 +2618,21 @@ void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse()
 //
 //
 
-// TODO: Double check this test.
 void DataPacketWriter_Constructor_WritesStxToGivenAdress()
 {
     uint16_t address = 20;
     uint16_t eepromSize = 100;
     EEPROMClass_length_return = eepromSize;
+    DataPacket packet;
 
     DataPacketWriter packetWriter(address);
 
-    ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(address));
+    ASSERT_TEST(
+        EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(address) &&
+        EEPROMClass_put_param_t_o1_v[0] == packet.stx
+    );
 }
 
-// TODO: Double check this test.
 void DataPacketWriter_Constructor_AdressIsOutsideOfEEPROMsRange_DoesNotWriteAnythingToEEPROM()
 {
     uint16_t eepromSize, address;
@@ -2647,23 +2649,19 @@ void DataPacketWriter_Constructor_AdressIsOutsideOfEEPROMsRange_DoesNotWriteAnyt
     );
 }
 
-// DataPacketWriter_Constructor 
+void DataPacketWriter_Constructor_AdressIsOutsideOfEEPROMsRange_SuccessVariableIsSetToFalse()
+{
+    uint16_t eepromSize, address;
+    eepromSize = address = 1024;
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(address);
+
+    ASSERT_TEST(packetWriter.success == false);
+}
+
+// DataPacketWriter_Constructor
 //  {
-    // void SaveDataPacketToEEPROM_AdressIsOutsideOfEEPROMsRange_ReturnsFalse()
-    // {
-    //     uint32_t data = 8409;
-    //     DataPacket packet = DataToPacket(data);
-    //     uint16_t eepromSize, adress;
-    //     eepromSize = adress = 1024;
-    //     Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
-
-    //     uint16_t packetSize;
-    //     bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
-
-    //     ASSERT_TEST(resultBool == false);
-    // }
-
-
     // void SaveDataPacketToEEPROM_PacketIsCorrectlyPutDown()
     // {
     //     uint16_t data = 42;
