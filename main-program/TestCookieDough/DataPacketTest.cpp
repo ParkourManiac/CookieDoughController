@@ -2618,6 +2618,58 @@ void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse()
 //
 //
 
+void DataPacketWriter_Constructor_IsCompletedVariableIsSetToFalse()
+{
+    uint16_t address = 20;
+    uint16_t eepromSize = 100;
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(address);
+
+    ASSERT_TEST(
+        packetWriter.isCompleted == false
+    );
+}
+
+void DataPacketWriter_Constructor_AddressVariableIsSetToTheGivenPacketAdress()
+{
+    uint16_t expectedAddress = 20;
+    uint16_t eepromSize = 100;
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(expectedAddress);
+
+    ASSERT_TEST(
+        packetWriter.address == expectedAddress
+    );
+}
+
+void DataPacketWriter_Constructor_PayloadLengthVariableIsSetToZero()
+{
+    uint16_t address = 20;
+    uint16_t eepromSize = 100;
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(address);
+
+    ASSERT_TEST(
+        packetWriter.payloadLength == 0
+    );
+}
+
+void DataPacketWriter_Constructor_SizeOfEepromVariableIsSetToTheSizeOfTheEEPROM()
+{
+    uint16_t address = 20;
+    uint16_t expectedEepromSize = 100;
+    EEPROMClass_length_return = expectedEepromSize;
+
+    DataPacketWriter packetWriter(address);
+
+    ASSERT_TEST(
+        packetWriter.sizeOfEeprom == expectedEepromSize
+    );
+}
+
 void DataPacketWriter_Constructor_WritesStxToGivenAdress()
 {
     uint16_t address = 20;
@@ -2630,6 +2682,36 @@ void DataPacketWriter_Constructor_WritesStxToGivenAdress()
     ASSERT_TEST(
         EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(address) &&
         EEPROMClass_put_param_t_o1_v[0] == packet.stx
+    );
+}
+
+void DataPacketWriter_Constructor_WritesStxToGivenAdress_SuccessVariableIsSetToTrue()
+{
+    uint16_t address = 20;
+    uint16_t eepromSize = 100;
+    EEPROMClass_length_return = eepromSize;
+    DataPacket packet;
+
+    DataPacketWriter packetWriter(address);
+
+    ASSERT_TEST(
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(address) &&
+        EEPROMClass_put_param_t_o1_v[0] == packet.stx
+    );
+}
+
+void DataPacketWriter_Constructor_WroteDownStx_AddsSizeOfStxToPacketSizeVariable()
+{
+    uint16_t address = 20;
+    uint16_t eepromSize = 100;
+    EEPROMClass_length_return = eepromSize;
+    DataPacket packet;
+    
+    DataPacketWriter packetWriter(address);
+
+    ASSERT_TEST(
+        packetWriter.packetSize == sizeof(packet.stx)
     );
 }
 
@@ -2653,6 +2735,19 @@ void DataPacketWriter_Constructor_AdressIsOutsideOfEEPROMsRange_SuccessVariableI
 {
     uint16_t eepromSize, address;
     eepromSize = address = 1024;
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(address);
+
+    ASSERT_TEST(packetWriter.success == false);
+}
+
+void DataPacketWriter_Constructor_PacketWillNotFitEEPROM_SuccessVariableIsSetToFalse()
+{
+    uint16_t eepromSize = static_cast<uint16_t>(
+        SizeOfEmptySerializedDataPacket() - 1
+    ); 
+    uint16_t address = 0;
     EEPROMClass_length_return = eepromSize;
 
     DataPacketWriter packetWriter(address);

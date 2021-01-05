@@ -499,21 +499,39 @@ uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc)
 }
 
 DataPacketWriter::DataPacketWriter(uint16_t packetAddress)
+    : isCompleted(false)
+    , success(false)
+    , address(packetAddress)
+    , payloadLength(0)
+    , crc(0)
+    , packetSize(0)
+    , sizeOfEeprom(EEPROM.length())
 {
-    success = true;
-    // uint32_t offset = 0;
-    // uint32_t currentAdress = 0;
-    uint16_t sizeOfEeprom = EEPROM.length();
-
-    if(packetAddress >= sizeOfEeprom)
+    if(address >= sizeOfEeprom)
     {
         DEBUG_PRINT(F("ERROR: Tried to begin writing a packet outside of the eeproms range. Adress out of range. \n"));
         success = false;
         return;
     }
 
-    // Create packet.
-    DataPacket packet; // = DataPacket(data, dataSize);
+    if(SizeOfEmptySerializedDataPacket() >= sizeOfEeprom)
+    {
+        DEBUG_PRINT(F("ERROR: EEPROM is too small to fit a DataPacket. EEPROM is too small. \n"));
+        success = false;
+        return;
+    }
+
+    // Write STX.
+    DataPacket packet;
+    EEPROM.put(address, packet.stx);
+    packetSize = sizeof(packet.stx);
+
+    success = true;
+}
+
+
+    // // Create packet.
+    // DataPacket packet = DataPacket(data, dataSize);
 
     // if(SizeOfSerializedDataPacket(packet) > sizeOfEeprom)
     // {
@@ -521,14 +539,65 @@ DataPacketWriter::DataPacketWriter(uint16_t packetAddress)
     //     return false;
     // }
 
-    // Write packet.
-    EEPROM.put(packetAddress, packet.stx);
-    // offset = sizeof(packet.stx);
+    // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
+    // for (uint16_t i = 0; i < packet.payloadLength; i++)
+    // {
+    //     uint16_t currentPayloadAdress = CyclicAdress(currentAdress + i, sizeOfEeprom);
+    //     EEPROM.update(currentPayloadAdress, packet.payload[i]);
+    // }
+    // offset += (packet.payloadLength * sizeof(packet.payload[0]));
 
-    // TODO: Test that success is true after we put down the stx.
-
-
+    // // // DEBUG
+    // // DEBUG_PRINT(F("Putting down: "));
+    // // for(int i = 0; i < packet.payloadLength; i++) {
+    // //     DEBUG_PRINT(packet.payload[i], HEX);
+    // // }
+    // // DEBUG_PRINT(F("\n"));
+    // // DEBUG(delay(100));
+    // // // DEBUG
 
     
-}
+
+    
+
+
+
+    // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
+    // EEPROM.put(currentAdress, packet.active);
+    // offset += sizeof(packet.active);
+
+    // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
+    // EEPROM.put(currentAdress, packet.payloadLength);
+    // offset += sizeof(packet.payloadLength);
+
+    // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
+    // EEPROM.put(currentAdress, packet.crc);
+    // offset += sizeof(packet.crc);
+
+
+
+    // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
+    // EEPROM.put(currentAdress, packet.etx);
+    // offset += sizeof(packet.etx);
+
+
+
+    // TODO: REWRITE THIS CHECK...
+    // // Verify that package can be read from memory correctly.
+    // DataPacket result;
+    // uint16_t _sizeOfPacket;
+    // bool success = ReadDataPacketOnEEPROM(adress, &result, &_sizeOfPacket);
+    // if (!success || packet.crc != result.crc)
+    // {
+    //     DEBUG_PRINT(F("ERROR: Failed to save DataPacket."));
+    //     return false; // Throw: Something went wrong when writing.
+    // } else
+    // {
+    //     *packetSize = static_cast<uint16_t>(offset);
+    //     DEBUG_PRINT(F("Size of packet: ")); // DEBUG
+    //     DEBUG_PRINT(*packetSize); // DEBUG
+    //     DEBUG_PRINT(F("\n"));
+    //     DEBUG(delay(100)); // DEBUG
+    //     return true; // Package saved successfully.
+    // }
 

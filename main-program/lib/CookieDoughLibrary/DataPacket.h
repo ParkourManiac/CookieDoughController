@@ -196,11 +196,13 @@ uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc = ~0L);
 class DataPacketWriter
 {
 private:
-    bool isCompleted = false; // Todo: Test that this is false after constructor. And true after FinishPacket().
-    bool success = true; // TODO: test that this is true from the beginning and set to false if any of the steps/methods fail.
-    uint16_t address = 0; // TODO: Test that adress is the packetAdress after constructor.
-    uint16_t payloadLength = 0; // TODO: Test that this increases each time we add to payload.
-    uint32_t crc = 0; // TODO: Test that this starts with the correct initial value.
+    bool isCompleted; // Todo: Test that it is true after FinishPacket().
+    bool success; // TODO: Test that this is set to false if any of the steps/methods fail.
+    uint16_t address;
+    uint16_t payloadLength; // TODO: Test that this increases each time we add to payload.
+    uint32_t crc; // TODO: Test that this starts with the correct initial value in AddDataToPayload.
+    uint16_t packetSize; // TODO: Test that this represents the correct value after finishing the packet.
+    uint16_t sizeOfEeprom;
 
 public:
 
@@ -223,15 +225,15 @@ public:
     bool FinishWritingPacket(uint16_t *packetSize);
 
     // TODO: Write functionality (Not fully planned out):
-    //  - 1 Constructor
-    //      - Take in a packetAdress as argument.
-    //      - Saves adress in object.
-    //      - Set isCompleted to false.
-    //      - Write stx to EEPROM on the given adress. (Take functionality and tests from 'SaveDataPacketToEEPROM')
-    //      - If we succeed,
-    //          - Set success to true.
-    //      - If we fail to write stx to EEPROM on the adress,
-    //          - Set success to false.
+    //  * 1 Constructor
+    //      * Take in a packetAdress as argument.
+    //      * Saves adress in object.
+    //      * Set isCompleted to false.
+    //      * Write stx to EEPROM on the given adress. (Take functionality and tests from 'SaveDataPacketToEEPROM')
+    //      * If we succeed,
+    //          * Set success to true.
+    //      * If we fail to write stx to EEPROM on the adress,
+    //          * Set success to false.
     //
     //  - 2 AddDataToPayload (writes payload step by step. Each call adds to payload)
     //      - if we are not successful, return false.
