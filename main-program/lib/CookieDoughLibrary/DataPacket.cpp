@@ -530,14 +530,23 @@ DataPacketWriter::DataPacketWriter(uint16_t packetAddress)
 }
 
 
-    // // Create packet.
+bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t dataSize)
+{
+
+    // Create packet.
     // DataPacket packet = DataPacket(data, dataSize);
 
-    // if(SizeOfSerializedDataPacket(packet) > sizeOfEeprom)
-    // {
-    //     DEBUG_PRINT(F("ERROR: Tried to save a packet that was larger than the EEPROM. \n"));
-    //     return false;
-    // }
+    uint16_t estimatedPacketSize = static_cast<uint16_t>(
+        SizeOfEmptySerializedDataPacket() 
+        + payloadLength 
+        + dataSize
+    );
+    if(estimatedPacketSize > sizeOfEeprom)
+    {
+        DEBUG_PRINT(F("ERROR: Adding data to payload will cause the packet to overflow the EEPROM. DataPacket is bigger than EEPROM. \n"));
+        success = false;
+        return false;
+    }
 
     // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     // for (uint16_t i = 0; i < packet.payloadLength; i++)
@@ -555,6 +564,7 @@ DataPacketWriter::DataPacketWriter(uint16_t packetAddress)
     // // DEBUG_PRINT(F("\n"));
     // // DEBUG(delay(100));
     // // // DEBUG
+}
 
     
 
