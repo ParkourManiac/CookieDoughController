@@ -557,8 +557,12 @@ bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t data
     }
 
 
-    
+
     // offset += (packet.payloadLength * sizeof(packet.payload[0]));
+
+
+    
+    return true;
 }
 
     

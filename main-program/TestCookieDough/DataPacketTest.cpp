@@ -2734,26 +2734,30 @@ void AddDataToPayload_AdaptsSizeOfPacketToFitData()
     );
 }
 
+void AddDataToPayload_PacketFitsOnEEPROM_ReturnsTrueAndSuccessIsTrue()
+{
+    uint64_t data = 8409;
+    DataPacket packet = DataToPacket(data);
+    uint16_t address = 0,
+             eepromSize = SizeOfSerializedDataPacket(packet);
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(address);
+    bool resultBool = packetWriter.AddDataToPayload(packet.payload, packet.payloadLength);
+
+    ASSERT_TEST(
+        resultBool == true && 
+        packetWriter.success == true
+    );
+}
+
 
 // AddDataToPayload {
 
     // void AddDataToPayload_AlreadyAddedData_AddsDataAfterPreviouslyAddedData();
 
 
-    // void SaveDataPacketToEEPROM_PacketFitsOnEEPROM_ReturnsTrue()
-    // {
-    //     uint64_t data = 8409;
-    //     DataPacket packet = DataToPacket(data);
-    //     uint16_t packetSize = SizeOfSerializedDataPacket(packet),
-    //              adress = 0,
-    //              eepromSize = static_cast<uint16_t>(packetSize);
-    //     Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
 
-    //     uint16_t resultPacketSize;
-    //     bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &resultPacketSize);
-
-    //     ASSERT_TEST(resultBool == true && resultPacketSize == packetSize);
-    // }
 
 
     // void SaveDataPacketToEEPROM_SplitsPacketOnPayload_PutsDownPayloadOnCorrectAdresses()
