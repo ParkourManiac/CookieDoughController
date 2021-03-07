@@ -532,10 +532,6 @@ DataPacketWriter::DataPacketWriter(uint16_t packetAddress)
 
 bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t dataSize)
 {
-
-    // Create packet.
-    // DataPacket packet = DataPacket(data, dataSize);
-
     uint16_t estimatedPacketSize = static_cast<uint16_t>(
         SizeOfEmptySerializedDataPacket() 
         + payloadLength 
@@ -548,22 +544,21 @@ bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t data
         return false;
     }
 
-    // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
-    // for (uint16_t i = 0; i < packet.payloadLength; i++)
-    // {
-    //     uint16_t currentPayloadAdress = CyclicAdress(currentAdress + i, sizeOfEeprom);
-    //     EEPROM.update(currentPayloadAdress, packet.payload[i]);
-    // }
-    // offset += (packet.payloadLength * sizeof(packet.payload[0]));
 
-    // // // DEBUG
-    // // DEBUG_PRINT(F("Putting down: "));
-    // // for(int i = 0; i < packet.payloadLength; i++) {
-    // //     DEBUG_PRINT(packet.payload[i], HEX);
-    // // }
-    // // DEBUG_PRINT(F("\n"));
-    // // DEBUG(delay(100));
-    // // // DEBUG
+    uint16_t offset = static_cast<uint16_t>(
+        SizeOfEmptySerializedDataPacket() 
+        - sizeof(DataPacket::etx)
+    );
+    uint16_t currentAdress = CyclicAdress(address + offset, sizeOfEeprom);
+    for (uint16_t i = 0; i < dataSize; i++)
+    {
+        uint16_t currentPayloadAdress = CyclicAdress(currentAdress + i, sizeOfEeprom);
+        EEPROM.update(currentPayloadAdress, data[i]);
+    }
+
+
+    
+    // offset += (packet.payloadLength * sizeof(packet.payload[0]));
 }
 
     

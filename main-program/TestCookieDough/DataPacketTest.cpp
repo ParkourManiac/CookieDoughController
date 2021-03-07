@@ -2443,6 +2443,21 @@ void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse()
 //                 packetSize == expectedPacketSize);
 // }
 
+// void SaveDataPacketToEEPROM_PacketFitsOnEEPROM_ReturnsTrue() // TODO: Do we need this for FinishWritingPacket?
+// {
+//     uint64_t data = 8409;
+//     DataPacket packet = DataToPacket(data);
+//     uint16_t packetSize = SizeOfSerializedDataPacket(packet),
+//              adress = 0,
+//              eepromSize = static_cast<uint16_t>(packetSize);
+//     Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
+
+//     uint16_t resultPacketSize;
+//     bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &resultPacketSize);
+
+//     ASSERT_TEST(resultBool == true && resultPacketSize == packetSize);
+// }
+
 // void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
 // {
 //     uint32_t data = 888;
@@ -2693,24 +2708,37 @@ void AddDataToPayload_PacketIsTooBigForEEPROM_DoesNotWritePayloadToMemoryAndRetu
     );
 }
 
+void AddDataToPayload_AdaptsSizeOfPacketToFitData()
+{
+    uint16_t eepromSize = 1024;
+    uint16_t data = 42;
+    DataPacket packet = DataToPacket(data);
+    uint16_t adress = 20;
+    uint16_t packetSize;
+    int expectedPayloadAdress = CyclicAdress(
+        (
+            adress +
+            SizeOfEmptySerializedDataPacket()
+            - sizeof(DataPacket::etx)
+        )
+        , eepromSize
+    );
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(adress);
+    packetWriter.AddDataToPayload(packet.payload, packet.payloadLength);
+
+    ASSERT_TEST(
+        EEPROMClass_update_param_idx_v[0] == expectedPayloadAdress && EEPROMClass_update_param_val_v[0] == packet.payload[0] &&
+        EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == packet.payload[1]
+    );
+}
+
 
 // AddDataToPayload {
 
-    // void SaveDataPacketToEEPROM_AdaptsSizeOfPacketToFitData()
-    // {
-    //     DataPacket packet;
-    //     uint16_t data = 42;
-    //     uint8_t *dataPtr = reinterpret_cast<uint8_t *>(&data);
-    //     uint16_t adress = 20;
-    //     uint16_t packetSize;
-    //     int expectedPayloadAdress = static_cast<int>(adress + sizeof(packet.stx) + sizeof(packet.active) + sizeof(packet.payloadLength) + sizeof(packet.crc));
-    //     Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, dataPtr, sizeof(data));
+    // void AddDataToPayload_AlreadyAddedData_AddsDataAfterPreviouslyAddedData();
 
-    //     SaveDataPacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
-
-    //     ASSERT_TEST(EEPROMClass_update_param_idx_v[0] == expectedPayloadAdress && EEPROMClass_update_param_val_v[0] == dataPtr[0] &&
-    //                 EEPROMClass_update_param_idx_v[1] == expectedPayloadAdress + 1 && EEPROMClass_update_param_val_v[1] == dataPtr[1]);
-    // }
 
     // void SaveDataPacketToEEPROM_PacketFitsOnEEPROM_ReturnsTrue()
     // {
