@@ -923,6 +923,7 @@ void DataPacketWriter_Constructor_PacketWillNotFitEEPROM_SuccessVariableIsSetToF
 void AddDataToPayload_PacketIsTooBigForEEPROM_DoesNotWritePayloadToMemoryAndReturnsFalse();
 void AddDataToPayload_AdaptsSizeOfPacketToFitData();
 void AddDataToPayload_PacketFitsOnEEPROM_ReturnsTrueAndSuccessIsTrue();
+void AddDataToPayload_SplitsPacketOnPayload_PutsDownPayloadOnCorrectAdresses();
 void EditMode_Constructor_SetsCorrectValues();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
@@ -1296,6 +1297,7 @@ void RunTests()
 	RUN_TEST(AddDataToPayload_PacketIsTooBigForEEPROM_DoesNotWritePayloadToMemoryAndReturnsFalse);
 	RUN_TEST(AddDataToPayload_AdaptsSizeOfPacketToFitData);
 	RUN_TEST(AddDataToPayload_PacketFitsOnEEPROM_ReturnsTrueAndSuccessIsTrue);
+	RUN_TEST(AddDataToPayload_SplitsPacketOnPayload_PutsDownPayloadOnCorrectAdresses);
 	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
