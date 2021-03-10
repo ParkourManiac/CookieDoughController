@@ -924,6 +924,8 @@ void AddDataToPayload_PacketIsTooBigForEEPROM_DoesNotWritePayloadToMemoryAndRetu
 void AddDataToPayload_AdaptsSizeOfPacketToFitData();
 void AddDataToPayload_PacketFitsOnEEPROM_ReturnsTrueAndSuccessIsTrue();
 void AddDataToPayload_SplitsPacketOnPayload_PutsDownPayloadOnCorrectAdresses();
+void SaveDataPacketToEEPROM_PayloadAndStxIsCorrectlyPutDown();
+void AddDataToPayload_PacketIsAlreadyCompleted_ReturnsFalseAndDoesNotWriteToStorage();
 void EditMode_Constructor_SetsCorrectValues();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
@@ -1298,6 +1300,8 @@ void RunTests()
 	RUN_TEST(AddDataToPayload_AdaptsSizeOfPacketToFitData);
 	RUN_TEST(AddDataToPayload_PacketFitsOnEEPROM_ReturnsTrueAndSuccessIsTrue);
 	RUN_TEST(AddDataToPayload_SplitsPacketOnPayload_PutsDownPayloadOnCorrectAdresses);
+	RUN_TEST(SaveDataPacketToEEPROM_PayloadAndStxIsCorrectlyPutDown);
+	RUN_TEST(AddDataToPayload_PacketIsAlreadyCompleted_ReturnsFalseAndDoesNotWriteToStorage);
 	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);

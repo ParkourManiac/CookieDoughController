@@ -237,7 +237,7 @@ public:
     //
     //  - 2 AddDataToPayload (writes payload step by step. Each call adds to payload)
     //      - if we are not successful, return false.
-    //      - if isCompleted is already true, return false.
+    //      * if isCompleted is already true, return false.
     //      - Test that the added data won't make the packet to big for the EEPROM.
     //      - ... Take functionality and tests from 'SaveDataPacketToEEPROM'.
     //      - Add size of data to the payloadLength on object.
