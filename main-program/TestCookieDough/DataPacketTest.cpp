@@ -2834,10 +2834,33 @@ void AddDataToPayload_PacketIsAlreadyCompleted_ReturnsFalseAndDoesNotWriteToStor
     );
 }
 
+void AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPacketSizeVariable()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 42,
+             adress = 20;
+    DataPacket packet = DataToPacket(data);
+    int32_t expectedAddedPacketSize = packet.payloadLength;
+    DataPacketWriter packetWriter(adress);
+
+    uint16_t initialPacketSize = packetWriter.packetSize;
+    bool resultBool = packetWriter.AddDataToPayload(packet.payload, packet.payloadLength);
+    int32_t sizeOfAddedData = packetWriter.packetSize - initialPacketSize;
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        sizeOfAddedData == expectedAddedPacketSize
+    );
+}
+
+
+
 // AddDataToPayload {
 
     // void AddDataToPayload_AlreadyAddedData_AddsDataAfterPreviouslyAddedData();
-
+    // void AddDataToPayload_WroteDownMultipleDataParts_AddsSizeOfAllDataPartsToPacketSizeVariable();
 // }
 
 

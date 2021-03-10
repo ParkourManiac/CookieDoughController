@@ -557,10 +557,12 @@ bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t data
         uint16_t currentPayloadAdress = CyclicAdress(currentAdress + i, sizeOfEeprom);
         EEPROM.update(currentPayloadAdress, data[i]);
     }
+    packetSize = static_cast<uint16_t>(
+        packetSize + (dataSize * sizeof(data[0]))
+    );
 
 
 
-    // offset += (packet.payloadLength * sizeof(packet.payload[0]));
 
 
     
