@@ -2815,6 +2815,42 @@ void AddDataToPayload_PayloadAndStxIsCorrectlyPutDown()
     );
 }
 
+void AddDataToPayload_AddsMultipleParts_PayloadAndStxIsCorrectlyPutDown()
+{
+    uint16_t data1 = 42;
+    uint8_t data2 = 13,
+            data3 = 37;
+    uint16_t adress = 20;
+    DataPacket packet1 = DataToPacket(data1),
+               packet2 = DataToPacket(data2),
+               packet3 = DataToPacket(data3);
+    unsigned int expectedStxAdress = static_cast<int>(adress), 
+                 expectedActiveFlagAdress = expectedStxAdress + sizeof(DataPacket::stx), 
+                 expectedPayloadLengthAdress = expectedActiveFlagAdress + sizeof(DataPacket::active), 
+                 expectedCRCAdress = expectedPayloadLengthAdress + sizeof(DataPacket::payloadLength), 
+                 expectedPayloadAdress = expectedCRCAdress + sizeof(DataPacket::crc), 
+                 expectedEtxAdress = expectedPayloadAdress + sizeof(data1) + sizeof(data2) + sizeof(data3);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(adress);
+    bool resultBool1 = packetWriter.AddDataToPayload(packet1.payload, packet1.payloadLength);
+    bool resultBool2 = packetWriter.AddDataToPayload(packet2.payload, packet2.payloadLength);
+    bool resultBool3 = packetWriter.AddDataToPayload(packet3.payload, packet3.payloadLength);
+
+    ASSERT_TEST(
+        resultBool1 == true &&
+        resultBool2 == true &&
+        resultBool3 == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(expectedStxAdress) && EEPROMClass_put_param_t_o1_v[0] == packet1.stx &&
+        EEPROMClass_update_param_idx_v[0] == static_cast<int>(expectedPayloadAdress + 0) && EEPROMClass_update_param_val_v[0] == packet1.payload[0] &&
+        EEPROMClass_update_param_idx_v[1] == static_cast<int>(expectedPayloadAdress + 1) && EEPROMClass_update_param_val_v[1] == packet1.payload[1] &&
+        EEPROMClass_update_param_idx_v[2] == static_cast<int>(expectedPayloadAdress + 2) && EEPROMClass_update_param_val_v[2] == packet2.payload[0] &&
+        EEPROMClass_update_param_idx_v[3] == static_cast<int>(expectedPayloadAdress + 3) && EEPROMClass_update_param_val_v[3] == packet3.payload[0]
+    );
+}
+
 
 void AddDataToPayload_PacketIsAlreadyCompleted_ReturnsFalseAndDoesNotWriteToStorage()
 {
@@ -2831,6 +2867,27 @@ void AddDataToPayload_PacketIsAlreadyCompleted_ReturnsFalseAndDoesNotWriteToStor
     ASSERT_TEST(
         resultBool == false &&
         EEPROMClass_update_invocations == 0
+    );
+}
+
+void AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPayloadLengthVariable()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 42,
+             adress = 20;
+    DataPacket packet = DataToPacket(data);
+    int32_t expectedAddedPayloadLength = packet.payloadLength;
+    DataPacketWriter packetWriter(adress);
+
+    uint16_t initialPayloadLength = packetWriter.payloadLength;
+    bool resultBool = packetWriter.AddDataToPayload(packet.payload, packet.payloadLength);
+    int32_t sizeOfAddedPayload = packetWriter.payloadLength - initialPayloadLength;
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        sizeOfAddedPayload == expectedAddedPayloadLength
     );
 }
 

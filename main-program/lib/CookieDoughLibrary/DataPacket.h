@@ -240,7 +240,9 @@ public:
     //      * if isCompleted is already true, return false.
     //      - Test that the added data won't make the packet to big for the EEPROM.
     //      * ... Take functionality and tests from 'SaveDataPacketToEEPROM'.
-    //      - Add size of data to the payloadLength on object.
+    //      * Add data to the end of the payload.
+    //      * Add size of data to the payloadLength on object.
+    //      * Add size of data to the packetSize on object.
     //      - Add data to crc on object. (If it has not yet been set, start it off with the initial function)
     //      - If we fail to add the data to the payload,
     //          - Set success to false.

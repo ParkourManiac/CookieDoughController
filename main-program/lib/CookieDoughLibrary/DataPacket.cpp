@@ -551,15 +551,15 @@ bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t data
         SizeOfEmptySerializedDataPacket() 
         - sizeof(DataPacket::etx)
     );
-    uint16_t currentAdress = CyclicAdress(address + offset, sizeOfEeprom);
+    uint16_t currentAdress = CyclicAdress(address + offset + payloadLength, sizeOfEeprom);
     for (uint16_t i = 0; i < dataSize; i++)
     {
         uint16_t currentPayloadAdress = CyclicAdress(currentAdress + i, sizeOfEeprom);
         EEPROM.update(currentPayloadAdress, data[i]);
     }
-    packetSize = static_cast<uint16_t>(
-        packetSize + (dataSize * sizeof(data[0]))
-    );
+    uint16_t sizeOfAddedData = static_cast<uint16_t>(dataSize * sizeof(data[0]));
+    payloadLength = static_cast<uint16_t>(payloadLength + sizeOfAddedData);
+    packetSize = static_cast<uint16_t>(packetSize + sizeOfAddedData);
 
 
 
