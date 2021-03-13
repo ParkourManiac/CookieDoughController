@@ -2708,6 +2708,34 @@ void AddDataToPayload_PacketIsTooBigForEEPROM_DoesNotWritePayloadToMemoryAndRetu
     );
 }
 
+void AddDataToPayload_PacketBecomesTooBigForEEPROM_DoesNotWritePayloadToMemoryAndReturnsFalse()
+{
+    uint64_t data1 = 8409,
+             data2 = 4321;
+    DataPacket packet1 = DataToPacket(data1),
+               packet2 = DataToPacket(data2);
+    uint16_t packetSize1 = SizeOfSerializedDataPacket(packet1),
+                eepromSize = static_cast<uint16_t>(packetSize1),
+                address = 0;
+    EEPROMClass_length_return = eepromSize;
+    DataPacketWriter packetWriter(address);
+    bool initialResultBool = packetWriter.AddDataToPayload(packet1.payload, packet1.payloadLength);
+    uint32_t expectedUpdateInvocations = EEPROMClass_update_invocations;
+
+    bool fitsPacketBeforeWeAddToPayload = packetWriter.success && initialResultBool;
+    bool resultBool = packetWriter.AddDataToPayload(packet2.payload, packet2.payloadLength);
+
+    ASSERT_TEST(
+        fitsPacketBeforeWeAddToPayload == true &&
+        resultBool == false &&
+        packetWriter.success == false &&
+        EEPROMClass_put_invocations_o1 == 1 &&
+        EEPROMClass_put_invocations_o2 == 0 &&
+        EEPROMClass_put_invocations_o3 == 0 &&
+        EEPROMClass_update_invocations == expectedUpdateInvocations
+    );
+}
+
 void AddDataToPayload_AdaptsSizeOfPacketToFitData()
 {
     uint16_t eepromSize = 1024;
