@@ -2970,7 +2970,6 @@ void AddDataToPayload_AddsMultipleParts_AddsSizeOfEachDataPartToPayloadLengthVar
     );
 }
 
-// TODO: Add test for multiple parts
 void AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPacketSizeVariable()
 {
     uint16_t eepromSize = 1024;
@@ -2983,6 +2982,33 @@ void AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPacketSizeVariable()
 
     uint16_t initialPacketSize = packetWriter.packetSize;
     bool resultBool = packetWriter.AddDataToPayload(packet.payload, packet.payloadLength);
+    int32_t sizeOfAddedData = packetWriter.packetSize - initialPacketSize;
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        sizeOfAddedData == expectedAddedPacketSize
+    );
+}
+
+void AddDataToPayload_AddsMultipleParts_AddsSizeOfEachDataPartToPacketSizeVariable()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data1 = 42,
+             data2 = 437,
+             adress = 20;
+    DataPacket packet1 = DataToPacket(data1),
+               packet2 = DataToPacket(data2);
+    int32_t expectedAddedPacketSize = (
+        packet1.payloadLength +
+        packet2.payloadLength
+    );
+    DataPacketWriter packetWriter(adress);
+
+    uint16_t initialPacketSize = packetWriter.packetSize;
+    packetWriter.AddDataToPayload(packet1.payload, packet1.payloadLength);
+    bool resultBool = packetWriter.AddDataToPayload(packet2.payload, packet2.payloadLength);
     int32_t sizeOfAddedData = packetWriter.packetSize - initialPacketSize;
 
     ASSERT_TEST(
