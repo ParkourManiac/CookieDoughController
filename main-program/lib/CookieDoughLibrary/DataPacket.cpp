@@ -557,6 +557,11 @@ bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t data
         uint16_t currentPayloadAdress = CyclicAdress(currentAdress + i, sizeOfEeprom);
         EEPROM.update(currentPayloadAdress, data[i]);
     }
+    crc = (
+        (payloadLength == 0)
+        ? CalculateCRC(data, dataSize)
+        : CalculateCRC(data, dataSize, crc)
+    );
     uint16_t sizeOfAddedData = static_cast<uint16_t>(dataSize * sizeof(data[0]));
     payloadLength = static_cast<uint16_t>(payloadLength + sizeOfAddedData);
     packetSize = static_cast<uint16_t>(packetSize + sizeOfAddedData);

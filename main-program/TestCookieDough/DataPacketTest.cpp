@@ -2964,6 +2964,49 @@ void AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPacketSizeVariable()
     );
 }
 
+void AddDataToPayload_WroteDownData_CalculatesCrcOfPayload() 
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 42,
+             adress = 5;
+    DataPacket packet = DataToPacket(data);
+    uint32_t expectedCrc = CalculateCRC(packet.payload, packet.payloadLength);
+    DataPacketWriter packetWriter(adress);
+
+    bool resultBool = packetWriter.AddDataToPayload(packet.payload, packet.payloadLength);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        packetWriter.crc == expectedCrc
+    );
+}
+
+void AddDataToPayload_WroteDownMultipleDataParts_AddsEachPartToCrc()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint32_t data = 342;
+    uint16_t adress = 5;
+    DataPacket packet = DataToPacket(data);
+    uint32_t expectedCrc = CalculateCRC((packet.payload + 0), sizeof(packet.payload[0]));
+    expectedCrc = CalculateCRC((packet.payload + 1), sizeof(packet.payload[1]), expectedCrc);
+    expectedCrc = CalculateCRC((packet.payload + 2), sizeof(packet.payload[2]), expectedCrc);
+    expectedCrc = CalculateCRC((packet.payload + 3), sizeof(packet.payload[3]), expectedCrc);
+    DataPacketWriter packetWriter(adress);
+
+    packetWriter.AddDataToPayload((packet.payload + 0), sizeof(packet.payload[0]));
+    packetWriter.AddDataToPayload((packet.payload + 1), sizeof(packet.payload[1]));
+    packetWriter.AddDataToPayload((packet.payload + 2), sizeof(packet.payload[2]));
+    bool resultBool = packetWriter.AddDataToPayload((packet.payload + 3), sizeof(packet.payload[3]));
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        packetWriter.crc == expectedCrc
+    );
+}
 
 
 // AddDataToPayload {

@@ -931,6 +931,8 @@ void AddDataToPayload_AddsMultipleParts_PayloadAndStxIsCorrectlyPutDown();
 void AddDataToPayload_PacketIsAlreadyCompleted_ReturnsFalseAndDoesNotWriteToStorage();
 void AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPayloadLengthVariable();
 void AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPacketSizeVariable();
+void AddDataToPayload_WroteDownData_CalculatesCrcOfPayload();
+void AddDataToPayload_WroteDownMultipleDataParts_AddsEacgPartToCrc();
 void EditMode_Constructor_SetsCorrectValues();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
@@ -1312,6 +1314,8 @@ void RunTests()
 	RUN_TEST(AddDataToPayload_PacketIsAlreadyCompleted_ReturnsFalseAndDoesNotWriteToStorage);
 	RUN_TEST(AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPayloadLengthVariable);
 	RUN_TEST(AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPacketSizeVariable);
+	RUN_TEST(AddDataToPayload_WroteDownData_CalculatesCrcOfPayload);
+	RUN_TEST(AddDataToPayload_WroteDownMultipleDataParts_AddsEacgPartToCrc);
 	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
