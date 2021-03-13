@@ -546,7 +546,6 @@ bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t data
         return false;
     }
 
-
     uint16_t offset = static_cast<uint16_t>(
         SizeOfEmptySerializedDataPacket() 
         - sizeof(DataPacket::etx)
@@ -565,11 +564,6 @@ bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t data
     uint16_t sizeOfAddedData = static_cast<uint16_t>(dataSize * sizeof(data[0]));
     payloadLength = static_cast<uint16_t>(payloadLength + sizeOfAddedData);
     packetSize = static_cast<uint16_t>(packetSize + sizeOfAddedData);
-
-
-
-
-
     
     return true;
 }

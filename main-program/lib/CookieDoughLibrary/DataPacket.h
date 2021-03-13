@@ -199,19 +199,35 @@ private:
     bool isCompleted; // Todo: Test that it is true after FinishPacket().
     bool success; // TODO: Test that this is set to false if any of the steps/methods fail.
     uint16_t address;
-    uint16_t payloadLength; // TODO: Test that this increases each time we add to payload.
-    uint32_t crc; // TODO: Test that this starts with the correct initial value in AddDataToPayload.
+    uint16_t payloadLength; // TODO: Test that this represents the correct value after finishing the packet.
+    uint32_t crc; // TODO: Test that this represents the correct value after finishing the packet.
     uint16_t packetSize; // TODO: Test that this represents the correct value after finishing the packet.
     uint16_t sizeOfEeprom;
 
 public:
 
-    // TODO: Document this...
+    /**
+     * @brief Constructs a new object used for writing DataPackets to storage
+     * in multiple steps. Will write the stx of the DataPacket being
+     * constructed to storage on the given address.
+     * 
+     * @param packetAddress The storage address of the DataPacket being created, 
+     * where the stx will be written.
+     */
     DataPacketWriter(uint16_t packetAddress);
     DataPacketWriter(const DataPacketWriter& other) = delete;
     void operator=(const DataPacketWriter&) = delete;
 
-    // TODO: Document this...
+    /**
+     * @brief Adds the provided data into the payload of the DataPacket which
+     * is being constructed on the storage. Can be used multiple times in a row
+     * to push additional data to the end of the packets payload.
+     * 
+     * @param data The data to be added to the payload.
+     * @param dataSize The size of the data to be added.
+     * @return true The data has successfully been added to the payload.
+     * @return false The data could not be added to the payload.
+     */
     bool AddDataToPayload(const uint8_t *data, const uint16_t dataSize);
 
     // TODO: Document this... Test this when above function is implemented.
@@ -236,21 +252,21 @@ public:
     //          * Set success to false.
     //
     //  - 2 AddDataToPayload (writes payload step by step. Each call adds to payload)
-    //      - if we are not successful, return false.
+    //      * if we are not successful, return false.
     //      * if isCompleted is already true, return false.
     //      * Test that the added data won't make the packet to big for the EEPROM.
     //      * ... Take functionality and tests from 'SaveDataPacketToEEPROM'.
     //      * Add data to the end of the payload.
     //      * Add size of data to the payloadLength on object.
     //      * Add size of data to the packetSize on object.
-    //      - Add data to crc on object. (If it has not yet been set, start it off with the initial function)
-    //      - If we fail to add the data to the payload,
-    //          - Set success to false.
-    //      - return success.
+    //      * Add data to crc on object. (If it has not yet been set, start it off with the initial function)
+    //      * If we fail to add the data to the payload,
+    //          * Set success to false.
+    //      * return success.
     //
     //  - 3 FinishWritingPacket (Make the user unable to call any other functions on this object after this step)
     //      - if we are not successful, return false.
-    //      - if we isCompleted is already true, return false.
+    //      - if isCompleted is already true, return false.
     //      - Write crc, payloadLength, active and etx to EEPROM. (Take functionality and tests from 'SaveDataPacketToEEPROM')
     //      - if we fail to save packet to EEPROM,
     //          - Set success to false.

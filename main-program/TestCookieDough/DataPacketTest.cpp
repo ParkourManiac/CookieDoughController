@@ -2943,6 +2943,34 @@ void AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPayloadLengthVariable
     );
 }
 
+void AddDataToPayload_AddsMultipleParts_AddsSizeOfEachDataPartToPayloadLengthVariable()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data1 = 42,
+             data2 = 451,
+             adress = 20;
+    DataPacket packet1 = DataToPacket(data1),
+               packet2 = DataToPacket(data2);
+    int32_t expectedAddedPayloadLength = (
+        packet1.payloadLength +
+        packet2.payloadLength
+    );
+    DataPacketWriter packetWriter(adress);
+
+    uint16_t initialPayloadLength = packetWriter.payloadLength;
+    packetWriter.AddDataToPayload(packet1.payload, packet1.payloadLength);
+    bool resultBool = packetWriter.AddDataToPayload(packet2.payload, packet2.payloadLength);
+    int32_t sizeOfAddedPayload = packetWriter.payloadLength - initialPayloadLength;
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        sizeOfAddedPayload == expectedAddedPayloadLength
+    );
+}
+
+// TODO: Add test for multiple parts
 void AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPacketSizeVariable()
 {
     uint16_t eepromSize = 1024;
@@ -3011,8 +3039,8 @@ void AddDataToPayload_WroteDownMultipleDataParts_AddsEachPartToCrc()
 
 // AddDataToPayload {
 
-    // void AddDataToPayload_AlreadyAddedData_AddsDataAfterPreviouslyAddedData();
     // void AddDataToPayload_WroteDownMultipleDataParts_AddsSizeOfAllDataPartsToPacketSizeVariable();
+    // void AddDataToPayload_DataPacketWriterIsUnsuccessful_DoesNotWriteToStorageAndReturnsFalse();
 // }
 
 
