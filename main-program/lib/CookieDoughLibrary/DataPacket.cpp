@@ -481,7 +481,7 @@ bool IsPacketOnEEPROMValid(uint16_t adress)
     return IsPacketOnEEPROMValid(adress, &sizeOfPacket, &adressOfPayload, &lengthOfPayload);
 }
 
-uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc)
+uint32_t CalculateCRC(const uint8_t *data, uint16_t length, uint32_t crc)
 {
     const uint32_t crc_table[16] = {
         0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,

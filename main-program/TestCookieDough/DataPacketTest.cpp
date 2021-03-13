@@ -233,6 +233,30 @@ void CalculateCRC_UsesAlgorithCRC32()
     ASSERT_TEST(result == 1119744540);
 }
 
+void CalculateCRC_DoesNotAlterInput()
+{
+    uint8_t data1 = 0xF,
+            data2 = 0xE,
+            *dataPtr1 = &data1,
+            *dataPtr2 = &data2;
+    uint8_t expectedData1 = uint8_t(data1),
+            expectedData2 = uint8_t(data2),
+            *expectedDataPtr1 = dataPtr1,
+            *expectedDataPtr2 = dataPtr2;
+
+    uint32_t crc = CalculateCRC(dataPtr1, sizeof(data1));
+    uint32_t expectedCrc = crc;
+    CalculateCRC(dataPtr2, sizeof(data2), crc);
+    
+    ASSERT_TEST(
+        data1 == expectedData1 &&
+        data2 == expectedData2 &&
+        dataPtr1 == expectedDataPtr1 &&
+        dataPtr2 == expectedDataPtr2 &&
+        crc == expectedCrc
+    );
+}
+
 void CalculateCRC_DataCanBeMadeStreamable()
 {
     uint32_t data = 98547324;

@@ -187,7 +187,7 @@ bool IsPacketOnEEPROMValid(uint16_t adress, uint16_t *sizeOfPacket, uint16_t *ad
  * the stream to calculate a checksum for the stream as a whole.
  * @return unsigned long Returns the CRC checksum calculated from the data (or data stream).
  */
-uint32_t CalculateCRC(uint8_t *data, uint16_t length, uint32_t crc = ~0L);
+uint32_t CalculateCRC(const uint8_t *data, uint16_t length, uint32_t crc = ~0L);
 
 /**
  * @brief Used to constructs and sequentially write down a DataPacket to 

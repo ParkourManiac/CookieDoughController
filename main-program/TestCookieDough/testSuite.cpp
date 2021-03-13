@@ -812,6 +812,7 @@ void DataPacket_ByDefault_StxIsTwo();
 void DataPacket_ByDefault_EtxIsThree();
 void DataPacket_ByDefault_ActiveIsTrue();
 void CalculateCRC_UsesAlgorithCRC32();
+void CalculateCRC_DoesNotAlterInput();
 void CalculateCRC_DataCanBeMadeStreamable();
 void CyclicAdress_TakesInAnAdressThatExceedsTheBufferSize_WrapsBackToTheBeginningOfTheBuffer();
 void CyclicAdress_AdressOvershootsLastBufferAdressWithOneStep_ReturnsTheFirstAdressOftheBuffer();
@@ -1192,6 +1193,7 @@ void RunTests()
 	RUN_TEST(DataPacket_ByDefault_EtxIsThree);
 	RUN_TEST(DataPacket_ByDefault_ActiveIsTrue);
 	RUN_TEST(CalculateCRC_UsesAlgorithCRC32);
+	RUN_TEST(CalculateCRC_DoesNotAlterInput);
 	RUN_TEST(CalculateCRC_DataCanBeMadeStreamable);
 	RUN_TEST(CyclicAdress_TakesInAnAdressThatExceedsTheBufferSize_WrapsBackToTheBeginningOfTheBuffer);
 	RUN_TEST(CyclicAdress_AdressOvershootsLastBufferAdressWithOneStep_ReturnsTheFirstAdressOftheBuffer);
