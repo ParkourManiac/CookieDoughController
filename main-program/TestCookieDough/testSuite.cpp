@@ -935,6 +935,7 @@ void AddDataToPayload_WroteDownData_AddsSizeOfWrittenDataToPacketSizeVariable();
 void AddDataToPayload_AddsMultipleParts_AddsSizeOfEachDataPartToPacketSizeVariable();
 void AddDataToPayload_WroteDownData_CalculatesCrcOfPayload();
 void AddDataToPayload_WroteDownMultipleDataParts_AddsEachPartToCrc();
+void AddDataToPayload_DataPacketWriterIsUnsuccessful_DoesNotWriteToStorageAndReturnsFalse();
 void EditMode_Constructor_SetsCorrectValues();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
@@ -1320,6 +1321,7 @@ void RunTests()
 	RUN_TEST(AddDataToPayload_AddsMultipleParts_AddsSizeOfEachDataPartToPacketSizeVariable);
 	RUN_TEST(AddDataToPayload_WroteDownData_CalculatesCrcOfPayload);
 	RUN_TEST(AddDataToPayload_WroteDownMultipleDataParts_AddsEachPartToCrc);
+	RUN_TEST(AddDataToPayload_DataPacketWriterIsUnsuccessful_DoesNotWriteToStorageAndReturnsFalse);
 	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);

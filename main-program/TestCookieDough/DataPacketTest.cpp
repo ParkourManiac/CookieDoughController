@@ -3062,11 +3062,31 @@ void AddDataToPayload_WroteDownMultipleDataParts_AddsEachPartToCrc()
     );
 }
 
+void AddDataToPayload_DataPacketWriterIsUnsuccessful_DoesNotWriteToStorageAndReturnsFalse()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint64_t data = 8409;
+    DataPacket packet = DataToPacket(data);
+    uint16_t address = 0;
+    DataPacketWriter packetWriter(address);
+    packetWriter.success = false;
+
+    bool resultBool = packetWriter.AddDataToPayload(packet.payload, packet.payloadLength);
+
+    ASSERT_TEST(
+        resultBool == false &&
+        packetWriter.success == false &&
+        EEPROMClass_put_invocations_o1 == 1 &&
+        EEPROMClass_put_invocations_o2 == 0 &&
+        EEPROMClass_put_invocations_o3 == 0 &&
+        EEPROMClass_update_invocations == 0
+    );
+}
 
 // AddDataToPayload {
-
-    // void AddDataToPayload_WroteDownMultipleDataParts_AddsSizeOfAllDataPartsToPacketSizeVariable();
-    // void AddDataToPayload_DataPacketWriterIsUnsuccessful_DoesNotWriteToStorageAndReturnsFalse();
+    // Double check that we have implemented all expected functionality for every variable on the class.
+    // Double check that we haven't misinterpreted the psudo code.
 // }
 
 

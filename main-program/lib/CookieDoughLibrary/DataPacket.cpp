@@ -533,6 +533,7 @@ DataPacketWriter::DataPacketWriter(uint16_t packetAddress)
 bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t dataSize)
 {
     if(isCompleted) return false;
+    if(!success) return false;
 
     uint16_t estimatedPacketSize = static_cast<uint16_t>(
         SizeOfEmptySerializedDataPacket() 
