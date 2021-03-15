@@ -3084,11 +3084,67 @@ void AddDataToPayload_DataPacketWriterIsUnsuccessful_DoesNotWriteToStorageAndRet
     );
 }
 
-// AddDataToPayload {
-    // Double check that we have implemented all expected functionality for every variable on the class.
-    // Double check that we haven't misinterpreted the psudo code.
-// }
+void AddDataToPayload_TemplateFunction_PayloadAndStxIsCorrectlyPutDown()
+{
+    uint16_t data = 42;
+    uint16_t adress = 20;
+    DataPacket expectedPacket = DataToPacket(data);
+    unsigned int expectedStxAdress = static_cast<int>(adress), 
+                 expectedActiveFlagAdress = expectedStxAdress + sizeof(DataPacket::stx), 
+                 expectedPayloadLengthAdress = expectedActiveFlagAdress + sizeof(DataPacket::active), 
+                 expectedCRCAdress = expectedPayloadLengthAdress + sizeof(DataPacket::payloadLength), 
+                 expectedPayloadAdress = expectedCRCAdress + sizeof(DataPacket::crc), 
+                 expectedEtxAdress = expectedPayloadAdress + sizeof(data);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
 
+    DataPacketWriter packetWriter(adress);
+    bool resultBool = packetWriter.AddDataToPayload(data);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(expectedStxAdress) && EEPROMClass_put_param_t_o1_v[0] == expectedPacket.stx &&
+        EEPROMClass_update_param_idx_v[0] == static_cast<int>(expectedPayloadAdress) && EEPROMClass_update_param_val_v[0] == expectedPacket.payload[0] &&
+        EEPROMClass_update_param_idx_v[1] == static_cast<int>(expectedPayloadAdress) + 1 && EEPROMClass_update_param_val_v[1] == expectedPacket.payload[1]
+    );
+}
+
+void AddDataToPayload_TemplateFunction_AddsMultipleParts_PayloadAndStxIsCorrectlyPutDown()
+{
+    uint16_t data1 = 42;
+    uint8_t data2 = 13,
+            data3 = 37;
+    uint16_t adress = 20;
+    DataPacket expectedPacket1 = DataToPacket(data1),
+               expectedPacket2 = DataToPacket(data2),
+               expectedPacket3 = DataToPacket(data3);
+    unsigned int expectedStxAdress = static_cast<int>(adress), 
+                 expectedActiveFlagAdress = expectedStxAdress + sizeof(DataPacket::stx), 
+                 expectedPayloadLengthAdress = expectedActiveFlagAdress + sizeof(DataPacket::active), 
+                 expectedCRCAdress = expectedPayloadLengthAdress + sizeof(DataPacket::payloadLength), 
+                 expectedPayloadAdress = expectedCRCAdress + sizeof(DataPacket::crc), 
+                 expectedEtxAdress = expectedPayloadAdress + sizeof(data1) + sizeof(data2) + sizeof(data3);
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(adress);
+    bool resultBool1 = packetWriter.AddDataToPayload(data1);
+    bool resultBool2 = packetWriter.AddDataToPayload(data2);
+    bool resultBool3 = packetWriter.AddDataToPayload(data3);
+
+    ASSERT_TEST(
+        resultBool1 == true &&
+        resultBool2 == true &&
+        resultBool3 == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o1_v[0] == static_cast<int>(expectedStxAdress) && EEPROMClass_put_param_t_o1_v[0] == expectedPacket1.stx &&
+        EEPROMClass_update_param_idx_v[0] == static_cast<int>(expectedPayloadAdress + 0) && EEPROMClass_update_param_val_v[0] == expectedPacket1.payload[0] &&
+        EEPROMClass_update_param_idx_v[1] == static_cast<int>(expectedPayloadAdress + 1) && EEPROMClass_update_param_val_v[1] == expectedPacket1.payload[1] &&
+        EEPROMClass_update_param_idx_v[2] == static_cast<int>(expectedPayloadAdress + 2) && EEPROMClass_update_param_val_v[2] == expectedPacket2.payload[0] &&
+        EEPROMClass_update_param_idx_v[3] == static_cast<int>(expectedPayloadAdress + 3) && EEPROMClass_update_param_val_v[3] == expectedPacket3.payload[0]
+    );
+}
 
 
 

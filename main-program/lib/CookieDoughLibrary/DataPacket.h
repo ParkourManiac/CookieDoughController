@@ -230,12 +230,20 @@ public:
      */
     bool AddDataToPayload(const uint8_t *data, const uint16_t dataSize);
 
-    // TODO: Document this... Test this when above function is implemented.
-    // template<class T>
-    // bool AddDataToPayload(const T &data)
-    // {
-    //     return AddDataToPayload(reinterpret_cast<const uint8_t*>(&data), sizeof(data));
-    // }
+    /**
+     * @brief Adds the provided data into the payload of the DataPacket which
+     * is being constructed on the storage. Can be used multiple times in a row
+     * to push additional data to the end of the packets payload.
+     * 
+     * @param data The data to be added to the payload.
+     * @return true The data has successfully been added to the payload.
+     * @return false The data could not be added to the payload.
+     */
+    template<class T>
+    bool AddDataToPayload(const T &data)
+    {
+        return AddDataToPayload(reinterpret_cast<const uint8_t*>(&data), sizeof(data));
+    }
 
     // TODO: Document this...
     bool FinishWritingPacket(uint16_t *packetSize);
@@ -251,7 +259,7 @@ public:
     //      * If we fail to write stx to EEPROM on the adress,
     //          * Set success to false.
     //
-    //  - 2 AddDataToPayload (writes payload step by step. Each call adds to payload)
+    //  * 2 AddDataToPayload (writes payload step by step. Each call adds to payload)
     //      * if we are not successful, return false.
     //      * if isCompleted is already true, return false.
     //      * Test that the added data won't make the packet to big for the EEPROM.
