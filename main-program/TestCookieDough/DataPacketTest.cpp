@@ -2567,9 +2567,6 @@ void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse()
 //     ASSERT_TEST(resultBool == false);
 // }
 
-//
-//
-//
 
 void DataPacketWriter_Constructor_IsCompletedVariableIsSetToFalse()
 {
@@ -3147,7 +3144,30 @@ void AddDataToPayload_TemplateFunction_AddsMultipleParts_PayloadAndStxIsCorrectl
 }
 
 
+void FinishWritingPacket_WritesActiveFlagToCorrectAddress()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 42;
+    uint16_t address = 20;
+    DataPacket templatePacket;
+    unsigned int expectedStxAdress = static_cast<int>(address), 
+                 expectedActiveFlagAdress = expectedStxAdress + sizeof(DataPacket::stx);
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
 
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o1_v[1] == static_cast<int>(expectedActiveFlagAdress) && 
+        EEPROMClass_put_param_t_o1_v[1] == templatePacket.active
+    );
+}
+
+// void FinishWritingPacket_ActiveFlagExceedsStorage_WritesActiveFlagAtTheStartOfTheStorage();
 
 // void FindFirstDataPacketOnEEPROM_TwoPacketsArePresent_StartAdressIsPutInBetweenPackages_FindsSecondPacketFirst(); // Note: can't be tested without somehow linking the idx to the output of the mocked function.
 // void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketOnDataTypeBiggerThan1Byte_SuccessfullySplitsPacketWithoutLoosingData(); // Note: Can't be tested. Would test the eeprom library. 

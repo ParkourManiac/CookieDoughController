@@ -569,15 +569,39 @@ bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t data
     return true;
 }
 
+
+bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
+{
+    DataPacket templatePacket;
+
+    // uint8_t stx = 0x02;
+    // uint8_t active = 0x01;
+    // uint16_t payloadLength = 0;
+    // uint32_t crc = 0;
+    // uint8_t *payload;
+    // uint8_t etx = 0x03;
+
+    uint16_t activeAdress = CyclicAdress(
+        address +
+        sizeof(DataPacket::stx)
+        , sizeOfEeprom
+    );
+    EEPROM.put(activeAdress, templatePacket.active);
+
+
+
+
+
+
+    return true;
+}
     
 
     
 
 
 
-    // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
-    // EEPROM.put(currentAdress, packet.active);
-    // offset += sizeof(packet.active);
+
 
     // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
     // EEPROM.put(currentAdress, packet.payloadLength);
