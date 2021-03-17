@@ -3195,5 +3195,65 @@ void FinishWritingPacket_ActiveFlagExceedsStorage_WritesActiveFlagAtTheStartOfTh
     );
 }
 
+void FinishWritingPacket_WritesPayloadLengthToCorrectAddress()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 42;
+    uint16_t address = 20;
+    DataPacket templatePacket;
+    int expectedStxAddress = static_cast<int>(address), 
+        expectedActiveFlagAddress = expectedStxAddress + sizeof(DataPacket::stx), 
+        expectedPayloadLengthAddress = expectedActiveFlagAddress + sizeof(DataPacket::active);
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o2_v[0] == expectedPayloadLengthAddress &&
+        EEPROMClass_put_param_t_o2_v[0] == sizeof(data)
+    );
+}
+
+void FinishWritingPacket_PayloadLengthsAddressExceedsStorage_WritesPayloadLengthAtTheStartOfTheStorage()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 42;
+    uint16_t address = static_cast<uint16_t>(
+        eepromSize
+        - sizeof(DataPacket::stx)
+        - sizeof(DataPacket::active)
+    );
+    DataPacket templatePacket;
+    int expectedStxAddress = CyclicAdress(address, eepromSize),
+        expectedActiveFlagAddress = CyclicAdress(
+            expectedStxAddress + 
+            sizeof(DataPacket::stx)
+            , eepromSize
+        ), 
+        expectedPayloadLengthAddress = CyclicAdress(
+            expectedActiveFlagAddress + 
+            sizeof(DataPacket::active)
+            , eepromSize
+        );
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o2_v[0] == expectedPayloadLengthAddress &&
+        EEPROMClass_put_param_t_o2_v[0] == sizeof(data)
+    );
+}
+
 // void FindFirstDataPacketOnEEPROM_TwoPacketsArePresent_StartAdressIsPutInBetweenPackages_FindsSecondPacketFirst(); // Note: can't be tested without somehow linking the idx to the output of the mocked function.
 // void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketOnDataTypeBiggerThan1Byte_SuccessfullySplitsPacketWithoutLoosingData(); // Note: Can't be tested. Would test the eeprom library. 

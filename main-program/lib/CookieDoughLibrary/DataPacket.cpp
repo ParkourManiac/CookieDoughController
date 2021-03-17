@@ -588,6 +588,13 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
     );
     EEPROM.put(activeAdress, templatePacket.active);
 
+    uint16_t payloadLengthAdress = CyclicAdress(
+        activeAdress +
+        sizeof(DataPacket::active)
+        , sizeOfEeprom
+    );
+    EEPROM.put(payloadLengthAdress, payloadLength);
+
 
 
 

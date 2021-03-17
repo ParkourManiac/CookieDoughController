@@ -940,6 +940,8 @@ void AddDataToPayload_TemplateFunction_PayloadAndStxIsCorrectlyPutDown();
 void AddDataToPayload_TemplateFunction_AddsMultipleParts_PayloadAndStxIsCorrectlyPutDown();
 void FinishWritingPacket_WritesActiveFlagToCorrectAddress();
 void FinishWritingPacket_ActiveFlagExceedsStorage_WritesActiveFlagAtTheStartOfTheStorage();
+void FinishWritingPacket_WritesPayloadLengthToCorrectAddress();
+void FinishWritingPacket_PayloadLengthsAdressExceedsStorage_WritesPayloadLengthToCorrectAddress();
 void EditMode_Constructor_SetsCorrectValues();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
@@ -1330,6 +1332,8 @@ void RunTests()
 	RUN_TEST(AddDataToPayload_TemplateFunction_AddsMultipleParts_PayloadAndStxIsCorrectlyPutDown);
 	RUN_TEST(FinishWritingPacket_WritesActiveFlagToCorrectAddress);
 	RUN_TEST(FinishWritingPacket_ActiveFlagExceedsStorage_WritesActiveFlagAtTheStartOfTheStorage);
+	RUN_TEST(FinishWritingPacket_WritesPayloadLengthToCorrectAddress);
+	RUN_TEST(FinishWritingPacket_PayloadLengthsAdressExceedsStorage_WritesPayloadLengthToCorrectAddress);
 	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);
