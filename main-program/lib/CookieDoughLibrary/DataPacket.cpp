@@ -581,19 +581,26 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
     // uint8_t *payload;
     // uint8_t etx = 0x03;
 
-    uint16_t activeAdress = CyclicAdress(
+    uint16_t activeAddress = CyclicAdress(
         address +
         sizeof(DataPacket::stx)
         , sizeOfEeprom
     );
-    EEPROM.put(activeAdress, templatePacket.active);
+    EEPROM.put(activeAddress, templatePacket.active);
 
-    uint16_t payloadLengthAdress = CyclicAdress(
-        activeAdress +
+    uint16_t payloadLengthAddress = CyclicAdress(
+        activeAddress +
         sizeof(DataPacket::active)
         , sizeOfEeprom
     );
-    EEPROM.put(payloadLengthAdress, payloadLength);
+    EEPROM.put(payloadLengthAddress, payloadLength);
+
+    uint16_t crcAddress = CyclicAdress(
+        payloadLengthAddress +
+        sizeof(DataPacket::payloadLength)
+        , sizeOfEeprom
+    );
+    EEPROM.put(crcAddress, crc);
 
 
 

@@ -3201,7 +3201,6 @@ void FinishWritingPacket_WritesPayloadLengthToCorrectAddress()
     EEPROMClass_length_return = eepromSize;
     uint16_t data = 42;
     uint16_t address = 20;
-    DataPacket templatePacket;
     int expectedStxAddress = static_cast<int>(address), 
         expectedActiveFlagAddress = expectedStxAddress + sizeof(DataPacket::stx), 
         expectedPayloadLengthAddress = expectedActiveFlagAddress + sizeof(DataPacket::active);
@@ -3229,7 +3228,6 @@ void FinishWritingPacket_PayloadLengthsAddressExceedsStorage_WritesPayloadLength
         - sizeof(DataPacket::stx)
         - sizeof(DataPacket::active)
     );
-    DataPacket templatePacket;
     int expectedStxAddress = CyclicAdress(address, eepromSize),
         expectedActiveFlagAddress = CyclicAdress(
             expectedStxAddress + 
@@ -3252,6 +3250,75 @@ void FinishWritingPacket_PayloadLengthsAddressExceedsStorage_WritesPayloadLength
         packetWriter.success == true &&
         EEPROMClass_put_param_idx_o2_v[0] == expectedPayloadLengthAddress &&
         EEPROMClass_put_param_t_o2_v[0] == sizeof(data)
+    );
+}
+
+void FinishWritingPacket_WritesCrcToCorrectAddress()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 42;
+    uint16_t address = 20;
+    DataPacket packet = DataToPacket(data);
+    int expectedStxAddress = static_cast<int>(address), 
+        expectedActiveFlagAddress = expectedStxAddress + sizeof(DataPacket::stx), 
+        expectedPayloadLengthAddress = expectedActiveFlagAddress + sizeof(DataPacket::active),
+        expectedCRCAddress = expectedPayloadLengthAddress + sizeof(DataPacket::payloadLength);
+    uint32_t expectedCrc = CalculateCRC(packet.payload, packet.payloadLength);
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o3_v[0] == expectedCRCAddress &&
+        EEPROMClass_put_param_t_o3_v[0] == expectedCrc
+    );
+}
+
+void FinishWritingPacket_CrcsAddressExceedsStorage_WritesCrcAtTheStartOfTheStorage()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 42;
+    uint16_t address = static_cast<uint16_t>(
+        eepromSize
+        - sizeof(DataPacket::stx)
+        - sizeof(DataPacket::active)
+        - sizeof(DataPacket::payloadLength)
+    );    
+    DataPacket packet = DataToPacket(data);
+    int expectedStxAddress = CyclicAdress(address, eepromSize),
+        expectedActiveFlagAddress = CyclicAdress(
+            expectedStxAddress + 
+            sizeof(DataPacket::stx)
+            , eepromSize
+        ), 
+        expectedPayloadLengthAddress = CyclicAdress(
+            expectedActiveFlagAddress + 
+            sizeof(DataPacket::active)
+            , eepromSize
+        ),
+        expectedCRCAddress = CyclicAdress(
+            expectedPayloadLengthAddress + 
+            sizeof(DataPacket::payloadLength)
+            , eepromSize
+        );
+    uint32_t expectedCrc = CalculateCRC(packet.payload, packet.payloadLength);
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o3_v[0] == expectedCRCAddress &&
+        EEPROMClass_put_param_t_o3_v[0] == expectedCrc
     );
 }
 
