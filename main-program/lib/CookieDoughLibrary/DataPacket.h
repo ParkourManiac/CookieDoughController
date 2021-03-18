@@ -277,8 +277,8 @@ public:
     //      - if isCompleted is already true, return false.
     //      * Write active. (Cyclic address)
     //      * Write payloadLength. (Cyclic address)
-    //      - Write crc. (Cyclic address)
-    //      - Write etx. (Cyclic address)
+    //      * Write crc. (Cyclic address)
+    //      * Write etx. (Cyclic address)
     //      - (Take functionality and tests from 'SaveDataPacketToEEPROM')
     //      - if we fail to save packet to EEPROM,
     //          - Set success to false.

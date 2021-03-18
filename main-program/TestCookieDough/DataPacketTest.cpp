@@ -3322,5 +3322,87 @@ void FinishWritingPacket_CrcsAddressExceedsStorage_WritesCrcAtTheStartOfTheStora
     );
 }
 
+void FinishWritingPacket_WritesEtxToCorrectAddress()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 42;
+    uint16_t address = 20;
+    DataPacket packet = DataToPacket(data);
+    int expectedStxAddress = static_cast<int>(address), 
+        expectedActiveFlagAddress = expectedStxAddress + sizeof(DataPacket::stx), 
+        expectedPayloadLengthAddress = expectedActiveFlagAddress + sizeof(DataPacket::active),
+        expectedCRCAddress = expectedPayloadLengthAddress + sizeof(DataPacket::payloadLength),
+        expectedPayloadAddress = expectedCRCAddress + sizeof(DataPacket::crc), 
+        expectedEtxAddress = expectedPayloadAddress + sizeof(data);
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o1_v[2] == expectedEtxAddress &&
+        EEPROMClass_put_param_t_o1_v[2] == packet.etx
+    );
+}
+
+void FinishWritingPacket_EtxsAddressExceedsStorage_WritesEtxAtTheStartOfTheStorage()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 42;
+    uint16_t address = static_cast<uint16_t>(
+        eepromSize
+        - sizeof(DataPacket::stx)
+        - sizeof(DataPacket::active)
+        - sizeof(DataPacket::payloadLength)
+        - sizeof(DataPacket::crc)
+        - sizeof(data)
+    );    
+    DataPacket packet = DataToPacket(data);
+    int expectedStxAddress = CyclicAdress(address, eepromSize),
+        expectedActiveFlagAddress = CyclicAdress(
+            expectedStxAddress + 
+            sizeof(DataPacket::stx)
+            , eepromSize
+        ), 
+        expectedPayloadLengthAddress = CyclicAdress(
+            expectedActiveFlagAddress + 
+            sizeof(DataPacket::active)
+            , eepromSize
+        ),
+        expectedCRCAddress = CyclicAdress(
+            expectedPayloadLengthAddress + 
+            sizeof(DataPacket::payloadLength)
+            , eepromSize
+        ),
+        expectedPayloadAddress = CyclicAdress(
+            expectedCRCAddress +
+            sizeof(DataPacket::crc)
+            , eepromSize
+        ),
+        expectedEtxAddress = CyclicAdress(
+            expectedPayloadAddress +
+            sizeof(data)
+            , eepromSize
+        );
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o1_v[2] == expectedEtxAddress &&
+        EEPROMClass_put_param_t_o1_v[2] == packet.etx
+    );
+}
+
+
 // void FindFirstDataPacketOnEEPROM_TwoPacketsArePresent_StartAdressIsPutInBetweenPackages_FindsSecondPacketFirst(); // Note: can't be tested without somehow linking the idx to the output of the mocked function.
 // void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketOnDataTypeBiggerThan1Byte_SuccessfullySplitsPacketWithoutLoosingData(); // Note: Can't be tested. Would test the eeprom library. 

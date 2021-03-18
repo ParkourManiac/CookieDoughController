@@ -602,6 +602,14 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
     );
     EEPROM.put(crcAddress, crc);
 
+    uint16_t etxAddress = CyclicAdress(
+        crcAddress +
+        sizeof(DataPacket::crc) +
+        payloadLength
+        , sizeOfEeprom
+    );
+    EEPROM.put(etxAddress, templatePacket.etx);
+
 
 
 
