@@ -946,6 +946,7 @@ void FinishWritingPacket_WritesCrcToCorrectAddress();
 void FinishWritingPacket_CrcsAddressExceedsStorage_WritesCrcAtTheStartOfTheStorage();
 void FinishWritingPacket_WritesEtxToCorrectAddress();
 void FinishWritingPacket_EtxsAddressExceedsStorage_WritesEtxAtTheStartOfTheStorage();
+void FinishWritingPacket_WritesEtxAtTheEndOfThePacket();
 void EditMode_Constructor_SetsCorrectValues();
 void EditMode_Initialized_NotEnabledByDefault();
 void Toggle_WhenDisabled_BecomesEnabled();
@@ -1342,6 +1343,7 @@ void RunTests()
 	RUN_TEST(FinishWritingPacket_CrcsAddressExceedsStorage_WritesCrcAtTheStartOfTheStorage);
 	RUN_TEST(FinishWritingPacket_WritesEtxToCorrectAddress);
 	RUN_TEST(FinishWritingPacket_EtxsAddressExceedsStorage_WritesEtxAtTheStartOfTheStorage);
+	RUN_TEST(FinishWritingPacket_WritesEtxAtTheEndOfThePacket);
 	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
 	RUN_TEST(EditMode_Initialized_NotEnabledByDefault);
 	RUN_TEST(Toggle_WhenDisabled_BecomesEnabled);

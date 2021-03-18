@@ -619,26 +619,6 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
 }
     
 
-    
-
-
-
-
-
-    // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
-    // EEPROM.put(currentAdress, packet.payloadLength);
-    // offset += sizeof(packet.payloadLength);
-
-    // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
-    // EEPROM.put(currentAdress, packet.crc);
-    // offset += sizeof(packet.crc);
-
-
-
-    // currentAdress = CyclicAdress(adress + offset, sizeOfEeprom);
-    // EEPROM.put(currentAdress, packet.etx);
-    // offset += sizeof(packet.etx);
-
 
 
     // TODO: REWRITE THIS CHECK...

@@ -2421,21 +2421,6 @@ void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse()
 //
 //
 //
-// void SaveDataPacketToEEPROM_EtxIsPutDownAtTheEndOfThePacket()
-// {
-//     DataPacket packet;
-//     uint8_t data = 42;
-//     uint16_t adress = 20;
-//     uint16_t packetSize;
-//     Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, &data, sizeof(data));
-
-
-//     SaveDataPacketToEEPROM(adress, &data, sizeof(data), &packetSize);
-//     unsigned int expectedEtxPosition = adress + sizeof(packet.stx) + sizeof(packet.active) + sizeof(packet.payloadLength) + sizeof(packet.crc) + sizeof(data);
-
-//     ASSERT_TEST(EEPROMClass_put_param_idx_o1_v[2] == static_cast<int>(expectedEtxPosition) && EEPROMClass_put_param_t_o1_v[2] == packet.etx);
-// }
-
 // void SaveDataPacketToEEPROM_PacketIsCorrectlyPutDown()
 // {
 //     uint16_t data = 42;
@@ -3389,6 +3374,33 @@ void FinishWritingPacket_EtxsAddressExceedsStorage_WritesEtxAtTheStartOfTheStora
             sizeof(data)
             , eepromSize
         );
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        EEPROMClass_put_param_idx_o1_v[2] == expectedEtxAddress &&
+        EEPROMClass_put_param_t_o1_v[2] == packet.etx
+    );
+}
+
+void FinishWritingPacket_EtxIsPutDownAtTheEndOfThePacket()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint8_t data = 42;
+    uint16_t address = 20;
+    DataPacket packet = DataToPacket(data);
+    int expectedEtxAddress = CyclicAdress(
+        address +
+        SizeOfSerializedDataPacket(packet)
+        - sizeof(DataPacket::etx)
+        , eepromSize
+    );
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
