@@ -572,6 +572,8 @@ bool DataPacketWriter::AddDataToPayload(const uint8_t *data, const uint16_t data
 
 bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
 {
+    if(!success) return false;
+
     DataPacket templatePacket;
 
     // uint8_t stx = 0x02;

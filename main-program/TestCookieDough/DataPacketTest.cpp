@@ -2452,21 +2452,6 @@ void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse()
 //                 packetSize == expectedPacketSize);
 // }
 
-// void SaveDataPacketToEEPROM_PacketFitsOnEEPROM_ReturnsTrue() // TODO: Do we need this for FinishWritingPacket?
-// {
-//     uint64_t data = 8409;
-//     DataPacket packet = DataToPacket(data);
-//     uint16_t packetSize = SizeOfSerializedDataPacket(packet),
-//              adress = 0,
-//              eepromSize = static_cast<uint16_t>(packetSize);
-//     Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
-
-//     uint16_t resultPacketSize;
-//     bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &resultPacketSize);
-
-//     ASSERT_TEST(resultBool == true && resultPacketSize == packetSize);
-// }
-
 // void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
 // {
 //     uint32_t data = 888;
@@ -3415,6 +3400,70 @@ void FinishWritingPacket_EtxIsPutDownAtTheEndOfThePacket()
     );
 }
 
+
+
+void FinishWritingPacket_PacketFitsOnEEPROM_ReturnsTrue()
+{
+    uint16_t address = 0;
+    uint64_t data = 8409;
+    DataPacket packet = DataToPacket(data);
+    uint16_t eepromSize = SizeOfSerializedDataPacket(packet);
+    EEPROMClass_length_return = eepromSize;
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true
+    );
+}
+
+void FinishWritingPacket_SuccessIsFalse_ReturnsFalseAndDoesNotWriteToStorage()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t address = 0;
+    uint64_t data = 8409;
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+    packetWriter.success = false;
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == false &&
+        packetWriter.success == false &&
+        EEPROMClass_put_invocations_o1 == 1 &&
+        EEPROMClass_put_invocations_o2 == 0 &&
+        EEPROMClass_put_invocations_o3 == 0
+    );
+}
+
+void DataPacketWriter_AllSteps_PacketDoesNotFitOnEEPROM_SuccessIsFalseAndReturnsFalse()
+{
+    uint16_t address = 0;
+    uint64_t data = 8409;
+    DataPacket packet = DataToPacket(data);
+    uint16_t eepromSize = static_cast<uint16_t>(
+        SizeOfSerializedDataPacket(packet) 
+        - 1
+    );
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == false &&
+        packetWriter.success == false
+    );
+}
 
 // void FindFirstDataPacketOnEEPROM_TwoPacketsArePresent_StartAdressIsPutInBetweenPackages_FindsSecondPacketFirst(); // Note: can't be tested without somehow linking the idx to the output of the mocked function.
 // void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_SplitsPacketOnDataTypeBiggerThan1Byte_SuccessfullySplitsPacketWithoutLoosingData(); // Note: Can't be tested. Would test the eeprom library. 
