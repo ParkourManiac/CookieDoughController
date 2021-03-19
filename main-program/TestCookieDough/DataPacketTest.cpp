@@ -3400,8 +3400,6 @@ void FinishWritingPacket_EtxIsPutDownAtTheEndOfThePacket()
     );
 }
 
-
-
 void FinishWritingPacket_PacketFitsOnEEPROM_ReturnsTrue()
 {
     uint16_t address = 0;
@@ -3418,6 +3416,53 @@ void FinishWritingPacket_PacketFitsOnEEPROM_ReturnsTrue()
     ASSERT_TEST(
         resultBool == true &&
         packetWriter.success == true
+    );
+}
+
+void FinishWritingPacket_Succeeds_ReturnsCorrectPacketSize()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint64_t data = 8409;
+    DataPacket packet = DataToPacket(data);
+    uint16_t address = 0,
+             expectedPacketSize = SizeOfSerializedDataPacket(packet);
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        packetSize == expectedPacketSize
+    );
+}
+
+void FinishWritingPacket_WritesMultipleDataPartsToPayloadAndSucceeds_ReturnsCorrectPacketSize()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint64_t data1 = 8409,
+             data2 = 1234;
+    uint16_t address = 0;
+    uint16_t expectedPacketSize = static_cast<uint16_t>(
+        SizeOfEmptySerializedDataPacket() +
+        sizeof(data1) +
+        sizeof(data2)
+    );
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data1);
+    packetWriter.AddDataToPayload(data2);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        packetSize == expectedPacketSize
     );
 }
 

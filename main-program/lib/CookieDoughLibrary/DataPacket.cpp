@@ -589,6 +589,9 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
         , sizeOfEeprom
     );
     EEPROM.put(activeAddress, templatePacket.active);
+    packetSize = static_cast<uint16_t>(
+        packetSize + sizeof(DataPacket::active)
+    );
 
     uint16_t payloadLengthAddress = CyclicAdress(
         activeAddress +
@@ -596,6 +599,9 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
         , sizeOfEeprom
     );
     EEPROM.put(payloadLengthAddress, payloadLength);
+    packetSize = static_cast<uint16_t>(
+        packetSize + sizeof(DataPacket::payloadLength)
+    );
 
     uint16_t crcAddress = CyclicAdress(
         payloadLengthAddress +
@@ -603,6 +609,9 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
         , sizeOfEeprom
     );
     EEPROM.put(crcAddress, crc);
+    packetSize = static_cast<uint16_t>(
+        packetSize + sizeof(DataPacket::crc)
+    );
 
     uint16_t etxAddress = CyclicAdress(
         crcAddress +
@@ -611,12 +620,15 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
         , sizeOfEeprom
     );
     EEPROM.put(etxAddress, templatePacket.etx);
+    packetSize = static_cast<uint16_t>(
+        packetSize + sizeof(DataPacket::etx)
+    );
 
 
 
 
 
-
+    *resultingPacketSize = packetSize;
     return true;
 }
     
