@@ -3432,9 +3432,6 @@ void FinishWritingPacket_WritesMultipleDataPartsToPayloadAndSucceeds_ReturnsCorr
     );
 }
 
-
-// TODO: 
-// void FinishWritingPacket_WritesMultipleDataPartsToPayload_PacketIsCorrectlyPutDown()
 void FinishWritingPacket_PacketIsCorrectlyPutDown()
 {
     uint16_t eepromSize = 1024;
@@ -3485,6 +3482,76 @@ void FinishWritingPacket_PacketIsCorrectlyPutDown()
         EEPROMClass_update_param_idx_v[0] == expectedPayloadAddress && EEPROMClass_update_param_val_v[0] == expectedPacket.payload[0] &&
         EEPROMClass_update_param_idx_v[1] == expectedPayloadAddress + 1 && EEPROMClass_update_param_val_v[1] == expectedPacket.payload[1] &&
         EEPROMClass_put_param_idx_o1_v[2] == expectedEtxAddress && EEPROMClass_put_param_t_o1_v[2] == expectedPacket.etx &&
+        packetSize == expectedPacketSize
+    );
+}
+
+void FinishWritingPacket_WritesMultipleDataPartsToPayload_PacketIsCorrectlyPutDown()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data1 = 42;
+    uint8_t data2 = 3;
+    uint16_t address = 20;
+    DataPacket templatePacket;
+    DataPacket packet1 = DataToPacket(data1),
+               packet2 = DataToPacket(data2);
+    int expectedStxAddress = CyclicAdress(address, eepromSize), 
+        expectedActiveFlagAddress = CyclicAdress(
+            expectedStxAddress + 
+            sizeof(DataPacket::stx)
+            , eepromSize
+        ), 
+        expectedPayloadLengthAddress = CyclicAdress(
+            expectedActiveFlagAddress + 
+            sizeof(DataPacket::active)
+            , eepromSize
+        ), 
+        expectedCRCAddress = CyclicAdress(
+            expectedPayloadLengthAddress + 
+            sizeof(DataPacket::payloadLength)
+            , eepromSize
+        ), 
+        expectedPayloadAddress = CyclicAdress(
+            expectedCRCAddress + 
+            sizeof(DataPacket::crc)
+            , eepromSize
+        ), 
+        expectedEtxAddress = CyclicAdress(
+            expectedPayloadAddress + 
+            sizeof(data1) +
+            sizeof(data2)
+            , eepromSize
+        ), 
+        expectedPacketSize = (
+            SizeOfEmptySerializedDataPacket() +
+            sizeof(data1) +
+            sizeof(data2)
+        ),
+        expectedPayloadLength = (
+            sizeof(data1) +
+            sizeof(data2)
+        );
+    uint32_t expectedCrc = CalculateCRC(packet1.payload, packet1.payloadLength);
+    expectedCrc = CalculateCRC(packet2.payload, packet2.payloadLength, expectedCrc);
+
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data1);
+    packetWriter.AddDataToPayload(data2);
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true && 
+        packetWriter.success == true && 
+        EEPROMClass_put_param_idx_o1_v[0] == expectedStxAddress && EEPROMClass_put_param_t_o1_v[0] == templatePacket.stx &&
+        EEPROMClass_put_param_idx_o1_v[1] == expectedActiveFlagAddress && EEPROMClass_put_param_t_o1_v[1] == templatePacket.active &&
+        EEPROMClass_put_param_idx_o2_v[0] == expectedPayloadLengthAddress && EEPROMClass_put_param_t_o2_v[0] == expectedPayloadLength &&
+        EEPROMClass_put_param_idx_o3_v[0] == expectedCRCAddress && EEPROMClass_put_param_t_o3_v[0] == expectedCrc &&
+        EEPROMClass_update_param_idx_v[0] == expectedPayloadAddress + 0 && EEPROMClass_update_param_val_v[0] == packet1.payload[0] &&
+        EEPROMClass_update_param_idx_v[1] == expectedPayloadAddress + 1 && EEPROMClass_update_param_val_v[1] == packet1.payload[1] &&
+        EEPROMClass_update_param_idx_v[2] == expectedPayloadAddress + 2 && EEPROMClass_update_param_val_v[2] == packet2.payload[0] &&
+        EEPROMClass_put_param_idx_o1_v[2] == expectedEtxAddress && EEPROMClass_put_param_t_o1_v[2] == templatePacket.etx &&
         packetSize == expectedPacketSize
     );
 }
