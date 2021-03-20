@@ -950,6 +950,7 @@ void FinishWritingPacket_EtxIsPutDownAtTheEndOfThePacket();
 void FinishWritingPacket_PacketFitsOnEEPROM_ReturnsTrue();
 void FinishWritingPacket_Succeeds_ReturnsCorrectPacketSize();
 void FinishWritingPacket_WritesMultipleDataPartsToPayloadAndSucceeds_ReturnsCorrectPacketSize();
+void FinishWritingPacket_PacketIsCorrectlyPutDown();
 void FinishWritingPacket_SuccessIsFalse_ReturnsFalseAndDoesNotWriteToStorage();
 void DataPacketWriter_AllSteps_PacketDoesNotFitOnEEPROM_SuccessIsFalseAndReturnsFalse();
 void EditMode_Constructor_SetsCorrectValues();
@@ -1352,6 +1353,7 @@ void RunTests()
 	RUN_TEST(FinishWritingPacket_PacketFitsOnEEPROM_ReturnsTrue);
 	RUN_TEST(FinishWritingPacket_Succeeds_ReturnsCorrectPacketSize);
 	RUN_TEST(FinishWritingPacket_WritesMultipleDataPartsToPayloadAndSucceeds_ReturnsCorrectPacketSize);
+	RUN_TEST(FinishWritingPacket_PacketIsCorrectlyPutDown);
 	RUN_TEST(FinishWritingPacket_SuccessIsFalse_ReturnsFalseAndDoesNotWriteToStorage);
 	RUN_TEST(DataPacketWriter_AllSteps_PacketDoesNotFitOnEEPROM_SuccessIsFalseAndReturnsFalse);
 	RUN_TEST(EditMode_Constructor_SetsCorrectValues);
