@@ -2418,26 +2418,6 @@ void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse()
     ASSERT_TEST(resultBool == false);
 }
 
-// void SaveDataPacketToEEPROM_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
-// {
-//     uint32_t data = 888;
-//     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
-//     DataPacket packet = DataPacket(dataPtr, sizeof(data));
-//     uint16_t expectedPacketSize = Helper_CalculateSizeOfPacketOnEEPROM(packet);
-//     uint16_t eepromSize = static_cast<uint16_t>(expectedPacketSize + 5);
-//     uint16_t adress = static_cast<uint16_t>(eepromSize - (expectedPacketSize / 2));
-//     // This ensures that SaveDataPacketToEEPROM returns true
-//     Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adress, packet.payload, packet.payloadLength, eepromSize);
-
-//     uint16_t packetSize;
-//     bool resultBool = SaveDataPacketToEEPROM(adress, packet.payload, packet.payloadLength, &packetSize);
-
-//     ASSERT_TEST(
-//         resultBool == true &&
-//         packetSize == expectedPacketSize
-//     );
-// }
-
 // void SaveDataPacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse()
 // {
 //     uint16_t data = 42;
@@ -3387,6 +3367,33 @@ void FinishWritingPacket_WritesMultipleDataPartsToPayloadAndSucceeds_ReturnsCorr
     ASSERT_TEST(
         resultBool == true &&
         packetWriter.success == true &&
+        packetSize == expectedPacketSize
+    );
+}
+
+void FinishWritingPacket_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
+{
+    uint32_t data = 888;
+    DataPacket packet = DataToPacket(data);
+    uint16_t expectedPacketSize = SizeOfSerializedDataPacket(packet),
+            eepromSize = static_cast<uint16_t>(
+                expectedPacketSize + 
+                5
+            ),
+            address = static_cast<uint16_t>(
+                eepromSize 
+                - (expectedPacketSize / 2)
+            );
+    EEPROMClass_length_return = eepromSize;
+
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success &&
         packetSize == expectedPacketSize
     );
 }
