@@ -274,7 +274,7 @@ public:
     //
     //  - 3 FinishWritingPacket (Make the user unable to call any other functions on this object after this step)
     //      * if we are not successful, return false.
-    //      - if isCompleted is already true, return false.
+    //      * if isCompleted is already true, return false.
     //      * Write active. (Cyclic address)
     //      * Write payloadLength. (Cyclic address)
     //      * Write crc. (Cyclic address)
