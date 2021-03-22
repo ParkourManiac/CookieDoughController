@@ -283,10 +283,10 @@ public:
     //      * if we fail to save packet to EEPROM,
     //          * Set success to false.
     //          * return false.
-    //      - if we succeeded in writing the datapacket,
+    //      * if we succeeded in writing the datapacket,
     //          * Set isCompleted to true.
-    //          - Assign the out-variable "packetSize" the size of the packet.
-    //          - Return success.
+    //          * Assign the out-variable "packetSize" the size of the packet.
+    //          * Return true.
 
 
 };

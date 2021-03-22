@@ -3427,7 +3427,7 @@ void FinishWritingPacket_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
     );
 }
 
-void FinishWritingPacket_PacketIsCorrectlyPutDown()
+void FinishWritingPacket_PacketIsCorrectlyPutDownAndReturnsTrue()
 {
     uint16_t eepromSize = 1024;
     EEPROMClass_length_return = eepromSize;
@@ -3469,8 +3469,8 @@ void FinishWritingPacket_PacketIsCorrectlyPutDown()
     bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
 
     ASSERT_TEST(
-        resultBool == true && 
-        packetWriter.success == true && 
+        resultBool == true &&
+        packetWriter.success == true &&
         EEPROMClass_put_param_idx_o1_v[0] == expectedStxAddress && EEPROMClass_put_param_t_o1_v[0] == expectedPacket.stx &&
         EEPROMClass_put_param_idx_o1_v[1] == expectedActiveFlagAddress && EEPROMClass_put_param_t_o1_v[1] == expectedPacket.active &&
         EEPROMClass_put_param_idx_o2_v[0] == expectedPayloadLengthAddress && EEPROMClass_put_param_t_o2_v[0] == expectedPacket.payloadLength &&
