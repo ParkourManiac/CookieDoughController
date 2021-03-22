@@ -196,12 +196,12 @@ uint32_t CalculateCRC(const uint8_t *data, uint16_t length, uint32_t crc = ~0L);
 class DataPacketWriter
 {
 private:
-    bool isCompleted; // Todo: Test that it is true after FinishPacket().
-    bool success; // TODO: Test that this is set to false if any of the steps/methods fail.
+    bool isCompleted;
+    bool success;
     uint16_t address;
     uint16_t payloadLength; // TODO: Test that this represents the correct value after finishing the packet.
     uint32_t crc; // TODO: Test that this represents the correct value after finishing the packet.
-    uint16_t packetSize; // TODO: Test that this represents the correct value after finishing the packet.
+    uint16_t packetSize;
     uint16_t sizeOfEeprom;
 
 public:

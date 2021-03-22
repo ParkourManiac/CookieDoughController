@@ -576,14 +576,7 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
     if(!success) return false;
 
     DataPacket templatePacket;
-
-    // uint8_t stx = 0x02;
-    // uint8_t active = 0x01;
-    // uint16_t payloadLength = 0;
-    // uint32_t crc = 0;
-    // uint8_t *payload;
-    // uint8_t etx = 0x03;
-
+    
     uint16_t activeAddress = CyclicAdress(
         address +
         sizeof(DataPacket::stx)
@@ -628,35 +621,13 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
 
     if(!IsPacketOnEEPROMValid(address)) 
     {
+        DEBUG_PRINT(F("ERROR: The data packet being built by DataPacketWriter failed the validation check. Could not read DataPacket"));
         success = false;
         return false;
     }
-
 
     *resultingPacketSize = packetSize;
     isCompleted = true;
     return true;
 }
     
-
-
-
-    // TODO: REWRITE THIS CHECK...
-    // // Verify that package can be read from memory correctly.
-    // DataPacket result;
-    // uint16_t _sizeOfPacket;
-    // bool success = ReadDataPacketOnEEPROM(adress, &result, &_sizeOfPacket);
-    // if (!success || packet.crc != result.crc)
-    // {
-    //     DEBUG_PRINT(F("ERROR: Failed to save DataPacket."));
-    //     return false; // Throw: Something went wrong when writing.
-    // } else
-    // {
-    //     *packetSize = static_cast<uint16_t>(offset);
-    //     DEBUG_PRINT(F("Size of packet: ")); // DEBUG
-    //     DEBUG_PRINT(*packetSize); // DEBUG
-    //     DEBUG_PRINT(F("\n"));
-    //     DEBUG(delay(100)); // DEBUG
-    //     return true; // Package saved successfully.
-    // }
-

@@ -3646,6 +3646,26 @@ void FinishWritingPacket_Succeeds_IsCompletedIsSetToTrue()
     );
 }
 
+void FinishWritingPacket_Succeeds_SuccessVariableIsTrue()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint64_t data = 8409;
+    DataPacket packet = DataToPacket(data);
+    uint16_t address = 0;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
+
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true
+    );
+}
+
 void FinishWritingPacket_SuccessIsFalse_ReturnsFalseAndDoesNotWriteToStorage()
 {
     uint16_t eepromSize = 1024;
