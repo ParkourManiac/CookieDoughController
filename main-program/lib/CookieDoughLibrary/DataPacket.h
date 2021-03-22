@@ -284,7 +284,7 @@ public:
     //          * Set success to false.
     //          * return false.
     //      - if we succeeded in writing the datapacket,
-    //          - Set isCompleted to true.
+    //          * Set isCompleted to true.
     //          - Assign the out-variable "packetSize" the size of the packet.
     //          - Return success.
 

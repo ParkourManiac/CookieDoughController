@@ -634,6 +634,7 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
 
 
     *resultingPacketSize = packetSize;
+    isCompleted = true;
     return true;
 }
     
