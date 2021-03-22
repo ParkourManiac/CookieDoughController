@@ -272,14 +272,14 @@ public:
     //          * Set success to false.
     //      * return success.
     //
-    //  - 3 FinishWritingPacket (Make the user unable to call any other functions on this object after this step)
+    //  * 3 FinishWritingPacket (Make the user unable to call any other functions on this object after this step)
     //      * if we are not successful, return false.
     //      * if isCompleted is already true, return false.
     //      * Write active. (Cyclic address)
     //      * Write payloadLength. (Cyclic address)
     //      * Write crc. (Cyclic address)
     //      * Write etx. (Cyclic address)
-    //      - (Take functionality and tests from 'SaveDataPacketToEEPROM')
+    //      * (Take functionality and tests from 'SaveDataPacketToEEPROM')
     //      * if we fail to save packet to EEPROM,
     //          * Set success to false.
     //          * return false.

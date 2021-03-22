@@ -2418,31 +2418,6 @@ void DeactivateAllPacketsOnEEPROM_NoPacketIsPresent_ReturnsFalse()
     ASSERT_TEST(resultBool == false);
 }
 
-// void SaveDataPacketToEEPROM_PacketIsSavedButEepromFailsToReadTheData_ReturnsFalse()
-// {
-//     uint16_t data = 42;
-//     uint8_t *dataPtr = reinterpret_cast<uint8_t*>(&data);
-//     uint16_t adress = 20;
-//     DataPacket packet;
-
-//     // This ensure that SaveDataPacketToEEPROM and ReadDataPacketOnEEPROM knows the size of the eeprom.
-//     EEPROMClass_length_return = sizeof(data) + 20;
-//     // This ensures that ReadDataPacketOnEEPROM returns false
-//     EEPROMClass_read_return_v.push_back(packet.stx);
-//     EEPROMClass_read_return_v.push_back(packet.active);
-//     EEPROMClass_get_param_t_o1_vr.push_back(sizeof(data));
-//     EEPROMClass_get_param_t_o2_vr.push_back(55561893);
-//     EEPROMClass_read_return_v.push_back(packet.etx);
-//     EEPROMClass_read_return_v.push_back(static_cast<uint8_t>(dataPtr[0] + 13));
-//     EEPROMClass_read_return_v.push_back(dataPtr[1]);
-
-//     uint16_t packetSize;
-//     bool resultBool = SaveDataPacketToEEPROM(adress, dataPtr, sizeof(data), &packetSize);
-
-//     ASSERT_TEST(resultBool == false);
-// }
-
-
 void DataPacketWriter_Constructor_IsCompletedVariableIsSetToFalse()
 {
     uint16_t address = 20;
@@ -3017,7 +2992,6 @@ void AddDataToPayload_TemplateFunction_AddsMultipleParts_PayloadAndStxIsCorrectl
         EEPROMClass_update_param_idx_v[3] == static_cast<int>(expectedPayloadAdress + 3) && EEPROMClass_update_param_val_v[3] == expectedPacket3.payload[0]
     );
 }
-
 
 void FinishWritingPacket_WritesActiveFlagToCorrectAddress()
 {
@@ -3723,6 +3697,35 @@ void FinishWritingPacket_PacketCannotBeReadFromStorage_SuccessIsFalseAndReturnsF
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == false &&
+        packetWriter.success == false
+    );
+}
+
+void FinishWritingPacket_PacketIsSavedButEepromFailsToReadTheData_SuccessIsFalseAndReturnsFalse()
+{
+    uint16_t eepromSize = 1024;
+    uint16_t address = 20;
+    uint16_t data = 42;
+    DataPacket packet = DataToPacket(data);
+
+    // This simulates a scenario where most of the packet is read correctly,
+    // but a part of the payload is corrupt or could not be read correctly
+    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_read_return_v.push_back(packet.stx);
+    EEPROMClass_get_param_t_o3_vr.push_back(packet.active);
+    EEPROMClass_get_param_t_o1_vr.push_back(packet.payloadLength);
+    EEPROMClass_read_return_v.push_back(packet.etx);
+    EEPROMClass_read_return_v.push_back(static_cast<uint8_t>(packet.payload[0] + 13));
+    EEPROMClass_read_return_v.push_back(packet.payload[1]);
+    EEPROMClass_get_param_t_o2_vr.push_back(55561893);
+
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
     uint16_t packetSize = 0;
     bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
 
