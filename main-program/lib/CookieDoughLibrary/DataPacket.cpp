@@ -626,7 +626,11 @@ bool DataPacketWriter::FinishWritingPacket(uint16_t *resultingPacketSize)
     );
 
 
-
+    if(!IsPacketOnEEPROMValid(address)) 
+    {
+        success = false;
+        return false;
+    }
 
 
     *resultingPacketSize = packetSize;

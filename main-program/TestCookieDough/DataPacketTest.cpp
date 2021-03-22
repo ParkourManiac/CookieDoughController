@@ -3025,9 +3025,10 @@ void FinishWritingPacket_WritesActiveFlagToCorrectAddress()
     EEPROMClass_length_return = eepromSize;
     uint16_t data = 42;
     uint16_t address = 20;
-    DataPacket templatePacket;
+    DataPacket packet = DataToPacket(data);
     unsigned int expectedStxAdress = static_cast<int>(address), 
                  expectedActiveFlagAdress = expectedStxAdress + sizeof(DataPacket::stx);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
@@ -3038,7 +3039,7 @@ void FinishWritingPacket_WritesActiveFlagToCorrectAddress()
         resultBool == true &&
         packetWriter.success == true &&
         EEPROMClass_put_param_idx_o1_v[1] == static_cast<int>(expectedActiveFlagAdress) && 
-        EEPROMClass_put_param_t_o1_v[1] == templatePacket.active
+        EEPROMClass_put_param_t_o1_v[1] == packet.active
     );
 }
 
@@ -3050,12 +3051,13 @@ void FinishWritingPacket_ActiveFlagExceedsStorage_WritesActiveFlagAtTheStartOfTh
     uint16_t address = static_cast<uint16_t>(
         eepromSize - sizeof(DataPacket::stx)
     );
-    DataPacket templatePacket;
+    DataPacket packet = DataToPacket(data);
     int expectedStxAdress = CyclicAdress(address, eepromSize);
     int expectedActiveFlagAdress = CyclicAdress(
         expectedStxAdress + sizeof(DataPacket::stx)
         , eepromSize
     );
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
@@ -3066,7 +3068,7 @@ void FinishWritingPacket_ActiveFlagExceedsStorage_WritesActiveFlagAtTheStartOfTh
         resultBool == true &&
         packetWriter.success == true &&
         EEPROMClass_put_param_idx_o1_v[1] == expectedActiveFlagAdress && 
-        EEPROMClass_put_param_t_o1_v[1] == templatePacket.active
+        EEPROMClass_put_param_t_o1_v[1] == packet.active
     );
 }
 
@@ -3076,9 +3078,11 @@ void FinishWritingPacket_WritesPayloadLengthToCorrectAddress()
     EEPROMClass_length_return = eepromSize;
     uint16_t data = 42;
     uint16_t address = 20;
+    DataPacket packet = DataToPacket(data);
     int expectedStxAddress = static_cast<int>(address), 
         expectedActiveFlagAddress = expectedStxAddress + sizeof(DataPacket::stx), 
         expectedPayloadLengthAddress = expectedActiveFlagAddress + sizeof(DataPacket::active);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
@@ -3103,6 +3107,7 @@ void FinishWritingPacket_PayloadLengthsAddressExceedsStorage_WritesPayloadLength
         - sizeof(DataPacket::stx)
         - sizeof(DataPacket::active)
     );
+    DataPacket packet = DataToPacket(data);
     int expectedStxAddress = CyclicAdress(address, eepromSize),
         expectedActiveFlagAddress = CyclicAdress(
             expectedStxAddress + 
@@ -3114,6 +3119,7 @@ void FinishWritingPacket_PayloadLengthsAddressExceedsStorage_WritesPayloadLength
             sizeof(DataPacket::active)
             , eepromSize
         );
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
@@ -3140,6 +3146,7 @@ void FinishWritingPacket_WritesCrcToCorrectAddress()
         expectedPayloadLengthAddress = expectedActiveFlagAddress + sizeof(DataPacket::active),
         expectedCRCAddress = expectedPayloadLengthAddress + sizeof(DataPacket::payloadLength);
     uint32_t expectedCrc = CalculateCRC(packet.payload, packet.payloadLength);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
@@ -3183,6 +3190,7 @@ void FinishWritingPacket_CrcsAddressExceedsStorage_WritesCrcAtTheStartOfTheStora
             , eepromSize
         );
     uint32_t expectedCrc = CalculateCRC(packet.payload, packet.payloadLength);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
@@ -3210,6 +3218,7 @@ void FinishWritingPacket_WritesEtxToCorrectAddress()
         expectedCRCAddress = expectedPayloadLengthAddress + sizeof(DataPacket::payloadLength),
         expectedPayloadAddress = expectedCRCAddress + sizeof(DataPacket::crc), 
         expectedEtxAddress = expectedPayloadAddress + sizeof(data);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
@@ -3264,6 +3273,7 @@ void FinishWritingPacket_EtxsAddressExceedsStorage_WritesEtxAtTheStartOfTheStora
             sizeof(data)
             , eepromSize
         );
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
@@ -3291,6 +3301,7 @@ void FinishWritingPacket_EtxIsPutDownAtTheEndOfThePacket()
         - sizeof(DataPacket::etx)
         , eepromSize
     );
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
@@ -3312,6 +3323,7 @@ void FinishWritingPacket_PacketFitsOnEEPROM_ReturnsTrue()
     DataPacket packet = DataToPacket(data);
     uint16_t eepromSize = SizeOfSerializedDataPacket(packet);
     EEPROMClass_length_return = eepromSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
 
@@ -3332,9 +3344,10 @@ void FinishWritingPacket_Succeeds_ReturnsCorrectPacketSize()
     DataPacket packet = DataToPacket(data);
     uint16_t address = 0,
              expectedPacketSize = SizeOfSerializedDataPacket(packet);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
+
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
-
     uint16_t packetSize = 0;
     bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
 
@@ -3357,10 +3370,24 @@ void FinishWritingPacket_WritesMultipleDataPartsToPayloadAndSucceeds_ReturnsCorr
         sizeof(data1) +
         sizeof(data2)
     );
+    DataPacket packet1 = DataToPacket(data1),
+               packet2 = DataToPacket(data2);
+    uint16_t expectedPayloadLength = static_cast<uint16_t>(
+        packet1.payloadLength + 
+        packet2.payloadLength
+    );
+    uint8_t *expectedPayload = new uint8_t[expectedPayloadLength] {
+        packet1.payload[0], packet1.payload[1], packet1.payload[2], packet1.payload[3],
+        packet1.payload[4], packet1.payload[5], packet1.payload[6], packet1.payload[7],
+        packet2.payload[0], packet2.payload[1], packet2.payload[2], packet2.payload[3],
+        packet2.payload[4], packet2.payload[5], packet2.payload[6], packet2.payload[7],
+    };
+    DataPacket expectedPacket = DataPacket(expectedPayload, expectedPayloadLength);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, expectedPacket, eepromSize);
+
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data1);
     packetWriter.AddDataToPayload(data2);
-
     uint16_t packetSize = 0;
     bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
 
@@ -3369,6 +3396,7 @@ void FinishWritingPacket_WritesMultipleDataPartsToPayloadAndSucceeds_ReturnsCorr
         packetWriter.success == true &&
         packetSize == expectedPacketSize
     );
+    delete[](expectedPayload);
 }
 
 void FinishWritingPacket_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
@@ -3385,6 +3413,7 @@ void FinishWritingPacket_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
                 - (expectedPacketSize / 2)
             );
     EEPROMClass_length_return = eepromSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
 
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
@@ -3393,7 +3422,7 @@ void FinishWritingPacket_PacketWillExceedEndOfEEPROM_ReturnsCorrectPacketSize()
 
     ASSERT_TEST(
         resultBool == true &&
-        packetWriter.success &&
+        packetWriter.success == true &&
         packetSize == expectedPacketSize
     );
 }
@@ -3432,6 +3461,7 @@ void FinishWritingPacket_PacketIsCorrectlyPutDown()
             , eepromSize
         ), 
         expectedPacketSize = SizeOfSerializedDataPacket(expectedPacket);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, expectedPacket, eepromSize);
 
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
@@ -3500,6 +3530,12 @@ void FinishWritingPacket_WritesMultipleDataPartsToPayload_PacketIsCorrectlyPutDo
         );
     uint32_t expectedCrc = CalculateCRC(packet1.payload, packet1.payloadLength);
     expectedCrc = CalculateCRC(packet2.payload, packet2.payloadLength, expectedCrc);
+    uint8_t *expectedPayload = new uint8_t[expectedPayloadLength] {
+        packet1.payload[0], packet1.payload[1],
+        packet2.payload[0],
+    };
+    DataPacket expectedPacket = DataPacket(expectedPayload, static_cast<uint16_t>(expectedPayloadLength));
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, expectedPacket, eepromSize);
 
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data1);
@@ -3520,6 +3556,7 @@ void FinishWritingPacket_WritesMultipleDataPartsToPayload_PacketIsCorrectlyPutDo
         EEPROMClass_put_param_idx_o1_v[2] == expectedEtxAddress && EEPROMClass_put_param_t_o1_v[2] == templatePacket.etx &&
         packetSize == expectedPacketSize
     );
+    delete[](expectedPayload);
 }
 
 void FinishWritingPacket_PacketWillExceedEndOfEEPROM_SplitsPacketBetweenEndAndStartOfEEPROM()
@@ -3565,6 +3602,7 @@ void FinishWritingPacket_PacketWillExceedEndOfEEPROM_SplitsPacketBetweenEndAndSt
              expectedPayloadAddressPart2 = CyclicAdress(expectedPayloadAddress + 2, eepromSize),
              expectedPayloadAddressPart3 = CyclicAdress(expectedPayloadAddress + 3, eepromSize);
     EEPROMClass_length_return = eepromSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
 
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
@@ -3593,6 +3631,8 @@ void FinishWritingPacket_SuccessIsFalse_ReturnsFalseAndDoesNotWriteToStorage()
     EEPROMClass_length_return = eepromSize;
     uint16_t address = 0;
     uint64_t data = 8409;
+    DataPacket packet = DataToPacket(data);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
     packetWriter.success = false;
@@ -3615,6 +3655,8 @@ void FinishWritingPacket_PacketIsAlreadyCompleted_ReturnsFalseAndDoesNotWriteToS
     EEPROMClass_length_return = eepromSize;
     uint16_t address = 0;
     uint16_t data = 3617;
+    DataPacket packet = DataToPacket(data);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);
     packetWriter.isCompleted = true;
@@ -3631,6 +3673,24 @@ void FinishWritingPacket_PacketIsAlreadyCompleted_ReturnsFalseAndDoesNotWriteToS
     );
 }
 
+void FinishWritingPacket_PacketCannotBeReadFromStorage_SuccessIsFalseAndReturnsFalse()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint16_t data = 3309;
+    uint16_t address = 0;
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == false &&
+        packetWriter.success == false
+    );
+}
+
 void DataPacketWriter_AllSteps_PacketDoesNotFitOnEEPROM_SuccessIsFalseAndReturnsFalse()
 {
     uint16_t address = 0;
@@ -3640,7 +3700,8 @@ void DataPacketWriter_AllSteps_PacketDoesNotFitOnEEPROM_SuccessIsFalseAndReturns
         SizeOfSerializedDataPacket(packet) 
         - 1
     );
-    EEPROMClass_length_return = eepromSize;
+    EEPROMClass_length_return_v.push_back(eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, 1024);
 
     DataPacketWriter packetWriter(address);
     packetWriter.AddDataToPayload(data);

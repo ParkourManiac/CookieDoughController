@@ -280,9 +280,9 @@ public:
     //      * Write crc. (Cyclic address)
     //      * Write etx. (Cyclic address)
     //      - (Take functionality and tests from 'SaveDataPacketToEEPROM')
-    //      - if we fail to save packet to EEPROM,
-    //          - Set success to false.
-    //          - return false.
+    //      * if we fail to save packet to EEPROM,
+    //          * Set success to false.
+    //          * return false.
     //      - if we succeeded in writing the datapacket,
     //          - Set isCompleted to true.
     //          - Assign the out-variable "packetSize" the size of the packet.
