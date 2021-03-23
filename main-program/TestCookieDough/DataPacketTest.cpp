@@ -3108,6 +3108,28 @@ void FinishWritingPacket_PayloadLengthsAddressExceedsStorage_WritesPayloadLength
     );
 }
 
+void FinishWritingPacket_Succeeds_PayloadLengthVariableHasTheCorrectValue()
+{
+    uint16_t eepromSize = 1024;
+    EEPROMClass_length_return = eepromSize;
+    uint64_t data = 8409;
+    DataPacket packet = DataToPacket(data);
+    uint16_t address = 0,
+             expectedPayloadLength = packet.payloadLength;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(address, packet, eepromSize);
+
+    DataPacketWriter packetWriter(address);
+    packetWriter.AddDataToPayload(data);
+    uint16_t packetSize = 0;
+    bool resultBool = packetWriter.FinishWritingPacket(&packetSize);
+
+    ASSERT_TEST(
+        resultBool == true &&
+        packetWriter.success == true &&
+        packetWriter.payloadLength == expectedPayloadLength
+    );
+}
+
 void FinishWritingPacket_WritesCrcToCorrectAddress()
 {
     uint16_t eepromSize = 1024;

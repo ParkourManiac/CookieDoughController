@@ -199,7 +199,7 @@ private:
     bool isCompleted;
     bool success;
     uint16_t address;
-    uint16_t payloadLength; // TODO: Test that this represents the correct value after finishing the packet.
+    uint16_t payloadLength;
     uint32_t crc; // TODO: Test that this represents the correct value after finishing the packet.
     uint16_t packetSize;
     uint16_t sizeOfEeprom;
