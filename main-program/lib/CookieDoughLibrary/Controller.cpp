@@ -165,8 +165,12 @@ bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymap
     // DEBUG_PRINT(F("\n"));
     // DEBUG(delay(100));
     // // DEBUG
-    uint16_t packetSize;
-    bool success = SaveDataPacketToEEPROM(nextPacketAdress, dataPtr, dataSize, &packetSize);
+
+    DataPacketWriter packetWriter(nextPacketAdress);
+    packetWriter.AddDataToPayload(dataPtr, dataSize);
+    uint16_t packetSize = 0;
+    bool success = packetWriter.FinishWritingPacket(&packetSize);
+
     if (success)
     {
         DEBUG_PRINT(F("Settings saved!\n")); // DEBUG

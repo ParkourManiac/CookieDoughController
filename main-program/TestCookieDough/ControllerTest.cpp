@@ -23,7 +23,9 @@ extern unsigned int EEPROMClass_get_invocations_o3;
 extern uint8_t *Serial__write_param_buffer;
 extern size_t Serial__write_param_size;
 
+extern unsigned int EEPROMClass_update_invocations;
 extern std::vector<uint8_t> EEPROMClass_update_param_val_v;
+
 
 extern std::vector<uint8_t> pinMode_param_pin_v;
 
@@ -1465,17 +1467,24 @@ void SaveKeyMapsToMemory_PutsDownKeysAsBareKeyboardKeyArrayIntoEEPROM()
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);
     DataPacket expectedPacket = DataToPacket(expectedData);
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.currentPacketAdress, expectedPacket.payload, expectedPacket.payloadLength);
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(controller.currentPacketAdress, expectedPacket, controller.storageSize);
 
     controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
     bool success = true;
-    for (uint16_t i = 0; i < expectedPacket.payloadLength; i++)
+    if(EEPROMClass_update_invocations >= expectedPacket.payloadLength)
     {
-        if (EEPROMClass_update_param_val_v[i] != expectedPacket.payload[i])
+        for (uint16_t i = 0; i < expectedPacket.payloadLength; i++)
         {
-            success = false;
-        } 
+            if (EEPROMClass_update_param_val_v[i] != expectedPacket.payload[i])
+            {
+                success = false;
+            } 
+        }
+    } else
+    {
+        success = false;
     }
 
     ASSERT_TEST(success == true);
@@ -1505,17 +1514,24 @@ void SaveKeyMapsToMemory_Succeeds_ReturnsTrue()
     controller.customKeyMaps.Add(keymap1);
     controller.customKeyMaps.Add(keymap2);
     DataPacket expectedPacket = DataToPacket(expectedData);
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.currentPacketAdress, expectedPacket.payload, expectedPacket.payloadLength);
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(controller.currentPacketAdress, expectedPacket, controller.storageSize);
 
     bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
     bool success = true;
-    for (uint16_t i = 0; i < expectedPacket.payloadLength; i++)
+    if(EEPROMClass_update_invocations >= expectedPacket.payloadLength)
     {
-        if (EEPROMClass_update_param_val_v[i] != expectedPacket.payload[i])
+        for (uint16_t i = 0; i < expectedPacket.payloadLength; i++)
         {
-            success = false;
-        } 
+            if (EEPROMClass_update_param_val_v[i] != expectedPacket.payload[i])
+            {
+                success = false;
+            } 
+        }
+    } else
+    {
+        success = false;
     }
 
     ASSERT_TEST(
@@ -1544,7 +1560,8 @@ void SaveKeyMapsToMemory_UpdatesCurrentPacketAdressWithTheAdressOfTheSavedPacket
     controller.nextPacketAdress = 124;
     // Setup mocked packet to return so that the function succeeds.
     DataPacket packet = DataToPacket(expectedData);
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(expectedCurrentAdress, packet.payload, packet.payloadLength);
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(expectedCurrentAdress, packet, controller.storageSize);
 
     bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -1576,7 +1593,8 @@ void SaveKeyMapsToMemory_UpdatesNextPacketAdressWithAFreeAdress()
     controller.currentPacketAdress = 0;
     controller.nextPacketAdress = adressToSavePacket;
     // Setup mocked packet to return so that the function succeeds.
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adressToSavePacket, packet.payload, packet.payloadLength);
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adressToSavePacket, packet, controller.storageSize);
 
     bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -1605,7 +1623,8 @@ void SaveKeyMapsToMemory_SavesKeymaps_SetsTheAmountOfFreeStorageToBeEqualToTheSt
     unsigned int packetSize = SizeOfSerializedDataPacket(packet);
     uint16_t expectedAmountOfFreeStorage = static_cast<uint16_t>(controller.storageSize - packetSize);
     // Setup mocked packet to return so that the function succeeds.
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(0, packet.payload, packet.payloadLength);
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(0, packet, controller.storageSize);
 
     bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -1659,7 +1678,8 @@ void SaveKeyMapsToMemory_SavedPacketExceedsTheLastAdressOfTheEeprom_DoesNotSetNe
     controller.currentPacketAdress = 0;
     controller.nextPacketAdress = adressToSavePacket;
     // Setup mocked packet to return so that the function succeeds.
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(adressToSavePacket, packet.payload, packet.payloadLength, controller.storageSize);
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(adressToSavePacket, packet, controller.storageSize);
 
     bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -1689,7 +1709,8 @@ void SaveKeyMapsToMemory_PacketIsSavedAtTheNextPacketAdress()
     controller.nextPacketAdress = expectedAdress;
     // Setup mocked packet to return so that the function succeeds.
     DataPacket packet = DataToPacket(expectedData);
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(expectedAdress, packet.payload, packet.payloadLength);
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(expectedAdress, packet, controller.storageSize);
 
     bool resultBool = controller.SaveKeyMapsToMemory(controller.customKeyMaps);
 
@@ -1725,7 +1746,7 @@ void SaveKeyMapsToMemory_PacketIsSavedSuccessfully_DeactivatesOldPacket()
     controller.nextPacketAdress = static_cast<uint16_t>(expectedOldPacketAdress + Helper_CalculateSizeOfPacketOnEEPROM(packet) + 10);
     // Setup mocked packet to return so that the function succeeds.
     uint16_t eepromSize = 1024;
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.nextPacketAdress, packet.payload, packet.payloadLength, eepromSize);
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(controller.nextPacketAdress, packet, eepromSize);
     EEPROMClass_length_return = eepromSize;
     EEPROMClass_read_return_v.push_back(oldPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(oldPacket.payloadLength);
@@ -1767,7 +1788,8 @@ void SaveKeyMapsToMemory_CurrentPacketAdressAndNextPacketAdressAreTheSame_Succes
     controller.currentPacketAdress = sharedAdress;
     controller.nextPacketAdress = sharedAdress;
     // Setup mocked packet to return so that the function succeeds.
-    Helper_SaveDataPacketToEEPROM_PrepareEepromSizeAndPrepareToReturnPacket(controller.nextPacketAdress, packet.payload, packet.payloadLength);
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_IsPacketValidOnEEPROM_PrepareToReadPacket(controller.nextPacketAdress, packet, controller.storageSize);
     EEPROMClass_read_return_v.push_back(oldPacket.stx);
     EEPROMClass_get_param_t_o1_vr.push_back(oldPacket.payloadLength);
     EEPROMClass_read_return_v.push_back(oldPacket.etx);
