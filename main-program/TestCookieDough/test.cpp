@@ -74,6 +74,12 @@ void Test(bool eval, const char *code, const char *file, unsigned long line)
         return;
     }
 
+    if(eval == false) 
+    {
+        std::cout <<("\033[01;31m" " Failed");
+        std::cout <<("\033[0m");
+    }
+
     test_result newResult;
 
     newResult.passed = eval;
