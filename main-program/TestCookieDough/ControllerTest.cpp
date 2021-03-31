@@ -1079,6 +1079,49 @@ void AddKeymapsFromPayloadIntoList_SuccessfullyAddsMultipleKeymapsToList()
     );
 }
 
+void AddKeymapsFromPayloadIntoList_PacketIsSplitOnStorage_ReadsPayloadInACyclicFormatAndSuccessfullyAddsKeymapsToList()
+{
+    Controller controller = SetUpController();
+    BareKeyboardKey data[genericNormalKeyCount] = {
+        BareKeyboardKey(2, 4), 
+        BareKeyboardKey(3, 26), 
+        BareKeyboardKey(4, 22), 
+        BareKeyboardKey(5, 7),
+    };
+    DataPacket packet = DataToPacket(data);
+    uint16_t packetAdress = static_cast<uint16_t>(
+        controller.storageSize 
+        - (
+            SizeOfSerializedDataPacket(packet)
+            - packet.payloadLength
+            - sizeof(DataPacket::etx)
+        )
+    );
+    uint16_t payloadAdress = static_cast<uint16_t>(
+        packetAdress +
+        SizeOfEmptySerializedDataPacket()
+        - sizeof(packet.etx)
+    );
+    EEPROMClass_length_return = controller.storageSize;
+    Helper_ReadBytesFromEEPROM_PreparesToReadPayload(packetAdress, packet, controller.storageSize);
+
+    LinkedList<BareKeyboardKey *> resultingKeymaps = LinkedList<BareKeyboardKey *>();
+    bool resultBool = controller.AddKeymapsFromPayloadIntoList(payloadAdress, packet.payloadLength, &resultingKeymaps);
+    BareKeyboardKey *result = nullptr;
+    if (!resultingKeymaps.IsEmpty())
+    {
+        result = *(resultingKeymaps[0]);
+    }
+
+    ASSERT_TEST(
+        resultingKeymaps.IsEmpty() == false &&
+        result[0] == data[0] &&
+        result[1] == data[1] &&
+        result[2] == data[2] && 
+        result[3] == data[3]
+    );
+}
+
 void AddKeymapsFromPayloadIntoList_OneKeymapFails_RemovesKeymapsThatWereAddedFromFaultyPayload()
 {
     Controller controller = SetUpController();
@@ -2363,3 +2406,7 @@ void CreateNewKeymap_SramDoesNotFitAnotherKeymap_DoesNotCreateNorChangeKeymapAnd
         controller.currentKeyMap[1].pin == keymap[1].pin && controller.currentKeyMap[1].keyCode == keymap[1].keyCode
     );
 }
+
+
+// TODO (this edge case is unlikely but could cause trouble):
+// SaveKeyMapsToMemory_PacketSavedIsSoBigItOverwritesPartOfThePreviousPacket_DoesNotTryToDeactivatePreviousPacket();

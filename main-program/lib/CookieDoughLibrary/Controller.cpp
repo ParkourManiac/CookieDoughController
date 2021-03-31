@@ -141,7 +141,6 @@ int32_t Controller::CalculateUnusedStorage(uint16_t amountOfKeymaps)
 
 bool Controller::SaveKeyMapsToMemory(const LinkedList<BareKeyboardKey *> &keymapList)
 {
-    const int keyCount = keymapList.length * normalKeyCount;
     DEBUG_PRINT(CalculateUnusedStorage(keymapList.length));
     DEBUG(delay(100));
 
@@ -229,7 +228,7 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
     uint16_t amountOfKeymaps = payloadLength / keymapSize;
     for(uint16_t i = 0; i < amountOfKeymaps; i++)
     {
-        uint16_t keymapStartAdress = static_cast<uint16_t>(
+        uint16_t keymapStartAdress = CyclicEepromAdress(
             payloadAdress + (i * keymapSize)
         );
 
