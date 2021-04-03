@@ -31,6 +31,7 @@ void setup()
 
     controller.Setup();
 }
+// TODO: Play test the controller and see that the memory threshold is an okay place to be. (Saving and loading works!)
 
 void loop()
 {

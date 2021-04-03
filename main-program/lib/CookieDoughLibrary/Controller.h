@@ -38,7 +38,7 @@ private:
      * @brief Represents the amount of free storage space available for use.
      */
     uint16_t amountOfFreeStorage;
-    int32_t SRAMSafetyThreshold = 500;
+    int32_t SRAMSafetyThreshold = 300;
 
     uint16_t currentPacketAdress = 0;
     uint16_t nextPacketAdress = 0;

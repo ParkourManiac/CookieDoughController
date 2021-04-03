@@ -255,7 +255,7 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
                     DEBUG_PRINT(F(", .keyCode: "));
                     DEBUG_PRINT(keymap[j].keyCode);
                     DEBUG_PRINT(F(" }"));
-                    delay(75);
+                    delay(30);
                     if(!IsKeyValid(keymap[j].pin)) delay(100);
                 );
             }
@@ -428,7 +428,7 @@ void Controller::CycleKeyMap()
 
 void Controller::ChangeKeyMap(BareKeyboardKey *keyMap)
 {
-    DEBUG_PRINT(F("Changing keymap\n")); // DEBUG
+    DEBUG_PRINT(F("\nChanging keymap")); // DEBUG
     // Overwrite currentKeyMap with the keys we want to equip.
     for(int i = 0; i < normalKeyCount; i++) 
     {
@@ -456,7 +456,7 @@ void Controller::UpdateCurrentCustomKeymap()
     }
 }
 
-void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys // TODO: Needs to be tested.
+void Controller::ToggleDefaultKeyMap()
 {
     bool toggleToDefault = !isUsingDefaultKeymap;
     if (toggleToDefault)
@@ -479,7 +479,7 @@ void Controller::ToggleDefaultKeyMap() // NOTE: Refactored to BareKeyboardKeys /
     }
 }
 
-void Controller::SendKeyInfo() // TODO: Needs to be tested
+void Controller::SendKeyInfo()
 {
     for (int keyIndex = 0; keyIndex < normalKeyCount; keyIndex++)
     {
@@ -547,6 +547,7 @@ void Controller::SendKeyInfo() // TODO: Needs to be tested
 
 void Controller::WipeKeyboardEventBuffer() 
 {
+    DEBUG_PRINT(F("\n"));
     for(int i = 0; i < bufferSize; i++) 
     {
         buf[i] = 0;
@@ -555,10 +556,11 @@ void Controller::WipeKeyboardEventBuffer()
 
 void Controller::SendKeyboardEvent() 
 {
+    DEBUG_PRINT(F("\n"));
     Serial.write(buf, bufferSize);
 }
 
-void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested. Refactor to use OnKeyPress and etc.
+void Controller::ExecuteSpecialCommands()
 {
     for (int i = 0; i < specialKeyCount; i++)
     {
@@ -667,7 +669,7 @@ void Controller::ExecuteSpecialCommands() // TODO: Needs to be tested. Refactor 
     }
 }
 
-void Controller::ToggleEditMode() // TODO: Needs to be tested.
+void Controller::ToggleEditMode()
 {
     bool enteringEditMode = !editmode.enabled;
 
@@ -687,8 +689,8 @@ void Controller::ToggleEditMode() // TODO: Needs to be tested.
         }
         else
         {
+            DEBUG_PRINT(F("\nCannot edit the default keymap."));
             SignalErrorToUser();
-            // We don't want to edit the default keyMap...
             return;
         }
     }
@@ -703,7 +705,7 @@ void Controller::ToggleEditMode() // TODO: Needs to be tested.
     UpdateCurrentCustomKeymap();
 }
 
-void Controller::SaveControllerSettings() // TODO: Needs to be tested.
+void Controller::SaveControllerSettings()
 {
     UpdateCurrentCustomKeymap();
     SaveKeyMapsToMemory(customKeyMaps);
@@ -735,7 +737,7 @@ void Controller::SaveControllerSettings() // TODO: Needs to be tested.
     digitalWrite(LED_BUILTIN, LOW);
 }
 
-void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. // TODO: Needs to be tested. // TODO: // TODO: After being tested, Double-check keymaps allocated in CreateNewKeymap is deleted[] when removing a keymap.
+void Controller::DeleteCurrentKeyMap()
 {
     if (!editmode.enabled)
         return;
@@ -749,26 +751,26 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
     // delete the default keymap...
 
     DEBUG(
+        DEBUG_PRINT(F("\n"));
         for (unsigned int i = 0; i < customKeyMaps.length; i++)
         {
             DEBUG_PRINT(F("Before deleting "));
             DEBUG_PRINT(i);
             DEBUG_PRINT(F(":\n"));
-            for (int j = 0; j < normalKeyCount; j++)
-            {
-                DEBUG_PRINT(F("    ( pin: "));
-                DEBUG_PRINT((*customKeyMaps[i])[j].pin);
-                DEBUG_PRINT(F(", keyCode: "));
-                DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
-                DEBUG_PRINT(F(" )\n"));
-            }
+            // for (int j = 0; j < normalKeyCount; j++)
+            // {
+            //     DEBUG_PRINT(F("    ( pin: "));
+            //     DEBUG_PRINT((*customKeyMaps[i])[j].pin);
+            //     DEBUG_PRINT(F(", keyCode: "));
+            //     DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
+            //     DEBUG_PRINT(F(" )\n"));
+            // }
         }
-        DEBUG(delay(100));
+        DEBUG(delay(20));
     );
 
-    // TODO: Try replacing **removedKeyMapPtr with *removedKeyMapPtr and pass in &removedKeyMapPtr to the function RemoveAtIndex.
-    BareKeyboardKey **removedKeyMapPtr = new BareKeyboardKey *;
-    bool success = customKeyMaps.RemoveAtIndex(customKeyMapIndex, removedKeyMapPtr);
+    BareKeyboardKey *removedKeyMapPtr;
+    bool success = customKeyMaps.RemoveAtIndex(customKeyMapIndex, &removedKeyMapPtr);
     // If we successfully removed the keymap...
     if (success)
     {
@@ -806,11 +808,8 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
             }
         }
 
-        if (*removedKeyMapPtr != nullptr) // TODO: Is this needed?
-        {
-            DEBUG_PRINT(F("Deleted pointer... *removedKeyMapPtr\n")); // DEBUG
-            delete (*removedKeyMapPtr);
-        }
+        DEBUG_PRINT(F("Deleted pointer removedKeyMapPtr\n")); // DEBUG
+        delete[](removedKeyMapPtr);
     }
     else
     {
@@ -820,8 +819,6 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
         DEBUG_PRINT(F("\n"));
     }
 
-    delete (removedKeyMapPtr);                             // TODO: Check if this is correct or not.
-    DEBUG_PRINT(F("Deleted pointer... removedKeyMapPtr\n")); // DEBUG
     ToggleEditMode();
 
     // DEBUG
@@ -838,21 +835,22 @@ void Controller::DeleteCurrentKeyMap() // NOTE: Refactored to BareKeyboardKeys. 
             DEBUG_PRINT(F("After deleting "));
             DEBUG_PRINT(i);
             DEBUG_PRINT(F(":\n"));
-            for (int j = 0; j < normalKeyCount; j++)
-            {
-                DEBUG_PRINT(F("    ( pin: "));
-                DEBUG_PRINT((*customKeyMaps[i])[j].pin);
-                DEBUG_PRINT(F(", keyCode: "));
-                DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
-                DEBUG_PRINT(F(" )\n"));
-            }
+            // for (int j = 0; j < normalKeyCount; j++)
+            // {
+            //     DEBUG_PRINT(F("    ( pin: "));
+            //     DEBUG_PRINT((*customKeyMaps[i])[j].pin);
+            //     DEBUG_PRINT(F(", keyCode: "));
+            //     DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
+            //     DEBUG_PRINT(F(" )\n"));
+            // }
         }
         if (customKeyMaps.length == 0)
         {
-            DEBUG_PRINT(F("avaiableKeyMaps is Empty\n"));
+            DEBUG_PRINT(F("\navaiableKeyMaps is Empty"));
         }
-        DEBUG(delay(100));
+        DEBUG(delay(20));
     );
+    DEBUG(delay(100));
 }
 
 bool Controller::CreateNewKeymap()
@@ -867,7 +865,7 @@ bool Controller::CreateNewKeymap()
 
     if (canFitAnotherKeymapIntoStorage && canFitAnotherKeymapIntoSRAM)
     {
-        BareKeyboardKey *newKeyMap = new BareKeyboardKey[normalKeyCount]; // TODO: Double-check if this is deleted[] when removing a keymap.
+        BareKeyboardKey *newKeyMap = new BareKeyboardKey[normalKeyCount];
         int initialKeycode = 4; // The "a" key. 
         // Copy the default pin values to the new keyMap.
         for (int i = 0; i < normalKeyCount; i++)
@@ -921,7 +919,7 @@ bool Controller::CreateNewKeymap()
     return successful;
 }
 
-void Controller::SignalErrorToUser() // TODO: Needs to be tested?
+void Controller::SignalErrorToUser()
 {
     for (int i = 0; i < 5; i++)
     {
