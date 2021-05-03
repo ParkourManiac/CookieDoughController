@@ -247,12 +247,12 @@ bool Controller::AddKeymapsFromPayloadIntoList(const uint16_t &payloadAdress, co
 
                 }
                 DEBUG(
-                    DEBUG_PRINT(F("\nIsValid?: ")); 
+                    DEBUG_PRINT(F("\nValid?: ")); 
                     DEBUG_PRINT(IsKeyValid(keymap[j].pin)); 
                     DEBUG_PRINT(F("  {"));
                     DEBUG_PRINT(F(" .pin: "));
                     DEBUG_PRINT(keymap[j].pin);
-                    DEBUG_PRINT(F(", .keyCode: "));
+                    DEBUG_PRINT(F(", .key: "));
                     DEBUG_PRINT(keymap[j].keyCode);
                     DEBUG_PRINT(F(" }"));
                     delay(30);
@@ -547,7 +547,7 @@ void Controller::SendKeyInfo()
 
 void Controller::WipeKeyboardEventBuffer() 
 {
-    DEBUG_PRINT(F("\n"));
+    DEBUG_PRINT(F("\nWiping buffer..."));
     for(int i = 0; i < bufferSize; i++) 
     {
         buf[i] = 0;
@@ -750,22 +750,28 @@ void Controller::DeleteCurrentKeyMap()
     // in our list and we are not trying to
     // delete the default keymap...
 
+
     DEBUG(
         DEBUG_PRINT(F("\n"));
-        for (unsigned int i = 0; i < customKeyMaps.length; i++)
-        {
-            DEBUG_PRINT(F("Before deleting "));
-            DEBUG_PRINT(i);
-            DEBUG_PRINT(F(":\n"));
-            // for (int j = 0; j < normalKeyCount; j++)
-            // {
-            //     DEBUG_PRINT(F("    ( pin: "));
-            //     DEBUG_PRINT((*customKeyMaps[i])[j].pin);
-            //     DEBUG_PRINT(F(", keyCode: "));
-            //     DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
-            //     DEBUG_PRINT(F(" )\n"));
-            // }
-        }
+        DEBUG_PRINT(F("\nBefore deleting:"));
+        DEBUG_PRINT(F("\n- Current position: "));
+        DEBUG_PRINT(customKeyMapIndex);
+        DEBUG_PRINT(F("\n- Keymap count: "));
+        DEBUG_PRINT(customKeyMaps.length);
+
+        // for (unsigned int i = 0; i < customKeyMaps.length; i++)
+        // {
+        //     DEBUG_PRINT(i);
+        //     DEBUG_PRINT(F(":\n"));
+        //     // for (int j = 0; j < normalKeyCount; j++)
+        //     // {
+        //     //     DEBUG_PRINT(F("    ( pin: "));
+        //     //     DEBUG_PRINT((*customKeyMaps[i])[j].pin);
+        //     //     DEBUG_PRINT(F(", keyCode: "));
+        //     //     DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
+        //     //     DEBUG_PRINT(F(" )\n"));
+        //     // }
+        // }
         DEBUG(delay(20));
     );
 
@@ -779,7 +785,7 @@ void Controller::DeleteCurrentKeyMap()
         // If we deleted the last object in the list...
         if (customKeyMaps.IsEmpty())
         {
-            DEBUG_PRINT(F("Switched to default keymap\n")); // DEBUG
+            DEBUG_PRINT(F("\nSwitched to default keymap"));
             ChangeKeyMap(defaultKeymap);
             customKeyMapIndex = 0;
         }
@@ -794,62 +800,59 @@ void Controller::DeleteCurrentKeyMap()
             nextKeyMapPtr = customKeyMaps[customKeyMapIndex];
             if (nextKeyMapPtr != nullptr)
             {
-                DEBUG_PRINT(F("Switched to keymap ")); // DEBUG
-                DEBUG_PRINT(customKeyMapIndex);   // DEBUG
-                DEBUG_PRINT(F("\n"));
+                DEBUG_PRINT(F("\nSwitched to keymap "));
+                DEBUG_PRINT(customKeyMapIndex);
                 ChangeKeyMap(*nextKeyMapPtr);
             }
             else
             {
-                DEBUG_PRINT(F("Failed to delete keymap at ")); // DEBUG
-                DEBUG_PRINT(customKeyMapIndex);           // DEBUG
-                DEBUG_PRINT(F("\n"));
+                DEBUG_PRINT(F("\nFailed to delete keymap at "));
+                DEBUG_PRINT(customKeyMapIndex);
                 // TODO: Throw error. We failed to retrieve the keymap at position customKeyMapIndex.
             }
         }
 
-        DEBUG_PRINT(F("Deleted pointer removedKeyMapPtr\n")); // DEBUG
+        DEBUG_PRINT(F("\nDeleted pointer removedKeyMapPtr"));
         delete[](removedKeyMapPtr);
     }
     else
     {
         // TODO: Throw error. We failed to delete the keyMap.
-        DEBUG_PRINT(F("Something went really wrong...")); // DEBUG
-        DEBUG_PRINT(customKeyMapIndex);              // DEBUG
-        DEBUG_PRINT(F("\n"));
+        DEBUG_PRINT(F("\nSomething went really wrong..."));
+        DEBUG_PRINT(customKeyMapIndex);
     }
 
     ToggleEditMode();
 
-    // DEBUG
-    DEBUG_PRINT(F("Amount of keymaps left: "));
-    DEBUG_PRINT(customKeyMaps.length);
-    DEBUG_PRINT(F("\nCurrent position: "));
-    DEBUG_PRINT(customKeyMapIndex);
-    DEBUG_PRINT(F("\n"));
-    // DEBUG
+    DEBUG(
+        DEBUG_PRINT(F("\nAfter deleting:"));
+        DEBUG_PRINT(F("\n- Current position: "));
+        DEBUG_PRINT(customKeyMapIndex);
+        DEBUG_PRINT(F("\n- Keymap count: "));
+        DEBUG_PRINT(customKeyMaps.length);
+    );
 
     DEBUG(
-        for (unsigned int i = 0; i < customKeyMaps.length; i++)
-        {
-            DEBUG_PRINT(F("After deleting "));
-            DEBUG_PRINT(i);
-            DEBUG_PRINT(F(":\n"));
-            // for (int j = 0; j < normalKeyCount; j++)
-            // {
-            //     DEBUG_PRINT(F("    ( pin: "));
-            //     DEBUG_PRINT((*customKeyMaps[i])[j].pin);
-            //     DEBUG_PRINT(F(", keyCode: "));
-            //     DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
-            //     DEBUG_PRINT(F(" )\n"));
-            // }
-        }
+        // for (unsigned int i = 0; i < customKeyMaps.length; i++)
+        // {
+        //     DEBUG_PRINT(i);
+        //     DEBUG_PRINT(F(":\n"));
+        //     // for (int j = 0; j < normalKeyCount; j++)
+        //     // {
+        //     //     DEBUG_PRINT(F("    ( pin: "));
+        //     //     DEBUG_PRINT((*customKeyMaps[i])[j].pin);
+        //     //     DEBUG_PRINT(F(", keyCode: "));
+        //     //     DEBUG_PRINT((*customKeyMaps[i])[j].keyCode);
+        //     //     DEBUG_PRINT(F(" )\n"));
+        //     // }
+        // }
         if (customKeyMaps.length == 0)
         {
             DEBUG_PRINT(F("\navaiableKeyMaps is Empty"));
         }
         DEBUG(delay(20));
     );
+    DEBUG_PRINT(F("\n"));
     DEBUG(delay(100));
 }
 
